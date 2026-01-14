@@ -17,15 +17,15 @@ const CheckoutSection = () => {
     ];
 
     return (
-        <section id="checkout" style={{ padding: '100px 0', backgroundColor: '#fff' }}>
+        <section id="checkout" className="section-padding" style={{ backgroundColor: '#fff' }}>
             <div className="container">
-                <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: '50px', alignItems: 'start' }}>
+                <div className="checkout-grid">
 
                     {/* Payment Methods Side */}
-                    <div>
-                        <h2 style={{ fontSize: '32px', marginBottom: '40px', color: '#163561' }}>Select your preferred method of payment</h2>
+                    <div className="payment-methods-side">
+                        <h2 className="payment-title" style={{ color: '#163561' }}>Select your preferred method of payment</h2>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+                        <div className="methods-grid">
                             {paymentMethods.map((method) => (
                                 <div
                                     key={method.id}
@@ -57,7 +57,7 @@ const CheckoutSection = () => {
                             ))}
                         </div>
 
-                        <div style={{ marginTop: '40px', padding: '24px', backgroundColor: '#F8FAFC', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div className="info-box" style={{ marginTop: '40px', padding: '24px', backgroundColor: '#F8FAFC', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '15px' }}>
                             <ShieldCheck size={24} color="#28A745" />
                             <p style={{ fontSize: '14px', color: '#666' }}>
                                 Your connection is encrypted and payment details are safe. Locked with industry-standard 256-bit SSL encryption.
@@ -66,8 +66,8 @@ const CheckoutSection = () => {
                     </div>
 
                     {/* Order Summary Side */}
-                    <div style={{ position: 'sticky', top: '100px' }}>
-                        <div style={{
+                    <div className="summary-side">
+                        <div className="summary-card" style={{
                             padding: '40px',
                             backgroundColor: '#041026',
                             borderRadius: '32px',
@@ -103,7 +103,7 @@ const CheckoutSection = () => {
                                 textAlign: 'center'
                             }}>
                                 <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}>Total Amount Due</div>
-                                <div style={{ fontSize: '42px', fontWeight: '800', color: '#0086FF' }}>$120.00</div>
+                                <div className="total-amount" style={{ fontSize: '42px', fontWeight: '800', color: '#0086FF' }}>$120.00</div>
                             </div>
 
                             <button style={{
@@ -133,10 +133,40 @@ const CheckoutSection = () => {
                 </div>
             </div>
             <style jsx>{`
+                .checkout-grid {
+                    display: grid;
+                    grid-template-columns: 1.25fr 1fr;
+                    gap: 50px;
+                    align-items: start;
+                }
+                .summary-side {
+                    position: sticky;
+                    top: 100px;
+                }
+                .methods-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                    gap: 20px;
+                }
+                .payment-title {
+                    font-size: 32px;
+                    margin-bottom: 40px;
+                }
                 .pay-btn:hover {
                     background-color: #0076e5;
                     transform: translateY(-2px);
                     box-shadow: 0 10px 20px rgba(0, 134, 255, 0.3);
+                }
+                @media (max-width: 1024px) {
+                    .checkout-grid { grid-template-columns: 1fr; gap: 40px; }
+                    .summary-side { position: relative; top: 0; }
+                    .payment-title { font-size: 24px; margin-bottom: 24px; text-align: center; }
+                    .info-box { flex-direction: column; text-align: center; }
+                }
+                @media (max-width: 768px) {
+                    .methods-grid { grid-template-columns: 1fr; }
+                    .summary-card { padding: 30px 20px !important; border-radius: 24px !important; }
+                    .total-amount { font-size: 32px !important; }
                 }
             `}</style>
         </section>

@@ -4,34 +4,52 @@ import React from 'react';
 
 const PromoBanner = () => {
     return (
-        <div style={{
+        <div className="promo-banner" style={{
             background: 'linear-gradient(90deg, #981A00 0%, #FF4D4D 100%)',
             color: 'white',
-            padding: '8px 0',
+            padding: '10px 0',
             textAlign: 'center',
             fontSize: '14px',
             fontWeight: '500',
             zIndex: 1001,
             position: 'relative'
         }}>
-            <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
-                <span>🎄 HAPPY CHRISTMAS 🎄</span>
-                <span>Up to 80% Discount! Don't miss out.</span>
-                <a href="#" style={{
+            <div className="container promo-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+                <span className="promo-text">🎄 HAPPY CHRISTMAS 🎄</span>
+                <span className="promo-text">Up to 80% Discount!</span>
+                <a href="#" className="promo-btn" style={{
                     backgroundColor: 'white',
                     color: '#981A00',
-                    padding: '2px 12px',
+                    padding: '4px 12px',
                     borderRadius: '4px',
                     fontWeight: '700',
-                    fontSize: '12px'
+                    fontSize: '12px',
+                    whiteSpace: 'nowrap'
                 }}>BUY NOW</a>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                    <span>Ends in:</span>
+                <div className="promo-timer" style={{ display: 'flex', gap: '5px', alignItems: 'center', whiteSpace: 'nowrap' }}>
+                    <span>Ends:</span>
                     <span style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '0 4px', borderRadius: '2px' }}>02</span>:
                     <span style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '0 4px', borderRadius: '2px' }}>14</span>:
                     <span style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '0 4px', borderRadius: '2px' }}>55</span>
                 </div>
             </div>
+            <style jsx>{`
+                .promo-banner {
+                    width: 100%;
+                    overflow: hidden;
+                }
+                @media (max-width: 768px) {
+                    .promo-container { gap: 10px !important; padding: 0 10px !important; }
+                    .promo-text { font-size: 12px; }
+                }
+                @media (max-width: 480px) {
+                    .promo-banner { padding: 6px 0; }
+                    .promo-container { gap: 5px !important; }
+                    .promo-text:first-of-type { display: none; } /* Hide 🎄 HAPPY CHRISTMAS 🎄 on very small screens */
+                    .promo-text { font-size: 11px; }
+                    .promo-timer { font-size: 11px; }
+                }
+            `}</style>
         </div>
     );
 };

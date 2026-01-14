@@ -23,37 +23,42 @@ const Pricing = () => {
     };
 
     return (
-        <section style={{ padding: '120px 0', backgroundColor: '#fff' }}>
+        <section className="section-padding" style={{ backgroundColor: '#fff' }}>
             <div className="container">
-                <div style={{ textAlign: 'center', marginBottom: '70px' }}>
-                    <h2 style={{ fontSize: '42px', marginBottom: '20px', letterSpacing: '-1px' }}>Find the Perfect Proxy Plan</h2>
-                    <p style={{ color: '#666', fontSize: '20px', maxWidth: '700px', margin: '0 auto' }}>Whether you're a startup or an enterprise, we have a plan tailored to your needs.</p>
+                <div style={{ textAlign: 'center', marginBottom: '40px' }} className="pricing-header">
+                    <h2 style={{ fontSize: '42px', marginBottom: '20px', letterSpacing: '-1px' }} className="title-text">Find the Perfect Proxy Plan</h2>
+                    <p style={{ color: '#666', fontSize: '20px', maxWidth: '700px', margin: '0 auto' }} className="subtitle-text">Whether you're a startup or an enterprise, we have a plan tailored to your needs.</p>
                 </div>
 
                 {/* Custom Tabs */}
-                <div style={{
+                <div className="tabs-container" style={{
                     display: 'flex',
                     justifyContent: 'center',
-                    marginBottom: '60px',
+                    marginBottom: '40px',
                     backgroundColor: '#F1F5F9',
                     padding: '6px',
                     borderRadius: '16px',
                     width: 'fit-content',
-                    margin: '0 auto 60px auto'
+                    margin: '0 auto 40px auto',
+                    overflowX: 'auto',
+                    maxWidth: '100%',
+                    whiteSpace: 'nowrap'
                 }}>
                     {tabs.map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             style={{
-                                padding: '14px 28px',
+                                padding: '12px 20px',
                                 borderRadius: '12px',
                                 fontWeight: '600',
-                                fontSize: '15px',
+                                fontSize: '14px',
                                 backgroundColor: activeTab === tab ? 'white' : 'transparent',
                                 color: activeTab === tab ? '#0086FF' : '#64748B',
                                 boxShadow: activeTab === tab ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
-                                transition: 'all 0.3s'
+                                transition: 'all 0.3s',
+                                border: 'none',
+                                flexShrink: 0
                             }}
                         >
                             {tab}
@@ -62,7 +67,7 @@ const Pricing = () => {
                 </div>
 
                 {/* Pricing Cards */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', justifyContent: 'center' }}>
+                <div className="pricing-grid">
                     <AnimatePresence mode="wait">
                         {pricingData[activeTab]?.length > 0 ? (
                             pricingData[activeTab].map((plan, index) => (
@@ -73,86 +78,111 @@ const Pricing = () => {
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     transition={{ duration: 0.4, delay: index * 0.1 }}
                                     style={{
-                                        padding: '48px 40px',
-                                        borderRadius: '28px',
-                                        border: '1px solid #f0f0f0',
                                         backgroundColor: 'white',
                                         position: 'relative',
                                         display: 'flex',
                                         flexDirection: 'column',
                                         boxShadow: plan.isPopular ? '0 30px 60px rgba(0, 134, 255, 0.12)' : '0 10px 30px rgba(0,0,0,0.03)',
-                                        transform: plan.isPopular ? 'scale(1.02)' : 'scale(1)',
                                         zIndex: plan.isPopular ? 1 : 0,
                                         borderTop: plan.isPopular ? '4px solid #0086FF' : '1px solid #f0f0f0'
                                     }} className="pricing-card">
                                     {plan.isPopular && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            top: '-18px',
-                                            left: '50%',
-                                            transform: 'translateX(-50%)',
-                                            backgroundColor: '#0086FF',
-                                            color: 'white',
-                                            padding: '6px 20px',
-                                            borderRadius: '30px',
-                                            fontSize: '12px',
-                                            fontWeight: '800',
-                                            letterSpacing: '1px'
-                                        }}>MOST POPULAR</div>
+                                        <div className="popular-badge">MOST POPULAR</div>
                                     )}
 
-                                    <div style={{ color: '#0086FF', marginBottom: '24px' }}>{plan.icon}</div>
+                                    <div style={{ color: '#0086FF', marginBottom: '20px' }}>{plan.icon}</div>
 
-                                    <h3 style={{ fontSize: '24px', marginBottom: '8px', color: '#163561' }}>{plan.title}</h3>
-                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '32px' }}>
-                                        <span style={{ fontSize: '48px', fontWeight: '800', color: '#163561' }}>${plan.price}</span>
+                                    <h3 style={{ fontSize: '22px', marginBottom: '8px', color: '#163561' }}>{plan.title}</h3>
+                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '24px' }}>
+                                        <span style={{ fontSize: '40px', fontWeight: '800', color: '#163561' }}>${plan.price}</span>
                                         <span style={{ color: '#64748B', fontWeight: '500' }}>/{plan.unit}</span>
                                     </div>
 
-                                    <div style={{ width: '100%', height: '1px', backgroundColor: '#f1f5f9', marginBottom: '32px' }} />
+                                    <div style={{ width: '100%', height: '1px', backgroundColor: '#f1f5f9', marginBottom: '24px' }} />
 
-                                    <ul style={{ listStyle: 'none', marginBottom: '40px', flexGrow: 1 }}>
+                                    <ul style={{ listStyle: 'none', marginBottom: '32px', flexGrow: 1, padding: 0 }}>
                                         {plan.features.map((feat: string, i: number) => (
-                                            <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px', color: '#475569', fontSize: '15px' }}>
-                                                <div style={{ backgroundColor: 'rgba(0, 134, 255, 0.1)', borderRadius: '50%', padding: '2px', display: 'flex' }}>
-                                                    <Check size={14} color="#0086FF" strokeWidth={3} />
+                                            <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', color: '#475569', fontSize: '14px' }}>
+                                                <div style={{ backgroundColor: 'rgba(0, 134, 255, 0.1)', borderRadius: '50%', padding: '2px', display: 'flex', flexShrink: 0 }}>
+                                                    <Check size={12} color="#0086FF" strokeWidth={3} />
                                                 </div>
                                                 {feat}
                                             </li>
                                         ))}
                                     </ul>
-                                    <button style={{
-                                        width: '100%',
-                                        padding: '16px',
-                                        borderRadius: '16px',
-                                        fontWeight: '700',
-                                        fontSize: '16px',
-                                        backgroundColor: plan.isPopular ? '#0086FF' : 'white',
-                                        color: plan.isPopular ? 'white' : '#0086FF',
-                                        border: '2px solid #0086FF',
-                                        transition: 'all 0.2s ease'
-                                    }} className="order-btn">Order Now</button>
+                                    <button className="order-btn">Order Now</button>
                                 </motion.div>
                             ))
                         ) : (
-                            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '100px', color: '#94a3b8' }}>
-                                Coming Soon...
-                            </div>
+                            <div className="coming-soon">Coming Soon...</div>
                         )}
                     </AnimatePresence>
                 </div>
             </div>
             <style jsx>{`
-        .pricing-card:hover {
-          transform: translateY(-8px) ${activeTab === 'Residential Proxies' ? '' : 'scale(1.02)'};
-          box-shadow: 0 40px 80px rgba(0,0,0,0.1);
-        }
-        .order-btn:hover {
-            background-color: ${activeTab === 'Residential Proxies' ? '#0076e5' : '#0086FF'};
-            color: white;
-            box-shadow: 0 10px 20px rgba(0, 134, 255, 0.2);
-        }
-      `}</style>
+                .pricing-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                    gap: 24px;
+                    justify-content: center;
+                }
+                .pricing-card {
+                    padding: 40px 30px;
+                    border-radius: 24px;
+                    border: 1px solid #f0f0f0;
+                    transition: all 0.3s ease;
+                }
+                .popular-badge {
+                    position: absolute;
+                    top: -18px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    backgroundColor: #0086FF;
+                    color: white;
+                    padding: 6px 20px;
+                    border-radius: 30px;
+                    font-size: 11px;
+                    font-weight: 800;
+                    letter-spacing: 1px;
+                }
+                .order-btn {
+                    width: 100%;
+                    padding: 14px;
+                    border-radius: 12px;
+                    font-weight: 700;
+                    font-size: 15px;
+                    background-color: white;
+                    color: #0086FF;
+                    border: 2px solid #0086FF;
+                    transition: all 0.2s ease;
+                    cursor: pointer;
+                }
+                .pricing-card.is-popular .order-btn {
+                    background-color: #0086FF;
+                    color: white;
+                }
+                .pricing-card:hover {
+                    transform: translateY(-8px);
+                    box-shadow: 0 40px 80px rgba(0,0,0,0.1);
+                }
+                .order-btn:hover {
+                    background-color: #0086FF !important;
+                    color: white !important;
+                    box-shadow: 0 10px 20px rgba(0, 134, 255, 0.2);
+                }
+                .coming-soon {
+                    grid-column: 1 / -1;
+                    text-align: center;
+                    padding: 60px;
+                    color: #94a3b8;
+                }
+                @media (max-width: 768px) {
+                    .title-text { font-size: 28px !important; }
+                    .subtitle-text { font-size: 16px !important; }
+                    .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+                    .tabs-container { padding: 4px !important; }
+                }
+            `}</style>
         </section>
     );
 };

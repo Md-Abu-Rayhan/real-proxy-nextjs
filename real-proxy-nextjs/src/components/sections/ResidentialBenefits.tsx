@@ -14,16 +14,16 @@ const ResidentialBenefits = () => {
     ];
 
     return (
-        <section style={{ padding: '100px 0', backgroundColor: '#fff' }}>
+        <section className="section-padding" style={{ backgroundColor: '#fff' }}>
             <div className="container">
-                <div style={{ textAlign: 'center', marginBottom: '70px' }}>
-                    <h2 style={{ fontSize: '36px', marginBottom: '20px' }}>Professional Residential Proxy Services</h2>
-                    <p style={{ color: '#666', fontSize: '18px', maxWidth: '700px', margin: '0 auto' }}>Designed for businesses that require scale, stability, and high anonymity.</p>
+                <div style={{ textAlign: 'center', marginBottom: '50px' }}>
+                    <h2 className="benefit-title" style={{ fontSize: '36px', marginBottom: '20px' }}>Professional Residential Proxy Services</h2>
+                    <p className="benefit-subtitle" style={{ color: '#666', fontSize: '18px', maxWidth: '700px', margin: '0 auto' }}>Designed for businesses that require scale, stability, and high anonymity.</p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '40px' }}>
+                <div className="benefits-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px' }}>
                     {benefits.map((benefit, i) => (
-                        <div key={i} style={{ display: 'flex', gap: '20px' }}>
+                        <div key={i} className="benefit-card" style={{ display: 'flex', gap: '20px' }}>
                             <div style={{
                                 minWidth: '60px',
                                 height: '60px',
@@ -32,18 +32,27 @@ const ResidentialBenefits = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: '#0086FF'
+                                color: '#0086FF',
+                                flexShrink: 0
                             }}>
                                 {benefit.icon}
                             </div>
                             <div>
-                                <h3 style={{ fontSize: '20px', marginBottom: '12px', color: '#163561' }}>{benefit.title}</h3>
+                                <h3 style={{ fontSize: '20px', marginBottom: '10px', color: '#163561' }}>{benefit.title}</h3>
                                 <p style={{ color: '#666', fontSize: '15px', lineHeight: '1.6' }}>{benefit.desc}</p>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
+            <style jsx>{`
+                @media (max-width: 768px) {
+                    .benefit-title { font-size: 28px !important; }
+                    .benefit-subtitle { font-size: 16px !important; }
+                    .benefits-grid { grid-template-columns: 1fr !important; gap: 30px !important; }
+                    .benefit-card { flex-direction: column; text-align: center; align-items: center; }
+                }
+            `}</style>
         </section>
     );
 };
