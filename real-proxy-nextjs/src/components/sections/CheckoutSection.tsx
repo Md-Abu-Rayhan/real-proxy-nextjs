@@ -1,0 +1,146 @@
+"use client";
+
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { CreditCard, Bitcoin, Wallet, ArrowRight, ShieldCheck } from 'lucide-react';
+
+const CheckoutSection = () => {
+    const [selectedMethod, setSelectedMethod] = useState('crypto');
+
+    const paymentMethods = [
+        { id: 'crypto', name: 'Crypto Currency', icon: <Bitcoin size={24} />, desc: 'BTC, ETH, USDT, LTC' },
+        { id: 'card', name: 'Credit Card', icon: <CreditCard size={24} />, desc: 'Visa, Mastercard, JCB' },
+        { id: 'alipay', name: 'Alipay', icon: <Wallet size={24} />, desc: 'AliPay Global' },
+        { id: 'unionpay', name: 'UnionPay', icon: <Wallet size={24} />, desc: 'UnionPay International' },
+        { id: 'apple', name: 'Apple Pay', icon: <Wallet size={24} />, desc: 'Supported via Stripe' },
+        { id: 'paypal', name: 'PayPal', icon: <Wallet size={24} />, desc: 'Global Payments' },
+    ];
+
+    return (
+        <section id="checkout" style={{ padding: '100px 0', backgroundColor: '#fff' }}>
+            <div className="container">
+                <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 1fr', gap: '50px', alignItems: 'start' }}>
+
+                    {/* Payment Methods Side */}
+                    <div>
+                        <h2 style={{ fontSize: '32px', marginBottom: '40px', color: '#163561' }}>Select your preferred method of payment</h2>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+                            {paymentMethods.map((method) => (
+                                <div
+                                    key={method.id}
+                                    onClick={() => setSelectedMethod(method.id)}
+                                    style={{
+                                        padding: '24px',
+                                        borderRadius: '20px',
+                                        border: '2px solid',
+                                        borderColor: selectedMethod === method.id ? '#0086FF' : '#f0f0f0',
+                                        backgroundColor: selectedMethod === method.id ? 'rgba(0,134,255,0.02)' : 'white',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        position: 'relative'
+                                    }}
+                                >
+                                    {selectedMethod === method.id && (
+                                        <div style={{ position: 'absolute', top: '15px', right: '15px', color: '#0086FF' }}>
+                                            <div style={{ backgroundColor: '#0086FF', borderRadius: '50%', padding: '2px' }}>
+                                                <ArrowRight size={14} color="white" />
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div style={{ color: selectedMethod === method.id ? '#0086FF' : '#666', marginBottom: '16px' }}>
+                                        {method.icon}
+                                    </div>
+                                    <div style={{ fontWeight: '700', fontSize: '18px', marginBottom: '4px', color: '#163561' }}>{method.name}</div>
+                                    <div style={{ fontSize: '13px', color: '#8898AA' }}>{method.desc}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div style={{ marginTop: '40px', padding: '24px', backgroundColor: '#F8FAFC', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <ShieldCheck size={24} color="#28A745" />
+                            <p style={{ fontSize: '14px', color: '#666' }}>
+                                Your connection is encrypted and payment details are safe. Locked with industry-standard 256-bit SSL encryption.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Order Summary Side */}
+                    <div style={{ position: 'sticky', top: '100px' }}>
+                        <div style={{
+                            padding: '40px',
+                            backgroundColor: '#041026',
+                            borderRadius: '32px',
+                            color: 'white',
+                            boxShadow: '0 30px 60px rgba(0,0,0,0.1)'
+                        }}>
+                            <h3 style={{ fontSize: '24px', marginBottom: '30px', color: 'white' }}>Order Summary</h3>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '30px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '15px' }}>
+                                    <span style={{ color: 'rgba(255,255,255,0.6)' }}>Plan</span>
+                                    <span style={{ fontWeight: '600' }}>Residential Proxies</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '15px' }}>
+                                    <span style={{ color: 'rgba(255,255,255,0.6)' }}>Package</span>
+                                    <span style={{ fontWeight: '600' }}>100GB Data</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '15px' }}>
+                                    <span style={{ color: 'rgba(255,255,255,0.6)' }}>Unit Price</span>
+                                    <span style={{ fontWeight: '600' }}>$1.2 / GB</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ color: 'rgba(255,255,255,0.6)' }}>Discount</span>
+                                    <span style={{ fontWeight: '600', color: '#ff4d4d' }}>-$52.00</span>
+                                </div>
+                            </div>
+
+                            <div style={{
+                                padding: '24px',
+                                backgroundColor: 'rgba(255,255,255,0.05)',
+                                borderRadius: '20px',
+                                marginBottom: '30px',
+                                textAlign: 'center'
+                            }}>
+                                <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}>Total Amount Due</div>
+                                <div style={{ fontSize: '42px', fontWeight: '800', color: '#0086FF' }}>$120.00</div>
+                            </div>
+
+                            <button style={{
+                                width: '100%',
+                                padding: '20px',
+                                borderRadius: '16px',
+                                backgroundColor: '#0086FF',
+                                color: 'white',
+                                fontWeight: '700',
+                                fontSize: '18px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px',
+                                transition: 'all 0.2s ease'
+                            }} className="pay-btn">
+                                Pay Now <ArrowRight size={20} />
+                            </button>
+
+                            <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: '1.6' }}>
+                                By clicking "Pay Now", you agree to our Terms of Service and Privacy Policy. All sales are final.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <style jsx>{`
+                .pay-btn:hover {
+                    background-color: #0076e5;
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 20px rgba(0, 134, 255, 0.3);
+                }
+            `}</style>
+        </section>
+    );
+};
+
+export default CheckoutSection;
