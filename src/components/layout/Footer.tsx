@@ -9,8 +9,7 @@ const Footer = () => {
                 <div className="footer-grid">
                     <div className="footer-info">
                         <div className="footer-logo">
-                            <div className="logo-icon">922</div>
-                            <span className="logo-text">S5Proxy</span>
+                            <img src="/logo.png" alt="Logo" style={{ height: '40px', width: 'auto' }} />
                         </div>
                         <p className="footer-desc">
                             The world's leading residential proxy service provider. We provide global real residential IP addresses with high anonymity and speed.
@@ -74,21 +73,6 @@ const Footer = () => {
                     align-items: center;
                     gap: 8px;
                     margin-bottom: 24px;
-                }
-                .logo-icon {
-                    width: 32px;
-                    height: 32px;
-                    background-color: #0086FF;
-                    border-radius: 6px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-weight: bold;
-                }
-                .logo-text {
-                    font-size: 20px;
-                    font-weight: 700;
                 }
                 .footer-desc {
                     color: #8898AA;

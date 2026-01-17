@@ -7,6 +7,7 @@ import Pricing from "@/components/sections/Pricing";
 import Stats from "@/components/sections/Stats";
 import HowItWorks from "@/components/sections/HowItWorks";
 import Footer from "@/components/layout/Footer";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -39,7 +40,7 @@ export default function Home() {
         <div className="container">
           <h2 className="cta-title">Ready to Scale Your Business?</h2>
           <p className="cta-desc">Join thousands of companies using 922S5Proxy to bypass restrictions and get reliable data globally.</p>
-          <button className="cta-btn">Get Started Now</button>
+          <Link href="/register" className="cta-btn">Get Started Now</Link>
         </div>
       </section>
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, Flame, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -32,10 +33,9 @@ const Navbar = () => {
         }}>
             <div className="container nav-container">
                 {/* Logo */}
-                <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                    <div className="logo-box" style={{ backgroundColor: '#0086FF', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>922</div>
-                    <span className="logo-text" style={{ fontWeight: '700', color: '#163561', letterSpacing: '-0.5px' }}>S5Proxy</span>
-                </a>
+                <Link href="/" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', textDecoration: 'none' }}>
+                    <img src="/logo.png" alt="Logo" style={{ height: '40px', width: 'auto' }} />
+                </Link>
 
                 {/* Desktop Menu Items */}
                 <div className="desktop-menu">
@@ -49,10 +49,13 @@ const Navbar = () => {
 
                 {/* Desktop Actions */}
                 <div className="desktop-actions">
-                    <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#ff4d4d', fontWeight: '600', fontSize: '15px' }}>
+                    <a href="#" className="mobile-hide" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#ff4d4d', fontWeight: '600', fontSize: '15px' }}>
                         <Flame size={18} fill="#ff4d4d" /> Proxy AI
                     </a>
-                    <button className="btn-primary" style={{ padding: '8px 20px', fontSize: '14px', borderRadius: '8px' }}>Login</button>
+                    <Link href="/login" className="nav-link-login" style={{ color: '#163561', fontWeight: '600', fontSize: '15px', padding: '0 10px' }}>Log In</Link>
+                    <Link href="/register" className="btn-primary" style={{ padding: '8px 24px', fontSize: '14px', borderRadius: '8px' }}>
+                        Sign Up
+                    </Link>
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -98,7 +101,14 @@ const Navbar = () => {
                             <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#ff4d4d', fontWeight: '600' }}>
                                 <Flame size={18} fill="#ff4d4d" /> Proxy AI
                             </a>
-                            <button className="btn-primary" style={{ width: '100%', padding: '15px' }}>Log In / Sign Up</button>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <Link href="/login" className="btn-outline" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
+                                    Log In
+                                </Link>
+                                <Link href="/register" className="btn-primary" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
+                                    Sign Up
+                                </Link>
+                            </div>
                         </div>
                     </motion.div>
                 )}
@@ -111,8 +121,6 @@ const Navbar = () => {
                     align-items: center;
                     width: 100%;
                 }
-                .logo-box { width: 36px; height: 36px; font-size: 18px; }
-                .logo-text { font-size: 22px; }
                 .desktop-menu {
                     display: flex;
                     gap: 25px;
@@ -126,8 +134,8 @@ const Navbar = () => {
                     align-items: center;
                     gap: 20px;
                 }
-                .nav-item:hover {
-                    color: var(--primary);
+                .nav-item:hover, .nav-link-login:hover {
+                    color: var(--primary) !important;
                 }
                 .mobile-toggle {
                     display: none;

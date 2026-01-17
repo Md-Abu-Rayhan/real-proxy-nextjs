@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Best residential ip proxy service provider to help companies get more profit. 922S5Proxy provides the most stable and high-speed residential proxies.",
 };
 
+import StyledJsxRegistry from "./registry";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -14,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body suppressHydrationWarning>
-        {children}
+        <StyledJsxRegistry>
+          {children}
+        </StyledJsxRegistry>
       </body>
     </html>
   );

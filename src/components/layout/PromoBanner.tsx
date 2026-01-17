@@ -15,7 +15,6 @@ const PromoBanner = () => {
             position: 'relative'
         }}>
             <div className="container promo-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
-                <span className="promo-text">🎄 HAPPY CHRISTMAS 🎄</span>
                 <span className="promo-text">Up to 80% Discount!</span>
                 <a href="#" className="promo-btn" style={{
                     backgroundColor: 'white',
@@ -45,7 +44,6 @@ const PromoBanner = () => {
                 @media (max-width: 480px) {
                     .promo-banner { padding: 6px 0; }
                     .promo-container { gap: 5px !important; }
-                    .promo-text:first-of-type { display: none; } /* Hide 🎄 HAPPY CHRISTMAS 🎄 on very small screens */
                     .promo-text { font-size: 11px; }
                     .promo-timer { font-size: 11px; }
                 }
