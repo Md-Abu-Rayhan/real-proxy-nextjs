@@ -2,11 +2,16 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, Globe, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Globe, CheckCircle2, Loader2 } from 'lucide-react';
 import LoginHeader from '@/components/layout/LoginHeader';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 const LoginPage = () => {
+    const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -19,6 +24,40 @@ const LoginPage = () => {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!formData.email || !formData.password) {
+            toast.error("Please enter email and password.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const response = await axios.post('https://localhost:7044/api/Auth/login', {
+                email: formData.email,
+                password: formData.password
+            });
+
+            if (response.data && response.data.token) {
+                // Save token to localStorage
+                localStorage.setItem('auth_token', response.data.token);
+                toast.success("Login successful!");
+
+                // Redirect to dashboard
+                setTimeout(() => {
+                    router.push('/dashboard');
+                }, 1000);
+            }
+        } catch (error: any) {
+            console.error("Login error:", error);
+            const message = error.response?.data || "Login failed. Please check your credentials.";
+            toast.error(typeof message === 'string' ? message : "Login failed.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -113,7 +152,7 @@ const LoginPage = () => {
                                 <div style={{ flex: 1, height: '1px', backgroundColor: '#F1F5F9' }} />
                             </div>
 
-                            <form style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left' }}>
+                            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left' }}>
                                 <div className="form-group">
                                     <input
                                         type="email"
@@ -121,6 +160,7 @@ const LoginPage = () => {
                                         placeholder="Email"
                                         style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#F8FBFF', fontSize: '15px', color: '#333' }}
                                         onChange={handleChange}
+                                        required
                                     />
                                 </div>
 
@@ -132,6 +172,7 @@ const LoginPage = () => {
                                             placeholder="Password"
                                             style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#F8FBFF', fontSize: '15px', color: '#333' }}
                                             onChange={handleChange}
+                                            required
                                         />
                                         <button
                                             type="button"
@@ -143,8 +184,27 @@ const LoginPage = () => {
                                     </div>
                                 </div>
 
-                                <button className="btn-primary" style={{ width: '100%', padding: '12px', borderRadius: '8px', fontSize: '16px', fontWeight: '600', marginTop: '10px' }}>
-                                    Log in
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="btn-primary"
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        marginTop: '10px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px',
+                                        opacity: isLoading ? 0.7 : 1,
+                                        cursor: isLoading ? 'not-allowed' : 'pointer'
+                                    }}
+                                >
+                                    {isLoading && <Loader2 className="animate-spin" size={18} />}
+                                    {isLoading ? "Logging in..." : "Log in"}
                                 </button>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px', alignItems: 'flex-start' }}>
@@ -187,9 +247,19 @@ const LoginPage = () => {
                         width: 100% !important;
                     }
                 }
+
+                .animate-spin {
+                    animation: spin 1s linear infinite;
+                }
+
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
             `}</style>
         </main>
     );
 };
 
 export default LoginPage;
+

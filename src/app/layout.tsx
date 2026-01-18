@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 };
 
 import StyledJsxRegistry from "./registry";
+import { Toaster } from 'react-hot-toast';
 
 export default function RootLayout({
   children,
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body suppressHydrationWarning>
+        <Toaster position="top-right" />
         <StyledJsxRegistry>
           {children}
         </StyledJsxRegistry>
@@ -23,3 +25,4 @@ export default function RootLayout({
     </html>
   );
 }
+

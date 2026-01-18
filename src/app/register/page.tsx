@@ -2,12 +2,17 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, Globe, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Globe, CheckCircle2, Loader2 } from 'lucide-react';
 import LoginHeader from '@/components/layout/LoginHeader';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 const RegisterPage = () => {
+    const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -22,6 +27,49 @@ const RegisterPage = () => {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        // Validation
+        if (!formData.email || !formData.password) {
+            toast.error("Please fill in all required fields.");
+            return;
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+            toast.error("Passwords do not match!");
+            return;
+        }
+
+        if (!formData.agree) {
+            toast.error("You must agree to the Terms and Privacy Policy.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const response = await axios.post('https://localhost:7044/api/Auth/register', {
+                email: formData.email,
+                password: formData.password,
+                invitationCode: formData.invitationCode
+            });
+
+            if (response.status === 200 || response.status === 201) {
+                toast.success("User registered successfully!");
+                // Optionally redirect to login
+                setTimeout(() => {
+                    router.push('/login');
+                }, 2000);
+            }
+        } catch (error: any) {
+            console.error("Registration error:", error);
+            const message = error.response?.data || "Registration failed. Please try again.";
+            toast.error(typeof message === 'string' ? message : "Registration failed.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -114,7 +162,7 @@ const RegisterPage = () => {
                             <div style={{ flex: 1, height: '1px', backgroundColor: '#F1F5F9' }} />
                         </div>
 
-                        <form style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             <div className="form-group">
                                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#163561' }}>Email address</label>
                                 <input
@@ -123,6 +171,7 @@ const RegisterPage = () => {
                                     placeholder="Enter your email"
                                     style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', fontSize: '15px' }}
                                     onChange={handleChange}
+                                    required
                                 />
                             </div>
 
@@ -135,6 +184,7 @@ const RegisterPage = () => {
                                         placeholder="Enter password"
                                         style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', fontSize: '15px' }}
                                         onChange={handleChange}
+                                        required
                                     />
                                     <button
                                         type="button"
@@ -155,6 +205,7 @@ const RegisterPage = () => {
                                         placeholder="Confirm your password"
                                         style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', fontSize: '15px' }}
                                         onChange={handleChange}
+                                        required
                                     />
                                     <button
                                         type="button"
@@ -190,8 +241,27 @@ const RegisterPage = () => {
                                 </label>
                             </div>
 
-                            <button className="btn-primary" style={{ width: '100%', padding: '14px', borderRadius: '10px', fontSize: '16px', fontWeight: '600', marginTop: '10px' }}>
-                                Sign Up
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="btn-primary"
+                                style={{
+                                    width: '100%',
+                                    padding: '14px',
+                                    borderRadius: '10px',
+                                    fontSize: '16px',
+                                    fontWeight: '600',
+                                    marginTop: '10px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px',
+                                    opacity: isLoading ? 0.7 : 1,
+                                    cursor: isLoading ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                {isLoading && <Loader2 className="animate-spin" size={20} />}
+                                {isLoading ? "Signing Up..." : "Sign Up"}
                             </button>
 
                             <p style={{ textAlign: 'center', fontSize: '14px', color: '#666', marginTop: '16px' }}>
@@ -224,9 +294,19 @@ const RegisterPage = () => {
                         border-radius: 16px !important;
                     }
                 }
+
+                .animate-spin {
+                    animation: spin 1s linear infinite;
+                }
+
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
             `}</style>
         </main>
     );
 };
 
 export default RegisterPage;
+
