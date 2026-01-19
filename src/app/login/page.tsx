@@ -44,11 +44,12 @@ const LoginPage = () => {
             if (response.data && response.data.token) {
                 // Save token to localStorage
                 localStorage.setItem('auth_token', response.data.token);
+                localStorage.setItem('user_email', formData.email);
                 toast.success("Login successful!");
 
                 // Redirect to dashboard
                 setTimeout(() => {
-                    router.push('/dashboard');
+                    router.push('/dashboard/traffic-setup');
                 }, 1000);
             }
         } catch (error: any) {

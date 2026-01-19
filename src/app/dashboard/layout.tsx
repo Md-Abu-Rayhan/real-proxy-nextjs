@@ -20,11 +20,28 @@ import {
     CircleUser,
     MousePointer2,
     Settings,
-    HelpCircle
+    HelpCircle,
+    LogOut
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     const [expandedGroups, setExpandedGroups] = useState<string[]>(['SOCKSS PROXIES', 'TRAFFIC PLANS', 'REFERRAL', 'TOOL', 'Promotion Plan']);
+    const router = useRouter();
+    const [userEmail, setUserEmail] = useState<string | null>(null);
+
+    React.useEffect(() => {
+        const email = localStorage.getItem('user_email');
+        if (email) {
+            setUserEmail(email);
+        }
+    }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_email');
+        router.push('/login');
+    };
 
     const toggleGroup = (group: string) => {
         setExpandedGroups(prev =>
@@ -202,10 +219,32 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                         <span style={{ fontWeight: '500' }}>EN-English</span>
                         <ChevronDown size={14} />
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '16px', borderLeft: '1px solid #f0f0f0', cursor: 'pointer' }}>
-                        <CircleUser size={28} color="#0086ff" strokeWidth={1.5} />
-                        <span style={{ fontSize: '14px', fontWeight: '600', color: '#1D2129' }}>26546705</span>
-                        <ChevronDown size={14} color="#86909C" />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '16px', borderLeft: '1px solid #f0f0f0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                            <CircleUser size={28} color="#0086ff" strokeWidth={1.5} />
+                            <span style={{ fontSize: '14px', fontWeight: '600', color: '#1D2129' }}>{userEmail || 'User'}</span>
+                            <ChevronDown size={14} color="#86909C" />
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '6px 12px',
+                                marginLeft: '12px',
+                                border: '1px solid #ff4d4f',
+                                borderRadius: '4px',
+                                backgroundColor: 'transparent',
+                                color: '#ff4d4f',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <LogOut size={14} />
+                            Logout
+                        </button>
                     </div>
                 </header>
 

@@ -14,6 +14,8 @@ import {
     ToggleRight,
     ExternalLink
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 const TrafficSetupPage = () => {
     const [activeTab, setActiveTab] = useState('Proxy Setup');
@@ -21,6 +23,14 @@ const TrafficSetupPage = () => {
     const [activeSettingTab, setActiveSettingTab] = useState('Basic settings');
     const [trafficReminder, setTrafficReminder] = useState(false);
     const [unit, setUnit] = useState('GB');
+    const router = useRouter();
+
+    useEffect(() => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            router.push('/login');
+        }
+    }, [router]);
 
     const cardStyle: React.CSSProperties = {
         backgroundColor: 'white',
