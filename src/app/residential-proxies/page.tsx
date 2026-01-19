@@ -7,7 +7,7 @@ import ResidentialBenefits from "@/components/sections/ResidentialBenefits";
 import CheckoutSection from "@/components/sections/CheckoutSection";
 
 export const metadata = {
-    title: "Residential Proxies - 922S5Proxy",
+    title: "Residential Proxies - Real Proxy",
     description: "Best residential ip proxy service provider. Get unlimited speed and anonymity with 200M+ real residential IPs.",
 };
 
@@ -25,7 +25,7 @@ export default function ResidentialProxiesPage() {
             <section style={{ padding: '80px 0', background: '#041026', color: 'white' }}>
                 <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '40px' }}>
                     <div>
-                        <h2 style={{ color: 'white', fontSize: '32px', marginBottom: '12px' }}>Start with 922S5 Residential Proxies</h2>
+                        <h2 style={{ color: 'white', fontSize: '32px', marginBottom: '12px' }}>Start with Real Proxy Residential Proxies</h2>
                         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '18px' }}>Join over 100k+ global users today.</p>
                     </div>
                     <div style={{ display: 'flex', gap: '20px' }}>

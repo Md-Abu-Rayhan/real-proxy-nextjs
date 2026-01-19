@@ -39,7 +39,7 @@ export default function Home() {
       <section className="cta-section">
         <div className="container">
           <h2 className="cta-title">Ready to Scale Your Business?</h2>
-          <p className="cta-desc">Join thousands of companies using 922S5Proxy to bypass restrictions and get reliable data globally.</p>
+          <p className="cta-desc">Join thousands of companies using Real Proxy to bypass restrictions and get reliable data globally.</p>
           <Link href="/register" className="cta-btn">Get Started Now</Link>
         </div>
       </section>

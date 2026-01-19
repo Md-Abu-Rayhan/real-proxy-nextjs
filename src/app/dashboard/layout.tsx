@@ -67,44 +67,41 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
     const sidebarItems: SidebarItem[] = [
         { name: 'Overview', icon: <LayoutDashboard size={18} />, path: '/dashboard' },
-        {
-            group: 'SOCKSS PROXIES',
-            items: [
-                { name: 'ISP Proxies', icon: <RefreshCw size={18} />, path: '#' },
-                { name: 'Static Residential Proxies', icon: <RefreshCw size={18} />, path: '#' },
-            ]
-        },
+        // {
+        //     group: 'SOCKSS PROXIES',
+        //     items: [
+        //         { name: 'ISP Proxies', icon: <RefreshCw size={18} />, path: '#' },
+        //         { name: 'Static Residential Proxies', icon: <RefreshCw size={18} />, path: '#' },
+        //     ]
+        // },
         {
             group: 'TRAFFIC PLANS',
             items: [
-                { name: 'Residential Proxies', icon: <RefreshCw size={18} />, path: '/dashboard/traffic-setup', active: true },
-                { name: 'Rotating ISP Proxies', icon: <RefreshCw size={18} />, path: '#' },
-                { name: 'Unlimited Proxies(customized)', icon: <Infinity size={18} />, path: '#' },
+                { name: 'Residential Proxies', icon: <RefreshCw size={18} />, path: '/dashboard/traffic-setup', active: true }
             ]
         },
         {
             group: 'REFERRAL',
             items: [
-                { name: 'Affiliate Program', icon: <Users size={18} />, path: '#' },
-                { name: 'Points Program', icon: <Trophy size={18} />, path: '#', badge: 'Free', badgeColor: '#F53F3F' },
+                { name: 'Affiliate Program', icon: <Users size={18} />, path: '#' }
             ]
         },
-        {
-            group: 'TOOL',
-            items: [
-                { name: 'Online Proxy Checker', icon: <Shield size={18} />, path: '#' },
-                { name: 'Proxy manager', icon: <Download size={18} />, path: '#' },
-                { name: 'Browser Extensions', icon: <MousePointer2 size={18} />, path: '#' },
-            ]
-        },
-        {
-            group: 'Promotion Plan',
-            items: [
-                { name: 'CDKey Details', icon: <Zap size={18} />, path: '#' },
-                { name: 'Balance Recharge', icon: <CreditCard size={18} />, path: '#', badge: 'New', badgeColor: '#F53F3F' },
-                { name: 'Agent Console', icon: <User size={18} />, path: '#' },
-            ]
-        }
+        // {
+        //     group: 'TOOL',
+        //     items: [
+        //         { name: 'Online Proxy Checker', icon: <Shield size={18} />, path: '#' },
+        //         { name: 'Proxy manager', icon: <Download size={18} />, path: '#' },
+        //         { name: 'Browser Extensions', icon: <MousePointer2 size={18} />, path: '#' },
+        //     ]
+        // },
+        // {
+        //     group: 'Promotion Plan',
+        //     items: [
+        //         { name: 'CDKey Details', icon: <Zap size={18} />, path: '#' },
+        //         { name: 'Balance Recharge', icon: <CreditCard size={18} />, path: '#', badge: 'New', badgeColor: '#F53F3F' },
+        //         { name: 'Agent Console', icon: <User size={18} />, path: '#' },
+        //     ]
+        // }
     ];
 
     return (

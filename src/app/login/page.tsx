@@ -36,7 +36,7 @@ const LoginPage = () => {
 
         setIsLoading(true);
         try {
-            const response = await axios.post('https://localhost:7044/api/Auth/login', {
+            const response = await axios.post('https://api.realproxy.net/api/Auth/login', {
                 email: formData.email,
                 password: formData.password
             });

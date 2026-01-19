@@ -48,9 +48,11 @@ const RegisterPage = () => {
             return;
         }
 
+
+
         setIsLoading(true);
         try {
-            const response = await axios.post('https://localhost:7044/api/Auth/register', {
+            const response = await axios.post('https://api.realproxy.net/api/Auth/register', {
                 email: formData.email,
                 password: formData.password,
                 invitationCode: formData.invitationCode
@@ -84,7 +86,7 @@ const RegisterPage = () => {
                         <div>
                             <h1 style={{ fontSize: '42px', color: '#163561', marginBottom: '12px', lineHeight: '1.2' }}>
                                 Start Your Journey with <br />
-                                <span style={{ color: '#0086FF' }}>922S5Proxy</span>
+                                <span style={{ color: '#0086FF' }}>Real 5Proxy</span>
                             </h1>
                             <p style={{ fontSize: '18px', color: '#666', lineHeight: '1.6' }}>
                                 Join 100,000+ users worldwide and experience the most stable residential proxy service.

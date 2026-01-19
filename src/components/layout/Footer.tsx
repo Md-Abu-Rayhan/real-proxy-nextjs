@@ -53,7 +53,7 @@ const Footer = () => {
                 </div>
 
                 <div className="footer-bottom">
-                    <p>© 2024 922S5Proxy. All rights reserved. Privacy Policy | Terms of Service</p>
+                    <p>© 2026 Real Proxy. All rights reserved. Privacy Policy | Terms of Service</p>
                 </div>
             </div>
             <style jsx>{`
