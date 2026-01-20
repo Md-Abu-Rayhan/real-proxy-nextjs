@@ -1,9 +1,10 @@
 "use client";
 
-import React from 'react';
 import Link from 'next/link';
+import LanguageSelector from '@/components/common/LanguageSelector';
 
 const LoginHeader = () => {
+
     return (
         <header style={{
             height: '60px',
@@ -20,11 +21,7 @@ const LoginHeader = () => {
                 </Link>
 
                 {/* Language Selector */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#163561', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
-                    <img src="https://static.922proxy.com/img/langu_earth.png" alt="Globe" style={{ width: '18px', height: '18px' }} />
-                    <span>EN-English</span>
-                    <img src="https://static.922proxy.com/img/index_new/select_down.png" alt="Down" style={{ width: '10px', height: '6px', marginLeft: '2px' }} />
-                </div>
+                <LanguageSelector />
             </div>
         </header>
     );

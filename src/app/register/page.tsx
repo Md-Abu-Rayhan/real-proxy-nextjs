@@ -7,8 +7,10 @@ import LoginHeader from '@/components/layout/LoginHeader';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
 
 const RegisterPage = () => {
+    const { t } = useLanguage();
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -85,11 +87,11 @@ const RegisterPage = () => {
                     <div className="register-marketing" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div>
                             <h1 style={{ fontSize: '42px', color: '#163561', marginBottom: '12px', lineHeight: '1.2' }}>
-                                Start Your Journey with <br />
+                                {t.register.startJourney} <br />
                                 <span style={{ color: '#0086FF' }}>Real 5Proxy</span>
                             </h1>
                             <p style={{ fontSize: '18px', color: '#666', lineHeight: '1.6' }}>
-                                Join 100,000+ users worldwide and experience the most stable residential proxy service.
+                                {t.register.joinUsers}
                             </p>
                         </div>
 
@@ -98,19 +100,19 @@ const RegisterPage = () => {
                                 <div style={{ backgroundColor: 'rgba(0, 134, 255, 0.1)', padding: '12px', borderRadius: '12px' }}>
                                     <CheckCircle2 color="#0086FF" size={24} />
                                 </div>
-                                <span style={{ fontWeight: '500', color: '#163561' }}>200M+ Real Residential IPs</span>
+                                <span style={{ fontWeight: '500', color: '#163561' }}>{t.register.marketing1}</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                 <div style={{ backgroundColor: 'rgba(0, 134, 255, 0.1)', padding: '12px', borderRadius: '12px' }}>
                                     <Globe color="#0086FF" size={24} />
                                 </div>
-                                <span style={{ fontWeight: '500', color: '#163561' }}>190+ Countries & Regions</span>
+                                <span style={{ fontWeight: '500', color: '#163561' }}>{t.register.marketing2}</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                 <div style={{ backgroundColor: 'rgba(0, 134, 255, 0.1)', padding: '12px', borderRadius: '12px' }}>
                                     <CheckCircle2 color="#0086FF" size={24} />
                                 </div>
-                                <span style={{ fontWeight: '500', color: '#163561' }}>Industry-leading Security</span>
+                                <span style={{ fontWeight: '500', color: '#163561' }}>{t.register.marketing3}</span>
                             </div>
                         </div>
 
@@ -138,7 +140,7 @@ const RegisterPage = () => {
                         maxWidth: '540px',
                         margin: '20px 0'
                     }}>
-                        <h2 style={{ fontSize: '24px', color: '#163561', marginBottom: '10px' }}>Create Account</h2>
+                        <h2 style={{ fontSize: '24px', color: '#163561', marginBottom: '10px' }}>{t.register.title}</h2>
                         {/* Social Logins */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '24px' }}>
                             <button style={{
@@ -166,11 +168,11 @@ const RegisterPage = () => {
 
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             <div className="form-group">
-                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#163561' }}>Email address</label>
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#163561' }}>{t.register.email}</label>
                                 <input
                                     type="email"
                                     name="email"
-                                    placeholder="Enter your email"
+                                    placeholder={t.register.emailPlaceholder}
                                     style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', fontSize: '15px' }}
                                     onChange={handleChange}
                                     required
@@ -178,12 +180,12 @@ const RegisterPage = () => {
                             </div>
 
                             <div className="form-group">
-                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#163561' }}>Password</label>
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#163561' }}>{t.register.password}</label>
                                 <div style={{ position: 'relative' }}>
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         name="password"
-                                        placeholder="Enter password"
+                                        placeholder={t.register.passwordPlaceholder}
                                         style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', fontSize: '15px' }}
                                         onChange={handleChange}
                                         required
@@ -199,12 +201,12 @@ const RegisterPage = () => {
                             </div>
 
                             <div className="form-group">
-                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#163561' }}>Confirm Password</label>
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#163561' }}>{t.register.confirmPassword}</label>
                                 <div style={{ position: 'relative' }}>
                                     <input
                                         type={showConfirmPassword ? "text" : "password"}
                                         name="confirmPassword"
-                                        placeholder="Confirm your password"
+                                        placeholder={t.register.confirmPasswordPlaceholder}
                                         style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', fontSize: '15px' }}
                                         onChange={handleChange}
                                         required
@@ -220,11 +222,11 @@ const RegisterPage = () => {
                             </div>
 
                             <div className="form-group">
-                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#163561' }}>Invitation Code (Optional)</label>
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#163561' }}>{t.register.invitationCode}</label>
                                 <input
                                     type="text"
                                     name="invitationCode"
-                                    placeholder="Enter invitation code"
+                                    placeholder={t.register.invitationCodePlaceholder}
                                     style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', fontSize: '15px' }}
                                     onChange={handleChange}
                                 />
@@ -239,7 +241,7 @@ const RegisterPage = () => {
                                     onChange={handleChange}
                                 />
                                 <label htmlFor="agree" style={{ fontSize: '14px', color: '#666' }}>
-                                    I have read and agree to the <a href="#" style={{ color: '#0086FF' }}>Terms of Service</a> and <a href="#" style={{ color: '#0086FF' }}>Privacy Policy</a>.
+                                    {t.register.agreeText} <a href="#" style={{ color: '#0086FF' }}>{t.register.terms}</a> {t.common.and} <a href="#" style={{ color: '#0086FF' }}>{t.register.privacy}</a>.
                                 </label>
                             </div>
 
@@ -263,11 +265,11 @@ const RegisterPage = () => {
                                 }}
                             >
                                 {isLoading && <Loader2 className="animate-spin" size={20} />}
-                                {isLoading ? "Signing Up..." : "Sign Up"}
+                                {isLoading ? t.register.signingUp : t.register.signup}
                             </button>
 
                             <p style={{ textAlign: 'center', fontSize: '14px', color: '#666', marginTop: '16px' }}>
-                                Already have an account? <Link href="/login" style={{ color: '#0086FF', fontWeight: '600' }}>Log In</Link>
+                                {t.register.alreadyAccount} <Link href="/login" style={{ color: '#0086FF', fontWeight: '600' }}>{t.nav.login}</Link>
                             </p>
                         </form>
                     </div>

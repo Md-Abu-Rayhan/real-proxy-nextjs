@@ -3,8 +3,12 @@
 import React from 'react';
 import { CheckCircle2, Download, ShoppingCart, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
 
 const Hero = () => {
+    const router = useRouter();
+    const { t } = useLanguage();
     return (
         <section className="hero-section" style={{
             padding: '80px 0',
@@ -22,31 +26,38 @@ const Hero = () => {
                     className="hero-content"
                 >
                     <h1 className="hero-title" style={{ lineHeight: '1.1', marginBottom: '24px', letterSpacing: '-1.5px' }}>
-                        The World's <span style={{ color: '#0086FF' }}>#1</span> Residential <br className="mobile-hide" />
-                        Proxy Service Provider
+                        {t.hero.title_prefix} <span style={{ color: '#0086FF' }}>#1</span> {t.hero.title_suffix} <br className="mobile-hide" />
                     </h1>
                     <p className="hero-description" style={{ color: '#666', marginBottom: '40px', maxWidth: '540px', lineHeight: '1.6' }}>
-                        Access 200M+ real residential IPs from 190+ countries. 99.9% uptime, lightning fast speed, and industry-leading security.
+                        {t.hero.description}
                     </p>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '48px' }} className="benefit-list">
                         <div className="benefit-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: '500' }}>
-                            <CheckCircle2 size={20} color="#28A745" /> 200M+ Stable Residential IPs
+                            <CheckCircle2 size={20} color="#28A745" /> {t.hero.benefit1}
                         </div>
                         <div className="benefit-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: '500' }}>
-                            <CheckCircle2 size={20} color="#28A745" /> City-level targeting coverage 190+ countries
+                            <CheckCircle2 size={20} color="#28A745" /> {t.hero.benefit2}
                         </div>
                         <div className="benefit-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: '500' }}>
-                            <CheckCircle2 size={20} color="#28A745" /> Compatible with all browsers and tools
+                            <CheckCircle2 size={20} color="#28A745" /> {t.hero.benefit3}
                         </div>
                     </div>
 
                     <div className="hero-actions">
-                        <button className="btn-primary hero-btn" style={{ padding: '18px 44px', borderRadius: '12px' }}>
-                            <ShoppingCart size={20} /> Buy Now
-                        </button>
-                        <button className="btn-outline hero-btn" style={{ padding: '18px 44px', borderRadius: '12px', border: '2px solid #0086FF' }}>
-                            <Download size={20} /> Free Download
+                        <button
+                            onClick={() => {
+                                const token = localStorage.getItem('auth_token');
+                                if (token) {
+                                    router.push('/dashboard/traffic-setup');
+                                } else {
+                                    router.push('/register');
+                                }
+                            }}
+                            className="btn-primary hero-btn"
+                            style={{ padding: '18px 44px', borderRadius: '12px' }}
+                        >
+                            <ShoppingCart size={20} /> {t.hero.buyNow}
                         </button>
                     </div>
                 </motion.div>
@@ -74,17 +85,17 @@ const Hero = () => {
                         <div className="stats-mini" style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ fontWeight: '800', fontSize: '24px', color: '#163561' }}>4.8/5</div>
-                                <div style={{ fontSize: '12px', color: '#8898AA', fontWeight: '600', marginTop: '4px' }}>TRUSTPILOT</div>
+                                <div style={{ fontSize: '12px', color: '#8898AA', fontWeight: '600', marginTop: '4px' }}>{t.stats.trustpilot}</div>
                             </div>
                             <div className="divider" style={{ width: '1px', height: '30px', backgroundColor: '#eee', alignSelf: 'center' }} />
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ fontWeight: '800', fontSize: '24px', color: '#163561' }}>High</div>
-                                <div style={{ fontSize: '12px', color: '#8898AA', fontWeight: '600', marginTop: '4px' }}>PERFORMANCE</div>
+                                <div style={{ fontSize: '12px', color: '#8898AA', fontWeight: '600', marginTop: '4px' }}>{t.stats.performance}</div>
                             </div>
                             <div className="divider" style={{ width: '1px', height: '30px', backgroundColor: '#eee', alignSelf: 'center' }} />
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ fontWeight: '800', fontSize: '24px', color: '#163561' }}>G2</div>
-                                <div style={{ fontSize: '12px', color: '#8898AA', fontWeight: '600', marginTop: '4px' }}>LEADER 2024</div>
+                                <div style={{ fontSize: '12px', color: '#8898AA', fontWeight: '600', marginTop: '4px' }}>{t.stats.leader}</div>
                             </div>
                         </div>
 

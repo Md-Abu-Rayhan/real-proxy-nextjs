@@ -137,7 +137,7 @@ const Pricing = () => {
                     top: -18px;
                     left: 50%;
                     transform: translateX(-50%);
-                    backgroundColor: #0086FF;
+                    background-color: #0086FF;
                     color: white;
                     padding: 6px 20px;
                     border-radius: 30px;

@@ -60,8 +60,8 @@ export default function Home() {
             display: flex;
             align-items: center;
             gap: 8px;
-            fontSize: 18px;
-            fontWeight: 800;
+            font-size: 18px;
+            font-weight: 800;
             color: #163561;
         }
         .stars { color: #28A745; }
@@ -74,25 +74,25 @@ export default function Home() {
             color: white;
         }
         .cta-title {
-            fontSize: 42px;
+            font-size: 42px;
             color: white;
-            marginBottom: 24px;
+            margin-bottom: 24px;
         }
         .cta-desc {
-            fontSize: 20px;
+            font-size: 20px;
             opacity: 0.9;
-            marginBottom: 40px;
-            maxWidth: 700px;
+            margin-bottom: 40px;
+            max-width: 700px;
             margin: 0 auto 40px auto;
         }
         .cta-btn {
-            backgroundColor: white;
+            background-color: white;
             color: #0086FF;
             padding: 18px 48px;
-            borderRadius: 12px;
-            fontSize: 18px;
-            fontWeight: 700;
-            boxShadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             border: none;
             cursor: pointer;
         }

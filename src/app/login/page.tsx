@@ -7,8 +7,10 @@ import LoginHeader from '@/components/layout/LoginHeader';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
 
 const LoginPage = () => {
+    const { t } = useLanguage();
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -85,8 +87,7 @@ const LoginPage = () => {
 
                         <div>
                             <h1 style={{ fontSize: '36px', color: '#163561', marginBottom: '20px', lineHeight: '1.2', fontWeight: '700' }}>
-                                Trusted by over 150,000 global <br />
-                                users, invalid IPs are free
+                                {t.login.marketing1}
                             </h1>
                         </div>
 
@@ -95,19 +96,19 @@ const LoginPage = () => {
                                 <div style={{ color: '#00B67A' }}>
                                     <CheckCircle2 size={18} fill="currentColor" color="white" />
                                 </div>
-                                <span style={{ fontSize: '16px', color: '#163561', fontWeight: '500' }}>More than 200 million IPs worldwide</span>
+                                <span style={{ fontSize: '16px', color: '#163561', fontWeight: '500' }}>{t.login.marketing2}</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <div style={{ color: '#00B67A' }}>
                                     <CheckCircle2 size={18} fill="currentColor" color="white" />
                                 </div>
-                                <span style={{ fontSize: '16px', color: '#163561', fontWeight: '500' }}>Residential IP score reaches above 99%</span>
+                                <span style={{ fontSize: '16px', color: '#163561', fontWeight: '500' }}>{t.login.marketing3}</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <div style={{ color: '#00B67A' }}>
                                     <CheckCircle2 size={18} fill="currentColor" color="white" />
                                 </div>
-                                <span style={{ fontSize: '16px', color: '#163561', fontWeight: '500' }}>Highly reliable with 99.9% uptime</span>
+                                <span style={{ fontSize: '16px', color: '#163561', fontWeight: '500' }}>{t.login.marketing4}</span>
                             </div>
                         </div>
 
@@ -125,7 +126,7 @@ const LoginPage = () => {
                             maxWidth: '460px',
                             textAlign: 'center'
                         }}>
-                            <h2 style={{ fontSize: '26px', color: '#163561', marginBottom: '32px', fontWeight: '700' }}>Login</h2>
+                            <h2 style={{ fontSize: '26px', color: '#163561', marginBottom: '32px', fontWeight: '700' }}>{t.login.title}</h2>
 
                             {/* Social Logins */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', marginBottom: '24px' }}>
@@ -158,7 +159,7 @@ const LoginPage = () => {
                                     <input
                                         type="email"
                                         name="email"
-                                        placeholder="Email"
+                                        placeholder={t.login.email}
                                         style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#F8FBFF', fontSize: '15px', color: '#333' }}
                                         onChange={handleChange}
                                         required
@@ -170,7 +171,7 @@ const LoginPage = () => {
                                         <input
                                             type={showPassword ? "text" : "password"}
                                             name="password"
-                                            placeholder="Password"
+                                            placeholder={t.login.password}
                                             style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#F8FBFF', fontSize: '15px', color: '#333' }}
                                             onChange={handleChange}
                                             required
@@ -205,15 +206,15 @@ const LoginPage = () => {
                                     }}
                                 >
                                     {isLoading && <Loader2 className="animate-spin" size={18} />}
-                                    {isLoading ? "Logging in..." : "Log in"}
+                                    {isLoading ? t.common.loading : t.login.title}
                                 </button>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px', alignItems: 'flex-start' }}>
                                     <Link href="/forgot-password" style={{ color: '#0086FF', fontSize: '14px', cursor: 'pointer' }}>
-                                        Forgot your password ?
+                                        {t.login.forgotPassword}
                                     </Link>
                                     <div style={{ fontSize: '14px', color: '#666' }}>
-                                        No account? <Link href="/register" style={{ color: '#0086FF', fontWeight: '500' }}>Sign Up</Link>
+                                        {t.login.noAccount} <Link href="/register" style={{ color: '#0086FF', fontWeight: '500' }}>{t.nav.signup}</Link>
                                     </div>
                                 </div>
                             </form>
