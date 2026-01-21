@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Info,
     ChevronDown,
@@ -12,10 +12,17 @@ import {
     Monitor,
     ToggleLeft,
     ToggleRight,
-    ExternalLink
+    ExternalLink,
+    Loader2
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+
+interface ProxyInfo {
+    proxyAccount: string;
+    proxyPassword: string;
+}
 
 const TrafficSetupPage = () => {
     const [activeTab, setActiveTab] = useState('Proxy Setup');
@@ -23,13 +30,47 @@ const TrafficSetupPage = () => {
     const [activeSettingTab, setActiveSettingTab] = useState('Basic settings');
     const [trafficReminder, setTrafficReminder] = useState(false);
     const [unit, setUnit] = useState('GB');
+    const [proxyInfo, setProxyInfo] = useState<ProxyInfo | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
         const token = localStorage.getItem('auth_token');
         if (!token) {
             router.push('/login');
+            return;
         }
+
+        // Fetch proxy info from API
+        const fetchProxyInfo = async () => {
+            try {
+                const response = await axios.get('https://api.realproxy.net/api/Auth/get-proxy-info', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'accept': '*/*'
+                    }
+                });
+
+                if (response.data) {
+                    setProxyInfo(response.data);
+                }
+            } catch (error: any) {
+                console.error('Error fetching proxy info:', error);
+                if (error.response?.status === 401) {
+                    // Token expired or invalid, redirect to login
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('user_email');
+                    toast.error('Session expired. Please login again.');
+                    router.push('/login');
+                } else {
+                    toast.error('Failed to fetch proxy information.');
+                }
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchProxyInfo();
     }, [router]);
 
     const cardStyle: React.CSSProperties = {
@@ -228,15 +269,47 @@ const TrafficSetupPage = () => {
                                             Username <Info size={14} color="#c9cdd4" strokeWidth={1.5} />
                                         </label>
                                         <div style={inputContainerStyle}>
-                                            <span style={{ flex: 1, fontWeight: '500' }}>26546705-zone-custom</span>
-                                            <ChevronDown size={16} color="#86909C" />
+                                            {isLoading ? (
+                                                <Loader2 size={16} className="animate-spin" color="#86909C" />
+                                            ) : (
+                                                <>
+                                                    <span style={{ flex: 1, fontWeight: '500' }}>{proxyInfo?.proxyAccount || 'N/A'}</span>
+                                                    <Copy 
+                                                        size={16} 
+                                                        color="#86909C" 
+                                                        style={{ cursor: 'pointer' }} 
+                                                        onClick={() => {
+                                                            if (proxyInfo?.proxyAccount) {
+                                                                navigator.clipboard.writeText(proxyInfo.proxyAccount);
+                                                                toast.success('Username copied!');
+                                                            }
+                                                        }}
+                                                    />
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>Password</label>
                                         <div style={inputContainerStyle}>
-                                            <span style={{ flex: 1, fontWeight: '500' }}>QM7VFRuN</span>
-                                            <RefreshCw size={16} color="#86909C" style={{ cursor: 'pointer' }} />
+                                            {isLoading ? (
+                                                <Loader2 size={16} className="animate-spin" color="#86909C" />
+                                            ) : (
+                                                <>
+                                                    <span style={{ flex: 1, fontWeight: '500' }}>{proxyInfo?.proxyPassword || 'N/A'}</span>
+                                                    <Copy 
+                                                        size={16} 
+                                                        color="#86909C" 
+                                                        style={{ cursor: 'pointer' }} 
+                                                        onClick={() => {
+                                                            if (proxyInfo?.proxyPassword) {
+                                                                navigator.clipboard.writeText(proxyInfo.proxyPassword);
+                                                                toast.success('Password copied!');
+                                                            }
+                                                        }}
+                                                    />
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -284,11 +357,24 @@ const TrafficSetupPage = () => {
                                     <span style={{ fontSize: '14px', color: '#1D2129', fontWeight: '700' }}>Example</span>
                                     <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                                         <span style={{ fontSize: '12px', color: '#1677ff', cursor: 'pointer', fontWeight: '600' }}>Other languages</span>
-                                        <Copy size={20} color="#86909C" style={{ cursor: 'pointer' }} />
+                                        <Copy 
+                                            size={20} 
+                                            color="#86909C" 
+                                            style={{ cursor: 'pointer' }} 
+                                            onClick={() => {
+                                                const curlCommand = `curl -x na.proxys5.net:6200 -U "${proxyInfo?.proxyAccount || 'username'}-sessid-XcivyX4zy-sessTime-15:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`;
+                                                navigator.clipboard.writeText(curlCommand);
+                                                toast.success('Example copied!');
+                                            }}
+                                        />
                                     </div>
                                 </div>
                                 <div style={{ fontSize: '13px', color: '#4E5969', lineHeight: '2', wordBreak: 'break-all', fontFamily: 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace', fontWeight: '500' }}>
-                                    curl -x na.proxys5.net:6200 -U "26546705-zone-custom-sessid-XcivyX4zy-sessTime-15:QM7VFRuN" ipinfo.io
+                                    {isLoading ? (
+                                        <span>Loading...</span>
+                                    ) : (
+                                        `curl -x na.proxys5.net:6200 -U "${proxyInfo?.proxyAccount || 'username'}-sessid-XcivyX4zy-sessTime-15:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`
+                                    )}
                                 </div>
                             </div>
 
@@ -354,6 +440,17 @@ const TrafficSetupPage = () => {
                     <div style={{ fontSize: '14px', color: '#86909C' }}>Statistics dynamic data will be displayed once there is usage.</div>
                 </div>
             )}
+
+            <style jsx>{`
+                .animate-spin {
+                    animation: spin 1s linear infinite;
+                }
+
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 };
