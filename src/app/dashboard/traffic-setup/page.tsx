@@ -26,7 +26,7 @@ interface ProxyInfo {
 
 const TrafficSetupPage = () => {
     const [activeTab, setActiveTab] = useState('Proxy Setup');
-    const [activeExtractionTab, setActiveExtractionTab] = useState('Username:Password');
+
     const [trafficReminder, setTrafficReminder] = useState(false);
     const [unit, setUnit] = useState('GB');
     const [proxyInfo, setProxyInfo] = useState<ProxyInfo | null>(null);
@@ -101,7 +101,7 @@ const TrafficSetupPage = () => {
     const renderProxySetup = () => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             {/* Top Cards Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                 {/* Residential Proxies */}
                 <div style={cardStyle}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#4E5969', fontWeight: '500' }}>
@@ -134,7 +134,6 @@ const TrafficSetupPage = () => {
                     <div style={{ fontSize: '13px', color: '#86909C', fontWeight: '500' }}>Expire Date:--</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: 'auto' }}>
                         <button style={{ backgroundColor: '#165DFF', color: 'white', border: 'none', height: '38px', padding: '0 24px', borderRadius: '4px', fontWeight: '600', fontSize: '14px', flex: 1, cursor: 'pointer', boxShadow: '0 2px 4px rgba(22, 93, 255, 0.2)' }}>Recharge</button>
-                        <a href="#" style={{ color: '#165DFF', fontSize: '13px', textDecoration: 'none', fontWeight: '600' }}>Redeem CDKey</a>
                     </div>
                 </div>
 
@@ -187,46 +186,12 @@ const TrafficSetupPage = () => {
                     </div>
                 </div>
 
-                {/* Download */}
-                <div style={{ ...cardStyle }}>
-                    <div style={{ width: '100%', textAlign: 'right', fontSize: '14px', color: '#4E5969', fontWeight: '700' }}>Download</div>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <Monitor size={52} color="#165DFF" strokeWidth={1} />
-                        <div style={{ fontWeight: '700', fontSize: '16px', color: '#1D2129', marginTop: '4px' }}>Proxy Manager</div>
-                        <a href="#" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#165DFF', fontSize: '14px', textDecoration: 'none', fontWeight: '700' }}>
-                            Download <ChevronRight size={16} />
-                        </a>
-                    </div>
-                </div>
+
             </div>
 
             {/* Main Tabs Section */}
             <div style={{ backgroundColor: 'white', border: '1px solid #f0f0f0', borderRadius: '12px', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)' }}>
-                {/* Secondary Navigation */}
-                <div style={{ display: 'flex', backgroundColor: '#f2f3f5', borderBottom: '1px solid #f0f0f0', padding: '6px 24px 0', borderTopLeftRadius: '12px', borderTopRightRadius: '12px', gap: '4px' }}>
-                    {['Username:Password', 'Whitelisted IPs'].map(tab => (
-                        <div
-                            key={tab}
-                            onClick={() => setActiveExtractionTab(tab)}
-                            style={{
-                                padding: '12px 28px',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                color: activeExtractionTab === tab ? '#1677ff' : '#4E5969',
-                                cursor: 'pointer',
-                                backgroundColor: activeExtractionTab === tab ? 'white' : 'transparent',
-                                borderTopLeftRadius: '6px',
-                                borderTopRightRadius: '6px',
-                                borderLeft: activeExtractionTab === tab ? '1px solid #f0f0f0' : '1px solid transparent',
-                                borderRight: activeExtractionTab === tab ? '1px solid #f0f0f0' : '1px solid transparent',
-                                borderTop: activeExtractionTab === tab ? '1px solid #f0f0f0' : '1px solid transparent',
-                                marginBottom: '-1px'
-                            }}
-                        >
-                            {tab}
-                        </div>
-                    ))}
-                </div>
+
 
                 <div style={{ padding: '32px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.75fr', gap: '60px' }}>
