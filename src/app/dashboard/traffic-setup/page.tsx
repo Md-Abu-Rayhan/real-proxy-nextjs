@@ -27,7 +27,6 @@ interface ProxyInfo {
 const TrafficSetupPage = () => {
     const [activeTab, setActiveTab] = useState('Proxy Setup');
     const [activeExtractionTab, setActiveExtractionTab] = useState('Username:Password');
-    const [activeSettingTab, setActiveSettingTab] = useState('Basic settings');
     const [trafficReminder, setTrafficReminder] = useState(false);
     const [unit, setUnit] = useState('GB');
     const [proxyInfo, setProxyInfo] = useState<ProxyInfo | null>(null);
@@ -230,27 +229,6 @@ const TrafficSetupPage = () => {
                 </div>
 
                 <div style={{ padding: '32px' }}>
-                    {/* Setup Category Tabs */}
-                    <div style={{ display: 'flex', gap: '44px', borderBottom: '1px solid #f0f0f0', marginBottom: '32px' }}>
-                        {['Basic settings', 'Advanced Settings', 'Code examples', 'Sub-Users'].map(tab => (
-                            <div
-                                key={tab}
-                                onClick={() => setActiveSettingTab(tab)}
-                                style={{
-                                    padding: '12px 0',
-                                    fontSize: '14px',
-                                    fontWeight: activeSettingTab === tab ? '700' : '500',
-                                    color: activeSettingTab === tab ? '#1677ff' : '#4E5969',
-                                    borderBottom: activeSettingTab === tab ? '2px solid #1677ff' : '2px solid transparent',
-                                    cursor: 'pointer',
-                                    marginBottom: '-1px'
-                                }}
-                            >
-                                {tab}
-                            </div>
-                        ))}
-                    </div>
-
                     <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.75fr', gap: '60px' }}>
                         {/* Form Column */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -274,10 +252,10 @@ const TrafficSetupPage = () => {
                                             ) : (
                                                 <>
                                                     <span style={{ flex: 1, fontWeight: '500' }}>{proxyInfo?.proxyAccount || 'N/A'}</span>
-                                                    <Copy 
-                                                        size={16} 
-                                                        color="#86909C" 
-                                                        style={{ cursor: 'pointer' }} 
+                                                    <Copy
+                                                        size={16}
+                                                        color="#86909C"
+                                                        style={{ cursor: 'pointer' }}
                                                         onClick={() => {
                                                             if (proxyInfo?.proxyAccount) {
                                                                 navigator.clipboard.writeText(proxyInfo.proxyAccount);
@@ -297,10 +275,10 @@ const TrafficSetupPage = () => {
                                             ) : (
                                                 <>
                                                     <span style={{ flex: 1, fontWeight: '500' }}>{proxyInfo?.proxyPassword || 'N/A'}</span>
-                                                    <Copy 
-                                                        size={16} 
-                                                        color="#86909C" 
-                                                        style={{ cursor: 'pointer' }} 
+                                                    <Copy
+                                                        size={16}
+                                                        color="#86909C"
+                                                        style={{ cursor: 'pointer' }}
                                                         onClick={() => {
                                                             if (proxyInfo?.proxyPassword) {
                                                                 navigator.clipboard.writeText(proxyInfo.proxyPassword);
@@ -313,7 +291,6 @@ const TrafficSetupPage = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <a href="#" style={{ color: '#1677ff', fontSize: '14px', textDecoration: 'none', fontWeight: '700' }}>+ Add sub-account</a>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -357,10 +334,10 @@ const TrafficSetupPage = () => {
                                     <span style={{ fontSize: '14px', color: '#1D2129', fontWeight: '700' }}>Example</span>
                                     <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                                         <span style={{ fontSize: '12px', color: '#1677ff', cursor: 'pointer', fontWeight: '600' }}>Other languages</span>
-                                        <Copy 
-                                            size={20} 
-                                            color="#86909C" 
-                                            style={{ cursor: 'pointer' }} 
+                                        <Copy
+                                            size={20}
+                                            color="#86909C"
+                                            style={{ cursor: 'pointer' }}
                                             onClick={() => {
                                                 const curlCommand = `curl -x na.proxys5.net:6200 -U "${proxyInfo?.proxyAccount || 'username'}-sessid-XcivyX4zy-sessTime-15:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`;
                                                 navigator.clipboard.writeText(curlCommand);
