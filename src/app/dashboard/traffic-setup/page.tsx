@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Info,
     ChevronDown,
@@ -13,7 +13,11 @@ import {
     ToggleLeft,
     ToggleRight,
     ExternalLink,
-    Loader2
+    Loader2,
+    Search,
+    Check,
+    Plus,
+    Minus
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -24,6 +28,31 @@ interface ProxyInfo {
     proxyPassword: string;
 }
 
+interface Region {
+    country_name: string;
+    country_code: string;
+    domain: any[];
+}
+
+interface State {
+    country_code: string;
+    state_code: string;
+    state_name: string;
+}
+
+interface City {
+    country_code: string;
+    state_code: string;
+    city_code: string;
+    city_name: string;
+}
+
+interface ASN {
+    asn_code: string;
+    asn_name: string;
+    country_code: string;
+}
+
 const TrafficSetupPage = () => {
     const [activeTab, setActiveTab] = useState('Proxy Setup');
 
@@ -31,6 +60,37 @@ const TrafficSetupPage = () => {
     const [unit, setUnit] = useState('GB');
     const [proxyInfo, setProxyInfo] = useState<ProxyInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [regions, setRegions] = useState<Region[]>([]);
+    const [selectedCountry, setSelectedCountry] = useState<Region | null>(null);
+    const [isRegionsLoading, setIsRegionsLoading] = useState(true);
+    const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+    const [countrySearchQuery, setCountrySearchQuery] = useState('');
+    const [states, setStates] = useState<State[]>([]);
+    const [selectedState, setSelectedState] = useState<State | null>(null);
+    const [isStatesLoading, setIsStatesLoading] = useState(false);
+    const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
+    const [stateSearchQuery, setStateSearchQuery] = useState('');
+    const [cities, setCities] = useState<City[]>([]);
+    const [selectedCity, setSelectedCity] = useState<City | null>(null);
+    const [isCitiesLoading, setIsCitiesLoading] = useState(false);
+    const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
+    const [citySearchQuery, setCitySearchQuery] = useState('');
+    const [asns, setAsns] = useState<ASN[]>([]);
+    const [selectedAsn, setSelectedAsn] = useState<ASN | null>(null);
+    const [isAsnsLoading, setIsAsnsLoading] = useState(false);
+    const [isAsnDropdownOpen, setIsAsnDropdownOpen] = useState(false);
+    const [asnSearchQuery, setAsnSearchQuery] = useState('');
+    const [selectedHostname, setSelectedHostname] = useState('na.proxys5.net');
+    const [isHostnameDropdownOpen, setIsHostnameDropdownOpen] = useState(false);
+    const [selectedSessionType, setSelectedSessionType] = useState('Sticky IP');
+    const [isSessionTypeDropdownOpen, setIsSessionTypeDropdownOpen] = useState(false);
+    const [sessionDuration, setSessionDuration] = useState(15);
+    const countryDropdownRef = useRef<HTMLDivElement>(null);
+    const stateDropdownRef = useRef<HTMLDivElement>(null);
+    const cityDropdownRef = useRef<HTMLDivElement>(null);
+    const asnDropdownRef = useRef<HTMLDivElement>(null);
+    const hostnameDropdownRef = useRef<HTMLDivElement>(null);
+    const sessionTypeDropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -69,8 +129,193 @@ const TrafficSetupPage = () => {
             }
         };
 
+        // Fetch regions from API
+        const fetchRegions = async () => {
+            try {
+                const response = await axios.get('https://api.realproxy.net/api/Location/regions', {
+                    headers: {
+                        'accept': '*/*'
+                    }
+                });
+
+                if (response.data && response.data.data) {
+                    setRegions(response.data.data);
+                    // Set default to Global if it exists
+                    const global = response.data.data.find((r: Region) => r.country_name === 'Global');
+                    if (global) {
+                        setSelectedCountry(global);
+                    } else if (response.data.data.length > 0) {
+                        setSelectedCountry(response.data.data[0]);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching regions:', error);
+                toast.error('Failed to fetch country list.');
+            } finally {
+                setIsRegionsLoading(false);
+            }
+        };
+
         fetchProxyInfo();
+        fetchRegions();
     }, [router]);
+
+    // Fetch states when country changes
+    useEffect(() => {
+        const fetchStates = async () => {
+            if (!selectedCountry || selectedCountry.country_name === 'Global') {
+                setStates([]);
+                setSelectedState(null);
+                return;
+            }
+
+            setIsStatesLoading(true);
+            try {
+                const response = await axios.get(`https://api.realproxy.net/api/Location/states?country_code=${selectedCountry.country_code}`, {
+                    headers: { 'accept': '*/*' }
+                });
+
+                if (response.data && response.data.data) {
+                    setStates(response.data.data);
+                    // Default to "Random" if found, else first state
+                    const randomState = response.data.data.find((s: State) => s.state_name === 'Random');
+                    if (randomState) {
+                        setSelectedState(randomState);
+                    } else if (response.data.data.length > 0) {
+                        setSelectedState(response.data.data[0]);
+                    } else {
+                        setSelectedState(null);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching states:', error);
+                setSelectedState(null);
+            } finally {
+                setIsStatesLoading(false);
+            }
+        };
+
+        fetchStates();
+    }, [selectedCountry]);
+
+    // Fetch cities when state changes
+    useEffect(() => {
+        const fetchCities = async () => {
+            if (!selectedCountry || !selectedState || selectedState.state_name === 'Random') {
+                setCities([]);
+                setSelectedCity(null);
+                return;
+            }
+
+            setIsCitiesLoading(true);
+            try {
+                const response = await axios.get(`https://api.realproxy.net/api/Location/citys?country_code=${selectedCountry.country_code}&state_code=${selectedState.state_code}`, {
+                    headers: { 'accept': '*/*' }
+                });
+
+                if (response.data && response.data.data) {
+                    setCities(response.data.data);
+                    // Default to "Random" if found, else first city
+                    const randomCity = response.data.data.find((c: City) => c.city_name === 'Random');
+                    if (randomCity) {
+                        setSelectedCity(randomCity);
+                    } else if (response.data.data.length > 0) {
+                        setSelectedCity(response.data.data[0]);
+                    } else {
+                        setSelectedCity(null);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching cities:', error);
+                setSelectedCity(null);
+            } finally {
+                setIsCitiesLoading(false);
+            }
+        };
+
+        fetchCities();
+    }, [selectedCountry, selectedState]);
+
+    // Fetch ASNs when country changes
+    useEffect(() => {
+        const fetchAsns = async () => {
+            if (!selectedCountry || selectedCountry.country_name === 'Global') {
+                setAsns([]);
+                setSelectedAsn(null);
+                return;
+            }
+
+            setIsAsnsLoading(true);
+            try {
+                const response = await axios.get(`https://api.realproxy.net/api/Location/asn?country_code=${selectedCountry.country_code}`, {
+                    headers: { 'accept': '*/*' }
+                });
+
+                if (response.data && response.data.data) {
+                    setAsns(response.data.data);
+                    setSelectedAsn(null);
+                }
+            } catch (error) {
+                console.error('Error fetching asns:', error);
+                setSelectedAsn(null);
+            } finally {
+                setIsAsnsLoading(false);
+            }
+        };
+
+        fetchAsns();
+    }, [selectedCountry]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target as Node)) {
+                setIsCountryDropdownOpen(false);
+            }
+            if (stateDropdownRef.current && !stateDropdownRef.current.contains(event.target as Node)) {
+                setIsStateDropdownOpen(false);
+            }
+            if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target as Node)) {
+                setIsCityDropdownOpen(false);
+            }
+            if (asnDropdownRef.current && !asnDropdownRef.current.contains(event.target as Node)) {
+                setIsAsnDropdownOpen(false);
+            }
+            if (hostnameDropdownRef.current && !hostnameDropdownRef.current.contains(event.target as Node)) {
+                setIsHostnameDropdownOpen(false);
+            }
+            if (sessionTypeDropdownRef.current && !sessionTypeDropdownRef.current.contains(event.target as Node)) {
+                setIsSessionTypeDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const resetSelection = () => {
+        const global = regions.find(r => r.country_name === 'Global');
+        if (global) {
+            setSelectedCountry(global);
+        }
+        setCountrySearchQuery('');
+        setIsCountryDropdownOpen(false);
+        setSelectedState(null);
+        setStateSearchQuery('');
+        setIsStateDropdownOpen(false);
+        setSelectedCity(null);
+        setCitySearchQuery('');
+        setIsCityDropdownOpen(false);
+        setSelectedAsn(null);
+        setAsnSearchQuery('');
+        setIsAsnDropdownOpen(false);
+        setSelectedHostname('na.proxys5.net');
+        setIsHostnameDropdownOpen(false);
+        setSelectedSessionType('Sticky IP');
+        setIsSessionTypeDropdownOpen(false);
+        setSessionDuration(15);
+    };
 
     const cardStyle: React.CSSProperties = {
         backgroundColor: 'white',
@@ -264,28 +509,773 @@ const TrafficSetupPage = () => {
                                         <div style={{ width: '4px', height: '16px', backgroundColor: '#1677ff', borderRadius: '2px' }} />
                                         Location Settings
                                     </div>
-                                    <span style={{ color: '#1677ff', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}>Reset</span>
+                                    <span
+                                        onClick={resetSelection}
+                                        style={{ color: '#1677ff', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
+                                    >Reset</span>
                                 </div>
 
+
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                Country/Region <Info size={14} color="#c9cdd4" strokeWidth={1.5} />
-                                            </label>
-                                            <a href="#" style={{ color: '#1677ff', fontSize: '13px', textDecoration: 'none', fontWeight: '500' }}>Country list</a>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        {/* Country/Region */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    Country/Region <Info size={14} color="#c9cdd4" strokeWidth={1.5} />
+                                                </label>
+                                                <a href="#" style={{ color: '#1677ff', fontSize: '13px', textDecoration: 'none', fontWeight: '500' }}>Country list</a>
+                                            </div>
+                                            <div style={{ position: 'relative' }} ref={countryDropdownRef}>
+                                                <div
+                                                    onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                                                    style={{
+                                                        ...inputContainerStyle,
+                                                        cursor: 'pointer',
+                                                        border: isCountryDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
+                                                        backgroundColor: 'white',
+                                                        boxShadow: isCountryDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none'
+                                                    }}
+                                                >
+                                                    <Globe size={16} color={selectedCountry?.country_name === 'Global' ? '#0086ff' : '#86909C'} style={{ marginRight: '8px' }} />
+                                                    <span style={{ flex: 1, fontWeight: '500' }}>
+                                                        {isRegionsLoading ? 'Loading countries...' : (selectedCountry?.country_name || '(ALL) Global')}
+                                                    </span>
+                                                    {isRegionsLoading ? (
+                                                        <Loader2 size={16} className="animate-spin" color="#86909C" />
+                                                    ) : (
+                                                        <ChevronDown
+                                                            size={16}
+                                                            color="#86909C"
+                                                            style={{
+                                                                transform: isCountryDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                                transition: 'transform 0.2s'
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                {isCountryDropdownOpen && (
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: 'calc(100% + 4px)',
+                                                        left: 0,
+                                                        right: 0,
+                                                        backgroundColor: 'white',
+                                                        borderRadius: '8px',
+                                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)',
+                                                        zIndex: 100,
+                                                        overflow: 'hidden',
+                                                        border: '1px solid #f0f0f0'
+                                                    }}>
+                                                        <div style={{ padding: '8px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa' }}>
+                                                            <div style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                backgroundColor: 'white',
+                                                                borderRadius: '4px',
+                                                                padding: '0 8px',
+                                                                height: '32px',
+                                                                border: '1px solid #e5e6eb'
+                                                            }}>
+                                                                <Search size={14} color="#86909C" style={{ marginRight: '6px' }} />
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Search country..."
+                                                                    value={countrySearchQuery}
+                                                                    onChange={(e) => setCountrySearchQuery(e.target.value)}
+                                                                    autoFocus
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    style={{
+                                                                        border: 'none',
+                                                                        outline: 'none',
+                                                                        fontSize: '13px',
+                                                                        width: '100%',
+                                                                        color: '#1D2129'
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ maxHeight: '300px', overflowY: 'auto' }} className="custom-scrollbar">
+                                                            {regions
+                                                                .filter(r => r.country_name.toLowerCase().includes(countrySearchQuery.toLowerCase()))
+                                                                .map((country, idx) => (
+                                                                    <div
+                                                                        key={country.country_code || `global-${idx}`}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setSelectedCountry(country);
+                                                                            setIsCountryDropdownOpen(false);
+                                                                            setCountrySearchQuery('');
+                                                                        }}
+                                                                        style={{
+                                                                            padding: '10px 12px',
+                                                                            fontSize: '14px',
+                                                                            color: selectedCountry?.country_name === country.country_name ? '#1677ff' : '#4E5969',
+                                                                            cursor: 'pointer',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'space-between',
+                                                                            backgroundColor: selectedCountry?.country_name === country.country_name ? '#e7f2ff' : 'transparent',
+                                                                            transition: 'all 0.1s'
+                                                                        }}
+                                                                        onMouseEnter={(e) => {
+                                                                            if (selectedCountry?.country_name !== country.country_name) {
+                                                                                e.currentTarget.style.backgroundColor = '#f7f8fa';
+                                                                            }
+                                                                        }}
+                                                                        onMouseLeave={(e) => {
+                                                                            if (selectedCountry?.country_name !== country.country_name) {
+                                                                                e.currentTarget.style.backgroundColor = 'transparent';
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                            {country.country_name === 'Global' ? (
+                                                                                <Globe size={14} color={selectedCountry?.country_name === 'Global' ? '#1677ff' : '#86909C'} />
+                                                                            ) : (
+                                                                                <span style={{ fontSize: '14px' }}>
+                                                                                    {/* We could use flag icons here if we had them, defaulting to globe for now */}
+                                                                                    <Globe size={14} color="#86909C" opacity={0.5} />
+                                                                                </span>
+                                                                            )}
+                                                                            <span style={{ fontWeight: selectedCountry?.country_name === country.country_name ? '600' : '400' }}>
+                                                                                {country.country_name === 'Global' ? '(ALL) Global' : country.country_name}
+                                                                            </span>
+                                                                        </div>
+                                                                        {selectedCountry?.country_name === country.country_name && (
+                                                                            <Check size={14} color="#1677ff" />
+                                                                        )}
+                                                                    </div>
+                                                                ))
+                                                            }
+                                                            {regions.filter(r => r.country_name.toLowerCase().includes(countrySearchQuery.toLowerCase())).length === 0 && (
+                                                                <div style={{ padding: '20px', textAlign: 'center', color: '#86909C', fontSize: '13px' }}>
+                                                                    No countries found
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div style={inputContainerStyle}>
-                                            <Globe size={16} color="#86909C" style={{ marginRight: '8px' }} />
-                                            <span style={{ flex: 1, fontWeight: '500' }}>(ALL) Global</span>
-                                            <ChevronDown size={16} color="#86909C" />
+
+                                        {/* City */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>City</label>
+                                            <div style={{ position: 'relative' }} ref={cityDropdownRef}>
+                                                <div
+                                                    onClick={() => !isStatesLoading && !isCitiesLoading && cities.length > 0 && setIsCityDropdownOpen(!isCityDropdownOpen)}
+                                                    style={{
+                                                        ...inputContainerStyle,
+                                                        cursor: (cities.length > 0) ? 'pointer' : 'default',
+                                                        border: isCityDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
+                                                        backgroundColor: (cities.length === 0) ? '#f7f8fa' : 'white',
+                                                        boxShadow: isCityDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none',
+                                                        opacity: (cities.length === 0) ? 0.6 : 1
+                                                    }}
+                                                >
+                                                    <span style={{ flex: 1, fontWeight: '500' }}>
+                                                        {isCitiesLoading ? 'Loading...' : (selectedCity?.city_name || (selectedState?.state_name === 'Random' ? 'Random' : (cities.length === 0 ? 'No cities' : 'Random')))}
+                                                    </span>
+                                                    {isCitiesLoading ? (
+                                                        <Loader2 size={16} className="animate-spin" color="#86909C" />
+                                                    ) : cities.length > 0 && (
+                                                        <ChevronDown
+                                                            size={16}
+                                                            color="#86909C"
+                                                            style={{
+                                                                transform: isCityDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                                transition: 'transform 0.2s'
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                {isCityDropdownOpen && (
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: 'calc(100% + 4px)',
+                                                        left: 0,
+                                                        right: 0,
+                                                        backgroundColor: 'white',
+                                                        borderRadius: '8px',
+                                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)',
+                                                        zIndex: 100,
+                                                        overflow: 'hidden',
+                                                        border: '1px solid #f0f0f0'
+                                                    }}>
+                                                        <div style={{ padding: '8px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa' }}>
+                                                            <div style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                backgroundColor: 'white',
+                                                                borderRadius: '4px',
+                                                                padding: '0 8px',
+                                                                height: '32px',
+                                                                border: '1px solid #e5e6eb'
+                                                            }}>
+                                                                <Search size={14} color="#86909C" style={{ marginRight: '6px' }} />
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Search city..."
+                                                                    value={citySearchQuery}
+                                                                    onChange={(e) => setCitySearchQuery(e.target.value)}
+                                                                    autoFocus
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    style={{
+                                                                        border: 'none',
+                                                                        outline: 'none',
+                                                                        fontSize: '13px',
+                                                                        width: '100%',
+                                                                        color: '#1D2129'
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="custom-scrollbar">
+                                                            {cities
+                                                                .filter(c => c.city_name.toLowerCase().includes(citySearchQuery.toLowerCase()))
+                                                                .map((city, idx) => (
+                                                                    <div
+                                                                        key={city.city_code || `city-${idx}`}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setSelectedCity(city);
+                                                                            setIsCityDropdownOpen(false);
+                                                                            setCitySearchQuery('');
+                                                                        }}
+                                                                        style={{
+                                                                            padding: '10px 12px',
+                                                                            fontSize: '14px',
+                                                                            color: selectedCity?.city_name === city.city_name ? '#1677ff' : '#4E5969',
+                                                                            cursor: 'pointer',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'space-between',
+                                                                            backgroundColor: selectedCity?.city_name === city.city_name ? '#e7f2ff' : 'transparent',
+                                                                            transition: 'all 0.1s'
+                                                                        }}
+                                                                        onMouseEnter={(e) => {
+                                                                            if (selectedCity?.city_name !== city.city_name) {
+                                                                                e.currentTarget.style.backgroundColor = '#f7f8fa';
+                                                                            }
+                                                                        }}
+                                                                        onMouseLeave={(e) => {
+                                                                            if (selectedCity?.city_name !== city.city_name) {
+                                                                                e.currentTarget.style.backgroundColor = 'transparent';
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <span style={{ fontWeight: selectedCity?.city_name === city.city_name ? '600' : '400' }}>
+                                                                            {city.city_name}
+                                                                        </span>
+                                                                        {selectedCity?.city_name === city.city_name && (
+                                                                            <Check size={14} color="#1677ff" />
+                                                                        )}
+                                                                    </div>
+                                                                ))
+                                                            }
+                                                            {cities.filter(c => c.city_name.toLowerCase().includes(citySearchQuery.toLowerCase())).length === 0 && (
+                                                                <div style={{ padding: '20px', textAlign: 'center', color: '#86909C', fontSize: '13px' }}>
+                                                                    No cities found
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Hostname */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    Hostname <Info size={14} color="#c9cdd4" strokeWidth={1.5} />
+                                                </label>
+                                                <Copy
+                                                    size={14}
+                                                    color="#86909C"
+                                                    style={{ cursor: 'pointer' }}
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(selectedHostname);
+                                                        toast.success('Hostname copied!');
+                                                    }}
+                                                />
+                                            </div>
+                                            <div style={{ position: 'relative' }} ref={hostnameDropdownRef}>
+                                                <div
+                                                    onClick={() => setIsHostnameDropdownOpen(!isHostnameDropdownOpen)}
+                                                    style={{
+                                                        ...inputContainerStyle,
+                                                        cursor: 'pointer',
+                                                        border: isHostnameDropdownOpen ? '1px solid #1677ff' : '1px solid #e5e6eb',
+                                                        backgroundColor: 'white',
+                                                        boxShadow: isHostnameDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none'
+                                                    }}
+                                                >
+                                                    <span style={{ flex: 1, fontWeight: '500' }}>{selectedHostname}</span>
+                                                    <ChevronDown
+                                                        size={16}
+                                                        color="#86909C"
+                                                        style={{
+                                                            transform: isHostnameDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                            transition: 'transform 0.2s'
+                                                        }}
+                                                    />
+                                                </div>
+
+                                                {isHostnameDropdownOpen && (
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: 'calc(100% + 4px)',
+                                                        left: 0,
+                                                        right: 0,
+                                                        backgroundColor: 'white',
+                                                        borderRadius: '8px',
+                                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)',
+                                                        zIndex: 100,
+                                                        overflow: 'hidden',
+                                                        border: '1px solid #f0f0f0'
+                                                    }}>
+                                                        {['na.proxys5.net', 'as.proxys5.net', 'eu.proxys5.net', 'ea.proxys5.net'].map((host) => (
+                                                            <div
+                                                                key={host}
+                                                                onClick={() => {
+                                                                    setSelectedHostname(host);
+                                                                    setIsHostnameDropdownOpen(false);
+                                                                }}
+                                                                style={{
+                                                                    padding: '10px 12px',
+                                                                    fontSize: '14px',
+                                                                    color: selectedHostname === host ? '#1677ff' : '#4E5969',
+                                                                    cursor: 'pointer',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'space-between',
+                                                                    backgroundColor: selectedHostname === host ? '#e7f2ff' : 'transparent',
+                                                                    transition: 'all 0.1s'
+                                                                }}
+                                                                onMouseEnter={(e) => {
+                                                                    if (selectedHostname !== host) {
+                                                                        e.currentTarget.style.backgroundColor = '#f7f8fa';
+                                                                    }
+                                                                }}
+                                                                onMouseLeave={(e) => {
+                                                                    if (selectedHostname !== host) {
+                                                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <span>{host}</span>
+                                                                {selectedHostname === host && <Check size={14} color="#1677ff" />}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>State</label>
-                                        <div style={inputContainerStyle}>
-                                            <span style={{ flex: 1, fontWeight: '500' }}>Random</span>
-                                            <ChevronDown size={16} color="#86909C" />
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        {/* State */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>State</label>
+                                            </div>
+                                            <div style={{ position: 'relative' }} ref={stateDropdownRef}>
+                                                <div
+                                                    onClick={() => !isRegionsLoading && !isStatesLoading && states.length > 0 && setIsStateDropdownOpen(!isStateDropdownOpen)}
+                                                    style={{
+                                                        ...inputContainerStyle,
+                                                        cursor: (states.length > 0) ? 'pointer' : 'default',
+                                                        border: isStateDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
+                                                        backgroundColor: (states.length === 0) ? '#f7f8fa' : 'white',
+                                                        boxShadow: isStateDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none',
+                                                        opacity: (states.length === 0) ? 0.6 : 1
+                                                    }}
+                                                >
+                                                    <span style={{ flex: 1, fontWeight: '500' }}>
+                                                        {isStatesLoading ? 'Loading...' : (selectedState?.state_name || (selectedCountry?.country_name === 'Global' ? 'Random' : (states.length === 0 ? 'No states' : 'Random')))}
+                                                    </span>
+                                                    {isStatesLoading ? (
+                                                        <Loader2 size={16} className="animate-spin" color="#86909C" />
+                                                    ) : states.length > 0 && (
+                                                        <ChevronDown
+                                                            size={16}
+                                                            color="#86909C"
+                                                            style={{
+                                                                transform: isStateDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                                transition: 'transform 0.2s'
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                {isStateDropdownOpen && (
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: 'calc(100% + 4px)',
+                                                        left: 0,
+                                                        right: 0,
+                                                        backgroundColor: 'white',
+                                                        borderRadius: '8px',
+                                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)',
+                                                        zIndex: 100,
+                                                        overflow: 'hidden',
+                                                        border: '1px solid #f0f0f0'
+                                                    }}>
+                                                        <div style={{ padding: '8px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa' }}>
+                                                            <div style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                backgroundColor: 'white',
+                                                                borderRadius: '4px',
+                                                                padding: '0 8px',
+                                                                height: '32px',
+                                                                border: '1px solid #e5e6eb'
+                                                            }}>
+                                                                <Search size={14} color="#86909C" style={{ marginRight: '6px' }} />
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Search state..."
+                                                                    value={stateSearchQuery}
+                                                                    onChange={(e) => setStateSearchQuery(e.target.value)}
+                                                                    autoFocus
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    style={{
+                                                                        border: 'none',
+                                                                        outline: 'none',
+                                                                        fontSize: '13px',
+                                                                        width: '100%',
+                                                                        color: '#1D2129'
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="custom-scrollbar">
+                                                            {states
+                                                                .filter(s => s.state_name.toLowerCase().includes(stateSearchQuery.toLowerCase()))
+                                                                .map((state, idx) => (
+                                                                    <div
+                                                                        key={state.state_code || `state-${idx}`}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setSelectedState(state);
+                                                                            setIsStateDropdownOpen(false);
+                                                                            setStateSearchQuery('');
+                                                                        }}
+                                                                        style={{
+                                                                            padding: '10px 12px',
+                                                                            fontSize: '14px',
+                                                                            color: selectedState?.state_name === state.state_name ? '#1677ff' : '#4E5969',
+                                                                            cursor: 'pointer',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'space-between',
+                                                                            backgroundColor: selectedState?.state_name === state.state_name ? '#e7f2ff' : 'transparent',
+                                                                            transition: 'all 0.1s'
+                                                                        }}
+                                                                        onMouseEnter={(e) => {
+                                                                            if (selectedState?.state_name !== state.state_name) {
+                                                                                e.currentTarget.style.backgroundColor = '#f7f8fa';
+                                                                            }
+                                                                        }}
+                                                                        onMouseLeave={(e) => {
+                                                                            if (selectedState?.state_name !== state.state_name) {
+                                                                                e.currentTarget.style.backgroundColor = 'transparent';
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <span style={{ fontWeight: selectedState?.state_name === state.state_name ? '600' : '400' }}>
+                                                                            {state.state_name}
+                                                                        </span>
+                                                                        {selectedState?.state_name === state.state_name && (
+                                                                            <Check size={14} color="#1677ff" />
+                                                                        )}
+                                                                    </div>
+                                                                ))
+                                                            }
+                                                            {states.filter(s => s.state_name.toLowerCase().includes(stateSearchQuery.toLowerCase())).length === 0 && (
+                                                                <div style={{ padding: '20px', textAlign: 'center', color: '#86909C', fontSize: '13px' }}>
+                                                                    No states found
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* ASN */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>ASN</label>
+                                            </div>
+                                            <div style={{ position: 'relative' }} ref={asnDropdownRef}>
+                                                <div
+                                                    onClick={() => !isRegionsLoading && !isAsnsLoading && asns.length > 0 && setIsAsnDropdownOpen(!isAsnDropdownOpen)}
+                                                    style={{
+                                                        ...inputContainerStyle,
+                                                        cursor: (asns.length > 0) ? 'pointer' : 'default',
+                                                        border: isAsnDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
+                                                        backgroundColor: (asns.length === 0) ? '#f7f8fa' : 'white',
+                                                        boxShadow: isAsnDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none',
+                                                        opacity: (asns.length === 0) ? 0.6 : 1
+                                                    }}
+                                                >
+                                                    <span style={{ flex: 1, fontWeight: '500' }}>
+                                                        {isAsnsLoading ? 'Loading...' : (selectedAsn?.asn_name || (selectedCountry?.country_name === 'Global' ? 'Random' : (asns.length === 0 ? 'No ASNs' : 'Random')))}
+                                                    </span>
+                                                    {isAsnsLoading ? (
+                                                        <Loader2 size={16} className="animate-spin" color="#86909C" />
+                                                    ) : asns.length > 0 && (
+                                                        <ChevronDown
+                                                            size={16}
+                                                            color="#86909C"
+                                                            style={{
+                                                                transform: isAsnDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                                transition: 'transform 0.2s'
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                {isAsnDropdownOpen && (
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: 'calc(100% + 4px)',
+                                                        left: 0,
+                                                        right: 0,
+                                                        backgroundColor: 'white',
+                                                        borderRadius: '8px',
+                                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)',
+                                                        zIndex: 100,
+                                                        overflow: 'hidden',
+                                                        border: '1px solid #f0f0f0'
+                                                    }}>
+                                                        <div style={{ padding: '8px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa' }}>
+                                                            <div style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                backgroundColor: 'white',
+                                                                borderRadius: '4px',
+                                                                padding: '0 8px',
+                                                                height: '32px',
+                                                                border: '1px solid #e5e6eb'
+                                                            }}>
+                                                                <Search size={14} color="#86909C" style={{ marginRight: '6px' }} />
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Search ASN..."
+                                                                    value={asnSearchQuery}
+                                                                    onChange={(e) => setAsnSearchQuery(e.target.value)}
+                                                                    autoFocus
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    style={{
+                                                                        border: 'none',
+                                                                        outline: 'none',
+                                                                        fontSize: '13px',
+                                                                        width: '100%',
+                                                                        color: '#1D2129'
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="custom-scrollbar">
+                                                            {asns
+                                                                .filter(a => a.asn_name.toLowerCase().includes(asnSearchQuery.toLowerCase()) || a.asn_code.toLowerCase().includes(asnSearchQuery.toLowerCase()))
+                                                                .map((asn, idx) => (
+                                                                    <div
+                                                                        key={asn.asn_code || `asn-${idx}`}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setSelectedAsn(asn);
+                                                                            setIsAsnDropdownOpen(false);
+                                                                            setAsnSearchQuery('');
+                                                                        }}
+                                                                        style={{
+                                                                            padding: '10px 12px',
+                                                                            fontSize: '14px',
+                                                                            color: selectedAsn?.asn_code === asn.asn_code ? '#1677ff' : '#4E5969',
+                                                                            cursor: 'pointer',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'space-between',
+                                                                            backgroundColor: selectedAsn?.asn_code === asn.asn_code ? '#e7f2ff' : 'transparent',
+                                                                            transition: 'all 0.1s'
+                                                                        }}
+                                                                        onMouseEnter={(e) => {
+                                                                            if (selectedAsn?.asn_code !== asn.asn_code) {
+                                                                                e.currentTarget.style.backgroundColor = '#f7f8fa';
+                                                                            }
+                                                                        }}
+                                                                        onMouseLeave={(e) => {
+                                                                            if (selectedAsn?.asn_code !== asn.asn_code) {
+                                                                                e.currentTarget.style.backgroundColor = 'transparent';
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                                            <span style={{ fontWeight: selectedAsn?.asn_code === asn.asn_code ? '600' : '400' }}>
+                                                                                {asn.asn_name}
+                                                                            </span>
+                                                                            <span style={{ fontSize: '11px', color: '#86909C' }}>{asn.asn_code}</span>
+                                                                        </div>
+                                                                        {selectedAsn?.asn_code === asn.asn_code && (
+                                                                            <Check size={14} color="#1677ff" />
+                                                                        )}
+                                                                    </div>
+                                                                ))
+                                                            }
+                                                            {asns.filter(a => a.asn_name.toLowerCase().includes(asnSearchQuery.toLowerCase()) || a.asn_code.toLowerCase().includes(asnSearchQuery.toLowerCase())).length === 0 && (
+                                                                <div style={{ padding: '20px', textAlign: 'center', color: '#86909C', fontSize: '13px' }}>
+                                                                    No ASNs found
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Port */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    Port <Info size={14} color="#c9cdd4" strokeWidth={1.5} />
+                                                </label>
+                                                <Copy
+                                                    size={14}
+                                                    color="#86909C"
+                                                    style={{ cursor: 'pointer' }}
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText('6200');
+                                                        toast.success('Port copied!');
+                                                    }}
+                                                />
+                                            </div>
+                                            <div style={{ ...inputContainerStyle, backgroundColor: '#f7f8fa', border: '1px solid #e5e6eb', cursor: 'default' }}>
+                                                <span style={{ fontWeight: '500', color: '#1D2129' }}>6200</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Session Settings */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '12px', borderTop: '1px solid #f0f0f0', paddingTop: '32px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '15px', fontWeight: '700', color: '#1D2129' }}>
+                                        <div style={{ width: '4px', height: '16px', backgroundColor: '#1677ff', borderRadius: '2px' }} />
+                                        Session Settings <Info size={14} color="#c9cdd4" strokeWidth={1.5} style={{ marginLeft: '4px' }} />
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.75fr', gap: '60px' }}>
+                                        {/* Session type */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>Session type</label>
+                                            <div style={{ position: 'relative' }} ref={sessionTypeDropdownRef}>
+                                                <div
+                                                    onClick={() => setIsSessionTypeDropdownOpen(!isSessionTypeDropdownOpen)}
+                                                    style={{
+                                                        ...inputContainerStyle,
+                                                        cursor: 'pointer',
+                                                        border: isSessionTypeDropdownOpen ? '1px solid #1677ff' : '1px solid #e5e6eb',
+                                                        backgroundColor: 'white',
+                                                        boxShadow: isSessionTypeDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none'
+                                                    }}
+                                                >
+                                                    <span style={{ flex: 1, fontWeight: '500' }}>{selectedSessionType}</span>
+                                                    <ChevronDown
+                                                        size={16}
+                                                        color="#86909C"
+                                                        style={{
+                                                            transform: isSessionTypeDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                            transition: 'transform 0.2s'
+                                                        }}
+                                                    />
+                                                </div>
+
+                                                {isSessionTypeDropdownOpen && (
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: 'calc(100% + 4px)',
+                                                        left: 0,
+                                                        right: 0,
+                                                        backgroundColor: 'white',
+                                                        borderRadius: '8px',
+                                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)',
+                                                        zIndex: 100,
+                                                        overflow: 'hidden',
+                                                        border: '1px solid #f0f0f0'
+                                                    }}>
+                                                        {['Sticky IP', 'Rotating IP'].map((type) => (
+                                                            <div
+                                                                key={type}
+                                                                onClick={() => {
+                                                                    setSelectedSessionType(type);
+                                                                    setIsSessionTypeDropdownOpen(false);
+                                                                }}
+                                                                style={{
+                                                                    padding: '10px 12px',
+                                                                    fontSize: '14px',
+                                                                    color: selectedSessionType === type ? '#1677ff' : '#4E5969',
+                                                                    cursor: 'pointer',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'space-between',
+                                                                    backgroundColor: selectedSessionType === type ? '#e7f2ff' : 'transparent',
+                                                                    transition: 'all 0.1s'
+                                                                }}
+                                                                onMouseEnter={(e) => {
+                                                                    if (selectedSessionType !== type) {
+                                                                        e.currentTarget.style.backgroundColor = '#f7f8fa';
+                                                                    }
+                                                                }}
+                                                                onMouseLeave={(e) => {
+                                                                    if (selectedSessionType !== type) {
+                                                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <span>{type}</span>
+                                                                {selectedSessionType === type && <Check size={14} color="#1677ff" />}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Duration */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>Duration</label>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    border: '1px solid #e5e6eb',
+                                                    borderRadius: '4px',
+                                                    overflow: 'hidden',
+                                                    height: '40px',
+                                                    backgroundColor: 'white'
+                                                }}>
+                                                    <button
+                                                        onClick={() => setSessionDuration(prev => Math.max(1, prev - 1))}
+                                                        style={{ width: '36px', height: '100%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#86909C' }}
+                                                    >
+                                                        <Minus size={14} />
+                                                    </button>
+                                                    <div style={{ width: '60px', textAlign: 'center', fontSize: '14px', fontWeight: '600', borderLeft: '1px solid #e5e6eb', borderRight: '1px solid #e5e6eb', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        {sessionDuration}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setSessionDuration(prev => Math.min(120, prev + 1))}
+                                                        style={{ width: '36px', height: '100%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1677ff' }}
+                                                    >
+                                                        <Plus size={14} />
+                                                    </button>
+                                                </div>
+                                                <span style={{ fontSize: '13px', color: '#86909C' }}>(1-120 minutes)</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -304,7 +1294,7 @@ const TrafficSetupPage = () => {
                                             color="#86909C"
                                             style={{ cursor: 'pointer' }}
                                             onClick={() => {
-                                                const curlCommand = `curl -x na.proxys5.net:6200 -U "${proxyInfo?.proxyAccount || 'username'}-sessid-XcivyX4zy-sessTime-15:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`;
+                                                const curlCommand = `curl -x ${selectedHostname}:6200 -U "${proxyInfo?.proxyAccount || 'username'}-sessid-XcivyX4zy-sessTime-${sessionDuration}:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`;
                                                 navigator.clipboard.writeText(curlCommand);
                                                 toast.success('Example copied!');
                                             }}
@@ -315,7 +1305,7 @@ const TrafficSetupPage = () => {
                                     {isLoading ? (
                                         <span>Loading...</span>
                                     ) : (
-                                        `curl -x na.proxys5.net:6200 -U "${proxyInfo?.proxyAccount || 'username'}-sessid-XcivyX4zy-sessTime-15:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`
+                                        `curl -x ${selectedHostname}:6200 -U "${proxyInfo?.proxyAccount || 'username'}-sessid-XcivyX4zy-sessTime-${sessionDuration}:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`
                                     )}
                                 </div>
                             </div>

@@ -2,12 +2,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Minus, Plus, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Pricing = () => {
     const [proxyType, setProxyType] = useState('Rotating Res.');
-    const [tier, setTier] = useState('Regular');
     const [bandwidth, setBandwidth] = useState(500);
 
     const proxyTypes = ['Rotating Res.', 'Static Res.', 'Mobile Proxies', 'Datacenter'];
@@ -26,13 +25,6 @@ const Pricing = () => {
 
         return { pricePerGb: pricePerGb.toFixed(2), total, originalTotal, discount };
     };
-
-    const enterprisePlans = [
-        { title: 'Venture', price: '5,200', traffic: '5 TB', gbPrice: '1.04', isPopular: false },
-        { title: 'Business', price: '6,600', traffic: '10 TB', gbPrice: '0.66', isPopular: true },
-        { title: 'Corporate', price: '30,000', traffic: '50 TB', gbPrice: '0.60', isPopular: false },
-        { title: 'Custom +', price: '47,000', traffic: '100 TB', gbPrice: '0.47', isPopular: false },
-    ];
 
     const current = getPricing(bandwidth);
 
@@ -58,13 +50,14 @@ const Pricing = () => {
                         font-size: 16px;
                         margin-bottom: 40px;
                     }
-                    .tabs-outer { display: flex; justify-content: center; margin-bottom: 25px; }
+                    .tabs-outer { display: flex; justify-content: center; margin-bottom: 40px; }
                     .tabs-container {
                         background: #fff;
                         padding: 6px;
                         border-radius: 50px;
                         display: flex;
                         gap: 5px;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
                     }
                     .tab-btn {
                         padding: 12px 40px;
@@ -78,29 +71,6 @@ const Pricing = () => {
                         transition: all 0.2s;
                     }
                     .tab-btn.active {
-                        background: #5B53EA;
-                        color: #fff;
-                    }
-                    .toggle-outer { display: flex; justify-content: center; margin-bottom: 40px; }
-                    .toggle-container {
-                        background: #F1F0FE;
-                        padding: 4px;
-                        border-radius: 50px;
-                        display: flex;
-                        width: 300px;
-                    }
-                    .toggle-btn {
-                        flex: 1;
-                        padding: 10px;
-                        border-radius: 50px;
-                        font-weight: 700;
-                        font-size: 14px;
-                        color: #5B53EA;
-                        background: transparent;
-                        border: none;
-                        cursor: pointer;
-                    }
-                    .toggle-btn.active {
                         background: #5B53EA;
                         color: #fff;
                     }
@@ -221,13 +191,6 @@ const Pricing = () => {
                         box-shadow: 3px 3px 0px 0px #111 !important;
                     }
                     .buy-btn { background: #5B53EA; color: #fff; }
-                    .ent-btn { 
-                        background: #FFBC0E !important; 
-                        color: #000 !important; 
-                        width: 90%; 
-                        padding: 14px 20px;
-                        font-size: 16px;
-                    }
                     .renews-text { color: #888; font-size: 13px; margin: 25px 0 15px; }
                     .payment-icons {
                         display: flex;
@@ -238,69 +201,40 @@ const Pricing = () => {
                     }
                     .payment-icons span { font-size: 13px; font-weight: 800; color: #999; margin-right: 5px; }
                     .payment-icons img { height: 26px; filter: grayscale(1); opacity: 0.5; }
-                    .enterprise-container {
+                    
+                    .coming-soon-container {
                         max-width: 1000px;
                         margin: 0 auto;
                         background: #fff;
+                        padding: 80px 40px;
                         border: 1px solid #CCC;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 20px;
                     }
-                    .enterprise-grid {
-                        display: grid;
-                        grid-template-columns: repeat(4, 1fr);
-                        border-bottom: 1px solid #eee;
+                    .coming-soon-icon {
+                        color: #5B53EA;
+                        animation: pulse 2s infinite;
                     }
-                    .ent-card {
-                        padding: 45px 15px;
-                        border-right: 1px solid #eee;
-                        position: relative;
-                        background: #fff;
+                    @keyframes pulse {
+                        0% { transform: scale(1); opacity: 1; }
+                        50% { transform: scale(1.1); opacity: 0.7; }
+                        100% { transform: scale(1); opacity: 1; }
                     }
-                    .ent-card:last-child { border-right: none; }
-                    .popular-card {
-                        transform: scale(1.05);
-                        background: #fff;
-                        box-shadow: 0 10px 40px rgba(0,0,0,0.12);
-                        z-index: 10;
-                        border: 1px solid #CCC;
-                    }
-                    .popular-ribbon {
-                        position: absolute;
-                        top: -16px;
-                        left: 50%;
-                        transform: translateX(-50%);
-                        background: #FFBC0E;
-                        padding: 6px 18px;
-                        font-size: 12px;
+                    .coming-soon-title {
+                        font-size: 32px;
                         font-weight: 800;
-                        text-transform: uppercase;
-                        border-radius: 4px;
-                        color: #000;
-                        border: 2px solid #000;
-                        white-space: nowrap;
+                        color: #323232;
                     }
-                    .ent-title { font-size: 26px; font-weight: 800; margin-bottom: 22px; color: #323232; }
-                    .ent-price { margin-bottom: 12px; color: #323232; }
-                    .ent-price .symbol { font-size: 22px; font-weight: 800; vertical-align: top; }
-                    .ent-price .amount { font-size: 42px; font-weight: 900; }
-                    .ent-price .yr { color: #999; font-size: 15px; font-weight: 700; }
-                    .ent-gb-price { color: #999; font-size: 15px; margin-bottom: 35px; font-weight: 600; }
-                    .features-table { padding: 25px; }
-                    .table-row {
-                        display: grid;
-                        grid-template-columns: 2fr repeat(4, 1fr);
-                        padding: 16px 12px;
-                        border-bottom: 1px dashed #eee;
-                        font-size: 15px;
-                        text-align: left;
+                    .coming-soon-text {
+                        color: #666;
+                        max-width: 500px;
                     }
-                    .table-row.head-row { background: #f9f9f9; font-weight: 800; border-bottom: none; color: #323232; }
-                    .col-val { text-align: center; color: #5B53EA; font-weight: 800; }
-                    .blue-check { color: #5B53EA; font-size: 19px; font-weight: 900; }
+
                     @media (max-width: 900px) {
-                        .stats-grid, .enterprise-grid { grid-template-columns: 1fr 1fr; }
-                        .table-row { display: none; }
-                        .ent-card { border-bottom: 1px solid #eee; border-right: none; }
-                        .popular-card { transform: none; margin: 20px 0; }
+                        .stats-grid { grid-template-columns: 1fr 1fr; }
                     }
                 ` }} />
 
@@ -319,17 +253,10 @@ const Pricing = () => {
                     </div>
                 </div>
 
-                <div className="toggle-outer">
-                    <div className="toggle-container">
-                        <button className={`toggle-btn ${tier === 'Regular' ? 'active' : ''}`} onClick={() => setTier('Regular')}>Regular</button>
-                        <button className={`toggle-btn ${tier === 'Enterprise' ? 'active' : ''}`} onClick={() => setTier('Enterprise')}>Enterprise</button>
-                    </div>
-                </div>
-
                 <div className="content-area">
                     <AnimatePresence mode="wait">
-                        {tier === 'Regular' ? (
-                            <motion.div key="regular" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        {proxyType === 'Rotating Res.' ? (
+                            <motion.div key="rotating" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                                 <div className="white-card slider-card">
                                     <h3 className="card-title">Pick Your Bandwidth</h3>
                                     <div className="slider-wrapper">
@@ -398,42 +325,11 @@ const Pricing = () => {
                                 </div>
                             </motion.div>
                         ) : (
-                            <motion.div key="enterprise" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                <div className="enterprise-container">
-                                    <div className="enterprise-grid">
-                                        {enterprisePlans.map((plan, i) => (
-                                            <div key={i} className={`ent-card ${plan.isPopular ? 'popular-card' : ''}`}>
-                                                {plan.isPopular && <div className="popular-ribbon">Most popular</div>}
-                                                <h4 className="ent-title">{plan.title}</h4>
-                                                <div className="ent-price">
-                                                    <span className="symbol">$</span>
-                                                    <span className="amount">{plan.price}</span>
-                                                    <span className="yr">/hr</span>
-                                                </div>
-                                                <p className="ent-gb-price">${plan.gbPrice}/GB</p>
-                                                <Link href="/contact" className="brutal-btn ent-btn">
-                                                    Contact Sales
-                                                </Link>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="features-table">
-                                        <div className="table-row head-row">
-                                            <div className="col-label">Traffic</div>
-                                            {enterprisePlans.map((p, i) => <div key={i} className="col-val">{p.traffic}</div>)}
-                                        </div>
-                                        {['Concurrent session', 'City/State targeting', 'Automatic proxy rotation', '24/7 support', 'Dedicated Account Manager'].map((f, i) => (
-                                            <div key={i} className="table-row">
-                                                <div className="col-label">{f}</div>
-                                                {enterprisePlans.map((_, idx) => (
-                                                    <div key={idx} className="col-val">
-                                                        {f.includes('session') ? 'Unlimited' : <span className="blue-check">✔</span>}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ))}
-                                    </div>
+                            <motion.div key="coming-soon" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                <div className="coming-soon-container">
+                                    <Zap size={64} className="coming-soon-icon" />
+                                    <h3 className="coming-soon-title">{proxyType} Coming Soon</h3>
+                                    <p className="coming-soon-text">We are currently working hard to bring you the best {proxyType} service. Stay tuned for updates!</p>
                                 </div>
                             </motion.div>
                         )}
