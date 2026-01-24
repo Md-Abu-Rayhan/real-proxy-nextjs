@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { Facebook, Twitter, Youtube, Instagram, Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
     return (
@@ -15,9 +16,10 @@ const Footer = () => {
                             The world's leading residential proxy service provider. We provide global real residential IP addresses with high anonymity and speed.
                         </p>
                         <div className="social-links">
-                            <div className="social-icon">FB</div>
-                            <div className="social-icon">TW</div>
-                            <div className="social-icon">YT</div>
+                            <div className="social-icon"><Facebook size={18} /></div>
+                            <div className="social-icon"><Twitter size={18} /></div>
+                            <div className="social-icon"><Youtube size={18} /></div>
+                            <div className="social-icon"><Instagram size={18} /></div>
                         </div>
                     </div>
 
@@ -58,9 +60,10 @@ const Footer = () => {
             </div>
             <style jsx>{`
                 .footer-section {
-                    background-color: #041026;
+                    background: linear-gradient(180deg, #041026 0%, #020817 100%);
                     color: #fff;
-                    padding: 80px 0 40px 0;
+                    padding: 100px 0 40px 0;
+                    border-top: 1px solid rgba(0, 134, 255, 0.1);
                 }
                 .footer-grid {
                     display: grid;
@@ -75,7 +78,7 @@ const Footer = () => {
                     margin-bottom: 24px;
                 }
                 .footer-desc {
-                    color: #8898AA;
+                    color: #CBD5E0;
                     font-size: 14px;
                     line-height: 1.8;
                     max-width: 300px;
@@ -86,22 +89,43 @@ const Footer = () => {
                     margin-top: 24px;
                 }
                 .social-icon {
-                    width: 36px;
-                    height: 36px;
+                    width: 40px;
+                    height: 40px;
                     border-radius: 50%;
-                    border: 1px solid #2d3b53;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
+                    transition: all 0.3s ease;
+                    color: white;
+                }
+                .social-icon:hover {
+                    background-color: #0086FF;
+                    border-color: #0086FF;
+                    color: white;
+                    transform: translateY(-3px);
                 }
                 .footer-heading {
-                    margin-bottom: 24px;
-                    font-size: 16px;
+                    margin-bottom: 30px;
+                    font-size: 18px;
+                    font-weight: 700;
+                    position: relative;
+                    padding-bottom: 12px;
+                    color: white;
+                }
+                .footer-heading::after {
+                    content: '';
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 30px;
+                    height: 2px;
+                    background-color: #0086FF;
                 }
                 .footer-links {
                     list-style: none;
-                    color: #8898AA;
+                    color: #CBD5E0;
                     font-size: 14px;
                     line-height: 2.5;
                     padding: 0;
@@ -110,10 +134,10 @@ const Footer = () => {
                     color: #0086FF;
                 }
                 .footer-bottom {
-                    border-top: 1px solid #2d3b53;
+                    border-top: 1px solid rgba(255, 255, 255, 0.1);
                     padding-top: 40px;
                     text-align: center;
-                    color: #8898AA;
+                    color: #CBD5E0;
                     font-size: 12px;
                 }
 

@@ -2,18 +2,15 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, Bitcoin, Wallet, ArrowRight, ShieldCheck } from 'lucide-react';
+import { CreditCard, Bitcoin, Wallet, ArrowRight, ShieldCheck, Check } from 'lucide-react';
 
 const CheckoutSection = () => {
-    const [selectedMethod, setSelectedMethod] = useState('crypto');
+    const [selectedMethod, setSelectedMethod] = useState('bitcoin');
 
     const paymentMethods = [
-        { id: 'crypto', name: 'Crypto Currency', icon: <Bitcoin size={24} />, desc: 'BTC, ETH, USDT, LTC' },
-        { id: 'card', name: 'Credit Card', icon: <CreditCard size={24} />, desc: 'Visa, Mastercard, JCB' },
-        { id: 'alipay', name: 'Alipay', icon: <Wallet size={24} />, desc: 'AliPay Global' },
-        { id: 'unionpay', name: 'UnionPay', icon: <Wallet size={24} />, desc: 'UnionPay International' },
-        { id: 'apple', name: 'Apple Pay', icon: <Wallet size={24} />, desc: 'Supported via Stripe' },
-        { id: 'paypal', name: 'PayPal', icon: <Wallet size={24} />, desc: 'Global Payments' },
+        { id: 'bitcoin', name: 'Bitcoin', icon: <Bitcoin size={48} />, desc: 'BTC, ETH, USDT, LTC' },
+        { id: 'bkash', name: 'bKash', icon: <img src="/bKash-Logo.png" alt="bkash" style={{ height: '48px', width: 'auto' }} />, desc: 'Mobile Banking' },
+        { id: 'nagad', name: 'Nagad', icon: <img src="/Nagad-Logo.png" alt="nagad" style={{ height: '48px', width: 'auto' }} />, desc: 'Mobile Banking' },
     ];
 
     return (
@@ -42,9 +39,9 @@ const CheckoutSection = () => {
                                     }}
                                 >
                                     {selectedMethod === method.id && (
-                                        <div style={{ position: 'absolute', top: '15px', right: '15px', color: '#0086FF' }}>
-                                            <div style={{ backgroundColor: '#0086FF', borderRadius: '50%', padding: '2px' }}>
-                                                <ArrowRight size={14} color="white" />
+                                        <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
+                                            <div style={{ backgroundColor: '#0086FF', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Check size={14} color="white" strokeWidth={3} />
                                             </div>
                                         </div>
                                     )}

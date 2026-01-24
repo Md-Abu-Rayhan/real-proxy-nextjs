@@ -2,6 +2,7 @@ import PromoBanner from "@/components/layout/PromoBanner";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ResidentialHero from "@/components/sections/ResidentialHero";
+import Pricing from "@/components/sections/Pricing";
 import ResidentialPricing from "@/components/sections/ResidentialPricing";
 import ResidentialBenefits from "@/components/sections/ResidentialBenefits";
 import CheckoutSection from "@/components/sections/CheckoutSection";
@@ -17,6 +18,7 @@ export default function ResidentialProxiesPage() {
             <PromoBanner />
             <Navbar />
             <ResidentialHero />
+            <Pricing />
             <ResidentialBenefits />
             <ResidentialPricing />
             <CheckoutSection />
@@ -30,7 +32,7 @@ export default function ResidentialProxiesPage() {
                     </div>
                     <div style={{ display: 'flex', gap: '20px' }}>
                         <button className="btn-primary" style={{ padding: '16px 40px', background: '#0086FF', border: 'none' }}>Order Now</button>
-                        <button className="btn-outline" style={{ padding: '16px 40px', color: 'white', borderColor: 'rgba(255,255,255,0.2)' }}>Contact Support</button>
+                        <button className="btn-outline" style={{ padding: '16px 40px', color: 'white', borderColor: 'rgba(255,255,255,0.4)', background: 'transparent' }}>Contact Support</button>
                     </div>
                 </div>
             </section>

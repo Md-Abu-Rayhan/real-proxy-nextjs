@@ -34,7 +34,7 @@ const Pricing = () => {
                 <style dangerouslySetInnerHTML={{
                     __html: `
                     .pricing-section {
-                        background: linear-gradient(180deg, #D1CAFD 0%, #EFE9FD 100%);
+                        background: linear-gradient(180deg, #E8F4FF 0%, #F5FAFF 100%);
                         padding: 80px 0;
                         font-family: 'Outfit', sans-serif;
                         text-align: center;
@@ -71,7 +71,7 @@ const Pricing = () => {
                         transition: all 0.2s;
                     }
                     .tab-btn.active {
-                        background: #5B53EA;
+                        background: #0086FF;
                         color: #fff;
                     }
                     .white-card {
@@ -86,7 +86,7 @@ const Pricing = () => {
                     }
                     .card-title {
                         font-size: 34px;
-                        color: #5B53EA;
+                        color: #0086FF;
                         font-weight: 700;
                         margin-bottom: 40px;
                     }
@@ -103,7 +103,7 @@ const Pricing = () => {
                         width: 24px;
                         height: 24px;
                         background: #FFF;
-                        border: 4px solid #5B53EA;
+                        border: 4px solid #0086FF;
                         border-radius: 50%;
                         cursor: pointer;
                         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -147,7 +147,7 @@ const Pricing = () => {
                         color: #323232;
                     }
                     .stat-value small { font-size: 12px; color: #999; font-weight: 600; }
-                    .gray-out del { color: #5B53EA; font-size: 14px; margin-right: 5px; font-weight: 700; }
+                    .gray-out del { color: #0086FF; font-size: 14px; margin-right: 5px; font-weight: 700; }
                     .green-text { color: #28a745; font-weight: 800; }
                     .plus-minus {
                         position: absolute;
@@ -178,7 +178,7 @@ const Pricing = () => {
                         font-weight: 800;
                         font-size: 18px;
                         color: #fff;
-                        background: #5B53EA;
+                        background: #0086FF;
                         box-shadow: 6px 6px 0px 0px #111 !important;
                         transition: all 0.1s;
                         border-radius: 6px;
@@ -190,16 +190,16 @@ const Pricing = () => {
                         transform: translate(3px, 3px);
                         box-shadow: 3px 3px 0px 0px #111 !important;
                     }
-                    .buy-btn { background: #5B53EA; color: #fff; }
+                    .buy-btn { background: #0086FF; color: #fff; }
                     .renews-text { color: #888; font-size: 13px; margin: 25px 0 15px; }
                     .payment-icons {
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        gap: 15px;
-                        margin-top: 15px;
+                        gap: 25px;
+                        margin-top: 30px;
                     }
-                    .payment-icons span { font-size: 13px; font-weight: 800; color: #999; margin-right: 5px; }
+                    .payment-icons span { font-size: 15px; font-weight: 800; color: #777; margin-right: 10px; }
                     .payment-icons img { height: 26px; filter: grayscale(1); opacity: 0.5; }
                     
                     .coming-soon-container {
@@ -215,7 +215,7 @@ const Pricing = () => {
                         gap: 20px;
                     }
                     .coming-soon-icon {
-                        color: #5B53EA;
+                        color: #0086FF;
                         animation: pulse 2s infinite;
                     }
                     @keyframes pulse {
@@ -265,7 +265,7 @@ const Pricing = () => {
                                             onChange={(e) => setBandwidth(parseInt(e.target.value))}
                                             className="proxy-slider"
                                             style={{
-                                                background: `linear-gradient(to right, #5B53EA 0%, #5B53EA ${(bandwidth / 1000) * 100}%, #E8E6FD ${(bandwidth / 1000) * 100}%, #E8E6FD 100%)`
+                                                background: `linear-gradient(to right, #0086FF 0%, #0086FF ${(bandwidth / 1000) * 100}%, #E8F4FF ${(bandwidth / 1000) * 100}%, #E8F4FF 100%)`
                                             }}
                                         />
                                         <div className="slider-labels">
@@ -313,14 +313,11 @@ const Pricing = () => {
                                     <Link href="/register" className="brutal-btn buy-btn">
                                         <ShoppingCart size={18} /> Buy Now
                                     </Link>
-                                    <p className="renews-text">Auto-renews upon plan completion or annually. Opt-out anytime.</p>
                                     <div className="payment-icons">
                                         <span>WE ACCEPT</span>
-                                        <img src="https://proxyjet.io/wp-content/uploads/2024/05/paypal.png" alt="paypal" />
-                                        <img src="https://proxyjet.io/wp-content/uploads/2024/05/visa.png" alt="visa" />
-                                        <img src="https://proxyjet.io/wp-content/uploads/2024/05/mastercard.png" alt="mastercard" />
-                                        <img src="https://proxyjet.io/wp-content/uploads/2024/05/amex.png" alt="amex" />
-                                        <img src="https://proxyjet.io/wp-content/uploads/2024/05/bitcoin.png" alt="bitcoin" />
+                                        <img src="/Bitcoin-Logo.png" alt="bitcoin" style={{ filter: 'none', opacity: 1, height: '48px' }} />
+                                        <img src="/bKash-Logo.png" alt="bkash" style={{ filter: 'none', opacity: 1, height: '48px' }} />
+                                        <img src="/Nagad-Logo.png" alt="nagad" style={{ filter: 'none', opacity: 1, height: '48px' }} />
                                     </div>
                                 </div>
                             </motion.div>
