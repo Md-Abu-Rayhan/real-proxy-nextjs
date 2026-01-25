@@ -15,25 +15,12 @@ export default function Home() {
       <PromoBanner />
       <Navbar />
       <Hero />
+      <Pricing />
 
-      {/* Social Proof Bar */}
-      <section className="social-proof">
-        <div className="container social-proof-container">
-          <div className="social-item">
-            TRUSTPILOT <span className="stars">★★★★★</span>
-          </div>
-          <div className="social-item">
-            Capterra <span className="score">4.8/5</span>
-          </div>
-          <div className="social-item">
-            G2 LEADER
-          </div>
-        </div>
-      </section>
+
 
       <Stats />
       <HowItWorks />
-      <Pricing />
 
       {/* Simple CTA Section */}
       <section className="cta-section">

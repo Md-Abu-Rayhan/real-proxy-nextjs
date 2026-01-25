@@ -26,10 +26,10 @@ const Footer = () => {
                     <div className="footer-column">
                         <h4 className="footer-heading">Help Center</h4>
                         <ul className="footer-links">
-                            <li><a href="#">Support</a></li>
-                            <li><a href="#">Blog</a></li>
                             <li><a href="#">FAQ</a></li>
-                            <li><a href="#">How to use?</a></li>
+                            <li><a href="#">Support</a></li>
+                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="#">Terms and Conditions</a></li>
                         </ul>
                     </div>
 
@@ -47,8 +47,6 @@ const Footer = () => {
                         <h4 className="footer-heading">Partnership</h4>
                         <ul className="footer-links">
                             <li><a href="#">Affiliate Program</a></li>
-                            <li><a href="#">Reseller Program</a></li>
-                            <li><a href="#">White Label</a></li>
                             <li><a href="#">Contact Us</a></li>
                         </ul>
                     </div>

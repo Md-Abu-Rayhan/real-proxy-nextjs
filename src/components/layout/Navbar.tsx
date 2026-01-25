@@ -42,18 +42,14 @@ const Navbar = () => {
 
                 {/* Desktop Menu Items */}
                 <div className="desktop-menu">
-                    <a href="/residential-proxies" className="nav-item" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>{t.nav.products} <ChevronDown size={14} /></a>
-                    <a href="#" className="nav-item" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>{t.nav.pricing} <ChevronDown size={14} /></a>
-                    <a href="#" className="nav-item" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>{t.nav.solutions} <ChevronDown size={14} /></a>
-                    <a href="#" className="nav-item" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>{t.nav.resources} <ChevronDown size={14} /></a>
-                    <a href="#" className="nav-item">{t.nav.apps}</a>
+                    <a href="/residential-proxies" className="nav-item">{t.nav.products}</a>
+                    <a href="#" className="nav-item">{t.nav.contact}</a>
                     <a href="#" className="nav-item">{t.nav.faq}</a>
                 </div>
 
                 {/* Desktop Actions */}
                 <div className="desktop-actions">
                     <a href="#" className="mobile-hide" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#ff4d4d', fontWeight: '600', fontSize: '15px' }}>
-                        <Flame size={18} fill="#ff4d4d" /> {t.nav.proxyAi}
                     </a>
                     <Link href="/login" className="nav-link-login" style={{ color: '#163561', fontWeight: '600', fontSize: '15px', padding: '0 10px' }}>{t.nav.login}</Link>
                     <Link href="/register" className="btn-primary" style={{ padding: '8px 24px', fontSize: '14px', borderRadius: '8px' }}>
@@ -96,15 +92,9 @@ const Navbar = () => {
                         }}
                     >
                         <a href="/residential-proxies" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.products}</a>
-                        <a href="#" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.pricing}</a>
-                        <a href="#" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.solutions}</a>
-                        <a href="#" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.resources}</a>
-                        <a href="#" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.apps}</a>
+                        <a href="#" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.contact}</a>
                         <a href="#" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.faq}</a>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '10px' }}>
-                            <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#ff4d4d', fontWeight: '600' }}>
-                                <Flame size={18} fill="#ff4d4d" /> {t.nav.proxyAi}
-                            </a>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                 <Link href="/login" className="btn-outline" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
                                     {t.nav.login}
@@ -127,11 +117,13 @@ const Navbar = () => {
                 }
                 .desktop-menu {
                     display: flex;
-                    gap: 25px;
+                    gap: 30px;
                     font-weight: 500;
                     font-size: 15px;
                     color: #163561;
                     align-items: center;
+                    margin-left: 50px;
+                    margin-right: auto;
                 }
                 .desktop-actions {
                     display: flex;

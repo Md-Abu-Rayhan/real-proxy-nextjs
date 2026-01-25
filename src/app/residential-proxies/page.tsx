@@ -3,7 +3,6 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ResidentialHero from "@/components/sections/ResidentialHero";
 import Pricing from "@/components/sections/Pricing";
-import ResidentialPricing from "@/components/sections/ResidentialPricing";
 import ResidentialBenefits from "@/components/sections/ResidentialBenefits";
 import CheckoutSection from "@/components/sections/CheckoutSection";
 
@@ -20,8 +19,7 @@ export default function ResidentialProxiesPage() {
             <ResidentialHero />
             <Pricing />
             <ResidentialBenefits />
-            <ResidentialPricing />
-            <CheckoutSection />
+            {/* <CheckoutSection /> */}
 
             {/* Dynamic CTA at the bottom */}
             <section style={{ padding: '80px 0', background: '#041026', color: 'white' }}>

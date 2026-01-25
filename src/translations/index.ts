@@ -1,13 +1,9 @@
 export const translations = {
     en: {
         nav: {
-            products: "Products",
-            pricing: "Pricing",
-            solutions: "Solutions",
-            resources: "Resources",
-            apps: "Apps",
+            products: "Products & Pricing",
+            contact: "Contact",
             faq: "FAQ",
-            proxyAi: "Proxy AI",
             login: "Log In",
             signup: "Sign Up"
         },
@@ -89,13 +85,9 @@ export const translations = {
     },
     bn: {
         nav: {
-            products: "পণ্যসমূহ",
-            pricing: "মূল্যতালিকা",
-            solutions: "সমাধান",
-            resources: "রিসোর্স",
-            apps: "অ্যাপস",
+            products: "পণ্য ও মূল্যতালিকা",
+            contact: "যোগাযোগ",
             faq: "প্রশ্নাবলী",
-            proxyAi: "প্রক্সি এআই",
             login: "লগ ইন",
             signup: "সাইন আপ"
         },

@@ -4,7 +4,7 @@ import React from 'react';
 
 const Stats = () => {
     const stats = [
-        { label: 'Active IPs', value: '200M+' },
+        { label: 'Active IPs', value: '10M+' },
         { label: 'Countries Covered', value: '190+' },
         { label: 'Success Rate', value: '99.9%' },
         { label: 'Latency', value: '<0.6s' },
