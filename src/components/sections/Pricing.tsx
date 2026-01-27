@@ -4,10 +4,64 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Minus, Plus, ShoppingCart, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 const Pricing = () => {
+    const router = useRouter();
     const [proxyType, setProxyType] = useState('Rotating Res.');
     const [bandwidth, setBandwidth] = useState(500);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleBuyNow = async () => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            toast.error("Please login to proceed with payment.");
+            router.push('/login');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+
+            // Map bandwidth/type to a package ID
+            let packageId = "res_10gb";
+            if (bandwidth >= 100) packageId = "res_100gb";
+            else if (bandwidth >= 50) packageId = "res_50gb";
+
+            const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {
+                packageId: packageId,
+                customerOrderId: `ORD${Date.now()}`.substring(0, 16),
+                customerName: "John Doe",
+                customerEmail: localStorage.getItem('user_email') || "customer@example.com",
+                customerPhone: "01700000000",
+                customerAddress: "Dhaka, Bangladesh",
+                customerCity: "Dhaka",
+                customerState: "Dhaka",
+                customerPostcode: "1212",
+                customerCountry: "BD"
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.data && response.data.redirectUrl) {
+                toast.success("Redirecting to payment gateway...");
+                window.location.href = response.data.redirectUrl;
+            } else {
+                toast.error("Failed to get payment URL.");
+            }
+        } catch (error: any) {
+            console.error("Payment error detail:", error.response?.data);
+            const message = error.response?.data?.message || error.message || "Payment initialization failed.";
+            toast.error(message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const proxyTypes = ['Rotating Res.', 'Static Res.', 'Mobile Proxies', 'Datacenter'];
 
@@ -310,9 +364,14 @@ const Pricing = () => {
                                 </div>
 
                                 <div className="buy-now-wrapper">
-                                    <Link href="/register" className="brutal-btn buy-btn">
-                                        <ShoppingCart size={18} /> Buy Now
-                                    </Link>
+                                    <button
+                                        onClick={handleBuyNow}
+                                        disabled={isLoading}
+                                        className="brutal-btn buy-btn"
+                                        style={{ border: 'none' }}
+                                    >
+                                        <ShoppingCart size={18} /> {isLoading ? 'Processing...' : 'Buy Now'}
+                                    </button>
                                     <div className="payment-icons">
                                         <span>WE ACCEPT</span>
                                         <img src="/Bitcoin-Logo.png" alt="bitcoin" style={{ filter: 'none', opacity: 1, height: '48px' }} />

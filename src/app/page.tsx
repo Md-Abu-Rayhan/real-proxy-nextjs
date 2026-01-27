@@ -27,7 +27,19 @@ export default function Home() {
         <div className="container">
           <h2 className="cta-title">Ready to Scale Your Business?</h2>
           <p className="cta-desc">Join thousands of companies using Real Proxy to bypass restrictions and get reliable data globally.</p>
-          <Link href="/register" className="cta-btn">Get Started Now</Link>
+          <button
+            onClick={() => {
+              const token = localStorage.getItem('auth_token');
+              if (token) {
+                window.location.href = '/dashboard/traffic-setup';
+              } else {
+                window.location.href = '/register';
+              }
+            }}
+            className="cta-btn"
+          >
+            Get Started Now
+          </button>
         </div>
       </section>
 

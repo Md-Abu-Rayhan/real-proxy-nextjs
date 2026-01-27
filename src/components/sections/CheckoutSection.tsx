@@ -4,14 +4,65 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CreditCard, Bitcoin, Wallet, ArrowRight, ShieldCheck, Check } from 'lucide-react';
 
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+
 const CheckoutSection = () => {
-    const [selectedMethod, setSelectedMethod] = useState('bitcoin');
+    const router = useRouter();
+    const [selectedMethod, setSelectedMethod] = useState('bkash');
+    const [isLoading, setIsLoading] = useState(false);
 
     const paymentMethods = [
         { id: 'bitcoin', name: 'Bitcoin', icon: <Bitcoin size={48} />, desc: 'BTC, ETH, USDT, LTC' },
         { id: 'bkash', name: 'bKash', icon: <img src="/bKash-Logo.png" alt="bkash" style={{ height: '48px', width: 'auto' }} />, desc: 'Mobile Banking' },
         { id: 'nagad', name: 'Nagad', icon: <img src="/Nagad-Logo.png" alt="nagad" style={{ height: '48px', width: 'auto' }} />, desc: 'Mobile Banking' },
     ];
+
+    const handlePayNow = async () => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            toast.error("Please login to proceed with payment.");
+            router.push('/login');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+
+            // Send only necessary data to the backend
+            const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {
+                packageId: "res_100gb", // This matches the UI "100GB Data"
+                customerOrderId: `ORD${Date.now()}`.substring(0, 16),
+                customerName: "John Doe", // Should ideally come from user profile
+                customerEmail: localStorage.getItem('user_email') || "customer@example.com",
+                customerPhone: "01700000000", // Should come from form
+                customerAddress: "Dhaka, Bangladesh",
+                customerCity: "Dhaka",
+                customerState: "Dhaka",
+                customerPostcode: "1212",
+                customerCountry: "BD"
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.data && response.data.redirectUrl) {
+                toast.success("Redirecting to payment gateway...");
+                window.location.href = response.data.redirectUrl;
+            } else {
+                toast.error("Failed to get payment URL.");
+            }
+        } catch (error: any) {
+            console.error("Order error detail:", error.response?.data);
+            const message = error.response?.data?.message || error.response?.data?.errorMessage || error.message || "Order initialization failed.";
+            toast.error(message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <section id="checkout" className="section-padding" style={{ backgroundColor: '#fff' }}>
@@ -103,23 +154,26 @@ const CheckoutSection = () => {
                                 <div className="total-amount" style={{ fontSize: '42px', fontWeight: '800', color: '#0086FF' }}>$120.00</div>
                             </div>
 
-                            <button style={{
-                                width: '100%',
-                                padding: '20px',
-                                borderRadius: '16px',
-                                backgroundColor: '#0086FF',
-                                color: 'white',
-                                fontWeight: '700',
-                                fontSize: '18px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '10px',
-                                transition: 'all 0.2s ease'
-                            }} className="pay-btn">
-                                Pay Now <ArrowRight size={20} />
+                            <button
+                                onClick={handlePayNow}
+                                disabled={isLoading}
+                                style={{
+                                    width: '100%',
+                                    padding: '20px',
+                                    borderRadius: '16px',
+                                    backgroundColor: isLoading ? '#66b5ff' : '#0086FF',
+                                    color: 'white',
+                                    fontWeight: '700',
+                                    fontSize: '18px',
+                                    border: 'none',
+                                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '10px',
+                                    transition: 'all 0.2s ease'
+                                }} className="pay-btn">
+                                {isLoading ? 'Processing...' : 'Pay Now'} {!isLoading && <ArrowRight size={20} />}
                             </button>
 
                             <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: '1.6' }}>

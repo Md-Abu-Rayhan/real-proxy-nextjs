@@ -3,9 +3,65 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 const ResidentialPricing = () => {
+    const router = useRouter();
     const [planType, setPlanType] = useState('Personal');
+    const [isLoading, setIsLoading] = useState<number | null>(null);
+
+    const handleOrderNow = async (planGb: string, index: number) => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            toast.error("Please login to proceed with order.");
+            router.push('/login');
+            return;
+        }
+
+        setIsLoading(index);
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+
+            // Map plan string to package ID
+            let packageId = "res_10gb";
+            if (planGb.includes('100GB')) packageId = "res_100gb";
+            else if (planGb.includes('50GB') || planGb.includes('40GB')) packageId = "res_50gb";
+            else if (planGb.includes('10GB')) packageId = "res_10gb";
+            else if (parseInt(planGb) >= 100) packageId = "res_100gb";
+
+            const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {
+                packageId: packageId,
+                customerOrderId: `ORD${Date.now()}`.substring(0, 16),
+                customerName: "John Doe",
+                customerEmail: localStorage.getItem('user_email') || "customer@example.com",
+                customerPhone: "01700000000",
+                customerAddress: "Dhaka, Bangladesh",
+                customerCity: "Dhaka",
+                customerState: "Dhaka",
+                customerPostcode: "1212",
+                customerCountry: "BD"
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.data && response.data.redirectUrl) {
+                toast.success("Redirecting to payment gateway...");
+                window.location.href = response.data.redirectUrl;
+            } else {
+                toast.error("Failed to get payment URL.");
+            }
+        } catch (error: any) {
+            console.error("Order error detail:", error.response?.data);
+            const message = error.response?.data?.message || error.response?.data?.errorMessage || error.message || "Order initialization failed.";
+            toast.error(message);
+        } finally {
+            setIsLoading(null);
+        }
+    };
 
     const personalPlans = [
         { gb: '5GB', price: '2', total: '10', discount: '-4', badge: '' },
@@ -95,16 +151,21 @@ const ResidentialPricing = () => {
                                 </li>
                             </ul>
 
-                            <button style={{
-                                width: '100%',
-                                padding: '14px',
-                                borderRadius: '12px',
-                                backgroundColor: '#0086FF',
-                                color: 'white',
-                                fontWeight: '700',
-                                border: 'none',
-                                cursor: 'pointer'
-                            }}>Order Now</button>
+                            <button
+                                onClick={() => handleOrderNow(plan.gb, i)}
+                                disabled={isLoading === i}
+                                style={{
+                                    width: '100%',
+                                    padding: '14px',
+                                    borderRadius: '12px',
+                                    backgroundColor: isLoading === i ? '#66b5ff' : '#0086FF',
+                                    color: 'white',
+                                    fontWeight: '700',
+                                    border: 'none',
+                                    cursor: isLoading === i ? 'not-allowed' : 'pointer'
+                                }}>
+                                {isLoading === i ? 'Ordering...' : 'Order Now'}
+                            </button>
                         </motion.div>
                     ))}
                 </div>

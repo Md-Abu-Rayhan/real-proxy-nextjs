@@ -11,14 +11,27 @@ const Navbar = () => {
     const { t } = useLanguage();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 20);
         };
+
+        // Initial check for login state
+        const token = localStorage.getItem('auth_token');
+        setIsLoggedIn(!!token);
+
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_email');
+        setIsLoggedIn(false);
+        window.location.reload();
+    };
 
     return (
         <nav className="navbar" style={{
@@ -49,12 +62,21 @@ const Navbar = () => {
 
                 {/* Desktop Actions */}
                 <div className="desktop-actions">
-                    <a href="#" className="mobile-hide" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#ff4d4d', fontWeight: '600', fontSize: '15px' }}>
-                    </a>
-                    <Link href="/login" className="nav-link-login" style={{ color: '#163561', fontWeight: '600', fontSize: '15px', padding: '0 10px' }}>{t.nav.login}</Link>
-                    <Link href="/register" className="btn-primary" style={{ padding: '8px 24px', fontSize: '14px', borderRadius: '8px' }}>
-                        {t.nav.signup}
-                    </Link>
+                    {isLoggedIn ? (
+                        <>
+                            <Link href="/dashboard/traffic-setup" className="nav-link-login" style={{ color: '#163561', fontWeight: '600', fontSize: '15px' }}>Dashboard</Link>
+                            <button onClick={handleLogout} className="btn-outline" style={{ padding: '8px 20px', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
+                                Logout
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <Link href="/login" className="nav-link-login" style={{ color: '#163561', fontWeight: '600', fontSize: '15px', padding: '0 10px' }}>{t.nav.login}</Link>
+                            <Link href="/register" className="btn-primary" style={{ padding: '8px 24px', fontSize: '14px', borderRadius: '8px' }}>
+                                {t.nav.signup}
+                            </Link>
+                        </>
+                    )}
                     <LanguageSelector />
                 </div>
 
@@ -95,14 +117,25 @@ const Navbar = () => {
                         <a href="#" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.contact}</a>
                         <a href="#" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.faq}</a>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '10px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                <Link href="/login" className="btn-outline" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
-                                    {t.nav.login}
-                                </Link>
-                                <Link href="/register" className="btn-primary" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
-                                    {t.nav.signup}
-                                </Link>
-                            </div>
+                            {isLoggedIn ? (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                                    <Link href="/dashboard/traffic-setup" className="btn-primary" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
+                                        Dashboard
+                                    </Link>
+                                    <button onClick={handleLogout} className="btn-outline" style={{ padding: '12px', textAlign: 'center', cursor: 'pointer' }}>
+                                        Logout
+                                    </button>
+                                </div>
+                            ) : (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    <Link href="/login" className="btn-outline" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
+                                        {t.nav.login}
+                                    </Link>
+                                    <Link href="/register" className="btn-primary" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
+                                        {t.nav.signup}
+                                    </Link>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 )}
