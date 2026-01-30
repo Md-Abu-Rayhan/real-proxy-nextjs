@@ -26,7 +26,12 @@ const PromoBanner = () => {
                     onClick={() => {
                         const token = localStorage.getItem('auth_token');
                         if (token) {
-                            router.push('/dashboard/traffic-setup');
+                            const pricingSection = document.getElementById('pricing-section');
+                            if (pricingSection) {
+                                pricingSection.scrollIntoView({ behavior: 'smooth' });
+                            } else {
+                                router.push('/dashboard/traffic-setup');
+                            }
                         } else {
                             router.push('/register');
                         }

@@ -31,7 +31,12 @@ export default function Home() {
             onClick={() => {
               const token = localStorage.getItem('auth_token');
               if (token) {
-                window.location.href = '/dashboard/traffic-setup';
+                const pricingSection = document.getElementById('pricing-section');
+                if (pricingSection) {
+                  pricingSection.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  window.location.href = '/dashboard/traffic-setup';
+                }
               } else {
                 window.location.href = '/register';
               }

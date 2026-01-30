@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { Globe, ChevronDown } from 'lucide-react';
 
 const LanguageSelector = () => {
     const [isLangOpen, setIsLangOpen] = useState(false);
@@ -14,9 +15,9 @@ const LanguageSelector = () => {
             onClick={() => setIsLangOpen(!isLangOpen)}
             style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px', color: '#163561', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
         >
-            <img src="https://static.922proxy.com/img/langu_earth.png" alt="Globe" style={{ width: '18px', height: '18px' }} />
+            <Globe size={18} color="#0086FF" />
             <span style={{ minWidth: '80px', textAlign: 'center' }}>{displayLang}</span>
-            <img src="https://static.922proxy.com/img/index_new/select_down.png" alt="Down" style={{ width: '10px', height: '6px', marginLeft: '2px', transform: isLangOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+            <ChevronDown size={14} style={{ marginLeft: '2px', transform: isLangOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
 
             {isLangOpen && (
                 <div style={{
