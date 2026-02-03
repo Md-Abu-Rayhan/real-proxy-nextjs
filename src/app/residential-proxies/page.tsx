@@ -29,7 +29,7 @@ export default function ResidentialProxiesPage() {
                         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '18px' }}>Join over 100k+ global users today.</p>
                     </div>
                     <div style={{ display: 'flex', gap: '20px' }}>
-                        <button className="btn-primary" style={{ padding: '16px 40px', background: '#0086FF', border: 'none' }}>Order Now</button>
+                        <a href="#pricing-section" className="btn-primary" style={{ padding: '16px 40px', background: '#0086FF', border: 'none', textDecoration: 'none', borderRadius: '4px', display: 'inline-flex', alignItems: 'center' }}>Order Now</a>
                         <button className="btn-outline" style={{ padding: '16px 40px', color: 'white', borderColor: 'rgba(255,255,255,0.4)', background: 'transparent' }}>Contact Support</button>
                     </div>
                 </div>

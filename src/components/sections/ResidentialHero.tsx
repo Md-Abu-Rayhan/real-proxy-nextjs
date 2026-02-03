@@ -26,7 +26,11 @@ const ResidentialHero = () => {
                     </p>
 
                     <div className="res-actions">
-                        <button className="btn-primary" style={{ padding: '18px 44px', fontSize: '18px', borderRadius: '12px', background: '#0086FF', border: 'none' }}>
+                        <button
+                            className="btn-primary"
+                            style={{ padding: '18px 44px', fontSize: '18px', borderRadius: '12px', background: '#0086FF', border: 'none' }}
+                            onClick={() => document.getElementById('pricing-section')?.scrollIntoView({ behavior: 'smooth' })}
+                        >
                             Get Started
                         </button>
                         <button className="btn-outline" style={{ padding: '18px 44px', fontSize: '18px', borderRadius: '12px', color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>

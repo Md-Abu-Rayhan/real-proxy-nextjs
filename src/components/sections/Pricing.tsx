@@ -14,76 +14,7 @@ const Pricing = () => {
     const [bandwidth, setBandwidth] = useState(0.1);
     const [isLoading, setIsLoading] = useState(false);
     const [exchangeRate, setExchangeRate] = useState(122); // Default fallback rate
-
-    React.useEffect(() => {
-        const fetchRate = async () => {
-            try {
-                // Using a free public API
-                const res = await axios.get('https://api.exchangerate-api.com/v4/latest/USD');
-                if (res.data && res.data.rates && res.data.rates.BDT) {
-                    setExchangeRate(res.data.rates.BDT);
-                    console.log(`Live Exchange Rate: 1 USD = ${res.data.rates.BDT} BDT`);
-                }
-            } catch (error) {
-                console.error("Failed to fetch exchange rate, using fallback:", error);
-            }
-        };
-        fetchRate();
-    }, []);
-
-    const handleBuyNow = async () => {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-            toast.error("Please login to proceed with payment.");
-            router.push('/login');
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
-
-            // Map bandwidth/type to a package ID or use "custom"
-            let packageId = "custom";
-            if (bandwidth === 10) packageId = "res_10gb";
-            else if (bandwidth === 50) packageId = "res_50gb";
-            else if (bandwidth === 100) packageId = "res_100gb";
-
-            const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {
-                packageId: packageId,
-                amount: parseFloat(current.totalBDT),
-                currency: "BDT",
-                customerOrderId: `ORD${Date.now()}`.substring(0, 16),
-                customerName: "John Doe",
-                customerEmail: localStorage.getItem('user_email') || "customer@example.com",
-                customerPhone: "01700000000",
-                customerAddress: "Dhaka, Bangladesh",
-                customerCity: "Dhaka",
-                customerState: "Dhaka",
-                customerPostcode: "1212",
-                customerCountry: "BD"
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.data && response.data.redirectUrl) {
-                toast.success("Redirecting to payment gateway...");
-                window.location.href = response.data.redirectUrl;
-            } else {
-                toast.error("Failed to get payment URL.");
-            }
-        } catch (error: any) {
-            console.error("Payment error detail:", error.response?.data);
-            const message = error.response?.data?.message || error.message || "Payment initialization failed.";
-            toast.error(message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const proxyTypes = ['Rotating Res.', 'Static Res.', 'Mobile Proxies', 'Datacenter'];
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     const getPricing = (gb: number) => {
         let pricePerGb = 1.00;
@@ -109,6 +40,135 @@ const Pricing = () => {
     };
 
     const current = getPricing(bandwidth);
+
+    React.useEffect(() => {
+        const fetchRate = async () => {
+            try {
+                // Using a free public API
+                const res = await axios.get('https://api.exchangerate-api.com/v4/latest/USD');
+                if (res.data && res.data.rates && res.data.rates.BDT) {
+                    setExchangeRate(res.data.rates.BDT);
+                    console.log(`Live Exchange Rate: 1 USD = ${res.data.rates.BDT} BDT`);
+                }
+            } catch (error) {
+                console.error("Failed to fetch exchange rate, using fallback:", error);
+            }
+        };
+        fetchRate();
+    }, []);
+
+    const handleBuyNowClick = () => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            toast.error("Please login to proceed with payment.");
+            router.push('/login');
+            return;
+        }
+        setShowPaymentModal(true);
+    };
+
+    const handleCryptoPayment = async () => {
+        setIsLoading(true);
+        let redirectToPayment = false;
+        try {
+            const orderId = `CR${Date.now()}`.substring(0, 16);
+            const amount = parseFloat(current.total);
+
+            // POST to initialize crypto payment
+            const response = await axios.post('https://api.realproxy.net/api/CryptoPayment/initialize', {
+                orderId: orderId,
+                amount: amount,
+                quoteAssetId: "b91e18ff-a9ae-3dc7-8679-e935d9a4b34b"
+            }, {
+                headers: {
+                    'accept': '*/*',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.data && response.data.paymentUrl) {
+                redirectToPayment = true;
+                toast.success("Redirecting to Crypto payment...");
+                window.location.href = response.data.paymentUrl;
+            } else {
+                toast.error(response.data.message || "Failed to get crypto payment URL.");
+            }
+        } catch (error: any) {
+            console.error("Crypto payment error:", error.response?.data || error.message);
+            toast.error("Crypto payment initialization failed.");
+        } finally {
+            if (!redirectToPayment) {
+                setIsLoading(false);
+                setShowPaymentModal(false);
+            } else {
+                // Keep loading true, but hide modal
+                setShowPaymentModal(false);
+            }
+        }
+    };
+
+    const handleFiatPayment = async () => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            toast.error("Please login to proceed with payment.");
+            router.push('/login');
+            return;
+        }
+
+        setIsLoading(true);
+        let redirectToPayment = false;
+        try {
+            // Map bandwidth/type to a package ID or use "custom"
+            let packageId = "custom";
+            if (bandwidth === 10) packageId = "res_10gb";
+            else if (bandwidth === 50) packageId = "res_50gb";
+            else if (bandwidth === 100) packageId = "res_100gb";
+
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+            const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {
+                packageId: packageId,
+                amount: Number(current.totalBDT),
+                currency: "BDT",
+                customerOrderId: `ORD${Math.floor(Date.now() / 1000)}${Math.floor(Math.random() * 100000)}`.substring(0, 16),
+                customerName: "John Doe",
+                customerEmail: localStorage.getItem('user_email') || "customer@example.com",
+                customerPhone: "01700000000",
+                customerAddress: "Dhaka, Bangladesh",
+                customerCity: "Dhaka",
+                customerState: "Dhaka",
+                customerPostcode: "1212",
+                customerCountry: "BD"
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.data && response.data.redirectUrl) {
+                redirectToPayment = true;
+                toast.success("Redirecting to payment gateway...");
+                window.location.href = response.data.redirectUrl;
+            } else {
+                toast.error("Failed to get payment URL. Server responded with success but no URL.");
+            }
+        } catch (error: any) {
+            console.error("Payment error detail:", error.response?.data);
+            const message = error.response?.data?.message || error.message || "Payment initialization failed.";
+            toast.error(`System Error: ${message}. Detail: ${typeof error.response?.data === 'string' ? error.response.data : ''}`);
+        } finally {
+            if (!redirectToPayment) {
+                setIsLoading(false);
+                setShowPaymentModal(false);
+            } else {
+                setShowPaymentModal(false);
+            }
+        }
+    };
+
+    const proxyTypes = ['Rotating Res.', 'Static Res.', 'Mobile Proxies', 'Datacenter'];
+
 
     return (
         <section id="pricing-section" className="pricing-section">
@@ -310,9 +370,188 @@ const Pricing = () => {
                         font-weight: 800;
                         color: #323232;
                     }
-                    .coming-soon-text {
+                     .coming-soon-text {
                         color: #666;
                         max-width: 500px;
+                    }
+
+                    .modal-overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: rgba(0, 0, 0, 0.7);
+                        backdrop-filter: blur(8px);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 9999;
+                        padding: 20px;
+                    }
+                    .payment-modal {
+                        background: #fff;
+                        border-radius: 24px;
+                        width: 100%;
+                        max-width: 500px;
+                        padding: 40px;
+                        position: relative;
+                        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                        border: 1px solid rgba(0, 134, 255, 0.1);
+                        text-align: left;
+                    }
+                    .modal-close {
+                        position: absolute;
+                        top: 20px;
+                        right: 20px;
+                        background: #f5f5f5;
+                        border: none;
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        cursor: pointer;
+                        color: #666;
+                        transition: all 0.2s;
+                    }
+                    .modal-close:hover {
+                        background: #e0e0e0;
+                        color: #000;
+                    }
+                    .modal-title {
+                        font-size: 24px;
+                        font-weight: 800;
+                        color: #323232;
+                        margin-bottom: 8px;
+                    }
+                    .modal-subtitle {
+                        color: #666;
+                        font-size: 15px;
+                        margin-bottom: 30px;
+                    }
+                    .payment-options {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 15px;
+                    }
+                    .payment-option-btn {
+                        display: flex;
+                        align-items: center;
+                        gap: 20px;
+                        padding: 20px;
+                        border-radius: 16px;
+                        border: 2px solid #f0f0f0;
+                        background: #fff;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        width: 100%;
+                        text-align: left;
+                    }
+                    .payment-option-btn:hover {
+                        border-color: #0086FF;
+                        background: #f8fbff;
+                        transform: translateY(-2px);
+                    }
+                    .option-icon {
+                        width: 48px;
+                        height: 48px;
+                        background: #f0f7ff;
+                        border-radius: 12px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: #0086FF;
+                    }
+                    .option-info h4 {
+                        margin: 0;
+                        font-size: 17px;
+                        font-weight: 700;
+                        color: #323232;
+                    }
+                    .option-info p {
+                        margin: 4px 0 0;
+                        font-size: 13px;
+                        color: #888;
+                    }
+                    .order-summary {
+                        margin-top: 30px;
+                        padding-top: 20px;
+                        border-top: 1px solid #f0f0f0;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+                    .summary-item label {
+                        display: block;
+                        font-size: 12px;
+                        color: #999;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        font-weight: 600;
+                    }
+                    .summary-item span {
+                        font-size: 18px;
+                        font-weight: 800;
+                        color: #0086FF;
+                    }
+
+                    .loading-overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: rgba(255, 255, 255, 0.85);
+                        backdrop-filter: blur(12px);
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 10001;
+                    }
+                    .spinner-container {
+                        position: relative;
+                        width: 80px;
+                        height: 80px;
+                        margin-bottom: 24px;
+                    }
+                    .spinner-outer {
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+                        border: 4px solid rgba(0, 134, 255, 0.1);
+                        border-top-color: #0086FF;
+                        border-radius: 50%;
+                        animation: spin 1s cubic-bezier(0.76, 0.35, 0.2, 0.7) infinite;
+                    }
+                    .spinner-inner {
+                        position: absolute;
+                        top: 15px;
+                        left: 15px;
+                        width: 50px;
+                        height: 50px;
+                        border: 4px solid rgba(0, 134, 255, 0.05);
+                        border-bottom-color: #0086FF;
+                        border-radius: 50%;
+                        animation: spin-reverse 1.5s linear infinite;
+                    }
+                    @keyframes spin {
+                        to { transform: rotate(360deg); }
+                    }
+                    @keyframes spin-reverse {
+                        to { transform: rotate(-360deg); }
+                    }
+                    .loading-title {
+                        font-size: 22px;
+                        font-weight: 800;
+                        color: #041026;
+                        margin-bottom: 8px;
+                    }
+                    .loading-subtitle {
+                        color: #666;
+                        font-size: 15px;
                     }
 
                     @media (max-width: 900px) {
@@ -399,7 +638,7 @@ const Pricing = () => {
 
                                 <div className="buy-now-wrapper">
                                     <button
-                                        onClick={handleBuyNow}
+                                        onClick={handleBuyNowClick}
                                         disabled={isLoading}
                                         className="brutal-btn buy-btn"
                                         style={{ border: 'none' }}
@@ -426,6 +665,90 @@ const Pricing = () => {
                     </AnimatePresence>
                 </div>
             </div>
+
+            {/* Payment Selection Modal */}
+            <AnimatePresence>
+                {showPaymentModal && (
+                    <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
+                        <motion.div
+                            className="payment-modal"
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button className="modal-close" onClick={() => setShowPaymentModal(false)}>
+                                <Plus size={20} style={{ transform: 'rotate(45deg)' }} />
+                            </button>
+
+                            <h3 className="modal-title">Select Payment Method</h3>
+                            <p className="modal-subtitle">Choose how you would like to pay for your plan.</p>
+
+                            <div className="payment-options">
+                                <button className="payment-option-btn" onClick={handleCryptoPayment} disabled={isLoading}>
+                                    <div className="option-icon">
+                                        <Zap size={24} />
+                                    </div>
+                                    <div className="option-info">
+                                        <h4>Crypto</h4>
+                                        <p>Pay with Bitcoin, USDT, and other cryptocurrencies</p>
+                                    </div>
+                                </button>
+
+                                <button className="payment-option-btn" onClick={handleFiatPayment} disabled={isLoading}>
+                                    <div className="option-icon">
+                                        <ShoppingCart size={24} />
+                                    </div>
+                                    <div className="option-info">
+                                        <h4>Fiat / Digital Payment</h4>
+                                        <p>Pay with bKash, Nagad, or Credit Card via Secure Gateway</p>
+                                    </div>
+                                </button>
+                            </div>
+
+                            <div className="order-summary">
+                                <div className="summary-item">
+                                    <label>Plan</label>
+                                    <span style={{ color: '#323232', fontSize: '15px' }}>{bandwidth} GB Rotating Residential</span>
+                                </div>
+                                <div className="summary-item" style={{ textAlign: 'right' }}>
+                                    <label>Total Price</label>
+                                    <span>${current.total} / ৳{current.totalBDT}</span>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Redirection Loader */}
+            <AnimatePresence>
+                {isLoading && (
+                    <motion.div
+                        className="loading-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <div className="spinner-container">
+                            <div className="spinner-outer"></div>
+                            <div className="spinner-inner"></div>
+                        </div>
+                        <h4 className="loading-title">Processing Securely</h4>
+                        <p className="loading-subtitle">Redirecting you to the payment gateway...</p>
+                        <div style={{ marginTop: '20px', display: 'flex', gap: '8px' }}>
+                            {[0, 1, 2].map((i) => (
+                                <motion.div
+                                    key={i}
+                                    style={{ width: '8px', height: '8px', background: '#0086FF', borderRadius: '50%' }}
+                                    animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+                                    transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
+                                />
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </section>
     );
 };
