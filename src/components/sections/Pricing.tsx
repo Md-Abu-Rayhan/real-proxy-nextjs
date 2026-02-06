@@ -68,20 +68,29 @@ const Pricing = () => {
     };
 
     const handleCryptoPayment = async () => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            toast.error("Please login to proceed with payment.");
+            router.push('/login');
+            return;
+        }
+
         setIsLoading(true);
         let redirectToPayment = false;
         try {
             const orderId = `CR${Date.now()}`.substring(0, 16);
             const amount = parseFloat(current.total);
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
 
             // POST to initialize crypto payment
-            const response = await axios.post('https://api.realproxy.net/api/CryptoPayment/initialize', {
+            const response = await axios.post(`${apiUrl}/api/CryptoPayment/initialize`, {
                 orderId: orderId,
                 amount: amount,
-                quoteAssetId: "b91e18ff-a9ae-3dc7-8679-e935d9a4b34b"
+                quoteAssetId: "usd"
             }, {
                 headers: {
                     'accept': '*/*',
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
