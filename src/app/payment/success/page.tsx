@@ -13,10 +13,11 @@ const PaymentSuccessContent = () => {
     const [paymentDetails, setPaymentDetails] = useState<any>(null);
 
     const merchantTransactionId = searchParams.get('merchantTransactionId');
+    const orderId = searchParams.get('orderId');
 
     useEffect(() => {
         const verifyPayment = async () => {
-            if (!merchantTransactionId) {
+            if (!merchantTransactionId && !orderId) {
                 setIsVerifying(false);
                 return;
             }
@@ -25,13 +26,29 @@ const PaymentSuccessContent = () => {
                 const token = localStorage.getItem('auth_token');
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
 
-                // Call verification endpoint
-                const response = await axios.get(`${apiUrl}/api/Payment/verify/${merchantTransactionId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                let response;
+                if (orderId) {
+                    // Crypto Payment Verification
+                    response = await axios.get(`${apiUrl}/api/CryptoPayment/verify/${orderId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
 
-                if (response.data) {
-                    setPaymentDetails(response.data);
+                    if (response.data && response.data.success) {
+                        setPaymentDetails({
+                            totalAmount: response.data.payment.amount,
+                            status: response.data.status,
+                            transactionId: response.data.payment.orderId
+                        });
+                    }
+                } else {
+                    // EPS Payment Verification
+                    response = await axios.get(`${apiUrl}/api/Payment/verify/${merchantTransactionId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.data) {
+                        setPaymentDetails(response.data);
+                    }
                 }
             } catch (error) {
                 console.error("Verification error:", error);
@@ -41,7 +58,7 @@ const PaymentSuccessContent = () => {
         };
 
         verifyPayment();
-    }, [merchantTransactionId]);
+    }, [merchantTransactionId, orderId]);
 
     if (isVerifying) {
         return (
@@ -97,7 +114,7 @@ const PaymentSuccessContent = () => {
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                             <span style={{ color: '#64748B', fontSize: '14px' }}>Transaction ID</span>
-                            <span style={{ color: '#163561', fontWeight: '600', fontSize: '14px' }}>{merchantTransactionId}</span>
+                            <span style={{ color: '#163561', fontWeight: '600', fontSize: '14px' }}>{merchantTransactionId || orderId}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                             <span style={{ color: '#64748B', fontSize: '14px' }}>Amount Paid</span>
