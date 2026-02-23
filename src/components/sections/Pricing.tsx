@@ -6,35 +6,29 @@ import { Minus, Plus, ShoppingCart, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const Pricing = () => {
     const router = useRouter();
     const [proxyType, setProxyType] = useState('Rotating Res.');
-    const [bandwidth, setBandwidth] = useState(0.1);
+    const [bandwidth, setBandwidth] = useState(1);
+    const searchParams = useSearchParams();
+    const isRecharge = searchParams.get('recharge') === 'true';
     const [isLoading, setIsLoading] = useState(false);
-    const [exchangeRate, setExchangeRate] = useState(122); // Default fallback rate
+    const [exchangeRate, setExchangeRate] = useState(125); // Default fallback rate
     const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     const getPricing = (gb: number) => {
-        let pricePerGb = 1.00;
-        if (gb >= 1000) pricePerGb = 0.50;
-        else if (gb >= 500) pricePerGb = 0.60;
-        else if (gb >= 250) pricePerGb = 0.65;
-        else if (gb >= 100) pricePerGb = 0.70;
-        else if (gb >= 50) pricePerGb = 0.80;
-        else if (gb >= 25) pricePerGb = 0.85;
-        else if (gb >= 10) pricePerGb = 0.90;
-        else if (gb >= 5) pricePerGb = 0.95;
+        let pricePerGb = 1.00; // Fixed at $1.00 per GB
 
         // Use toFixed(2) to ensure small amounts (like $0.10) are shown correctly
         const total = (gb * pricePerGb).toFixed(2);
-        const originalTotal = (gb * 1.50).toFixed(2); // Reduced base for more realistic discount
-        const discount = Math.round(((1.50 - pricePerGb) / 1.50) * 100);
+        const originalTotal = (gb * 3.10).toFixed(2); // Reduced base for more realistic discount
+        const discount = Math.round(((3.10 - pricePerGb) / 3.10) * 100);
 
         // BDT conversion
-        const totalBDT = (parseFloat(total) * exchangeRate).toFixed(2);
-        const pricePerGbBDT = (pricePerGb * exchangeRate).toFixed(2);
+        const totalBDT = (parseFloat(total) * 125).toFixed(2);
+        const pricePerGbBDT = (pricePerGb * 125).toFixed(2);
 
         return { pricePerGb: pricePerGb.toFixed(2), total, originalTotal, discount, totalBDT, pricePerGbBDT };
     };
@@ -42,20 +36,17 @@ const Pricing = () => {
     const current = getPricing(bandwidth);
 
     React.useEffect(() => {
-        const fetchRate = async () => {
-            try {
-                // Using a free public API
-                const res = await axios.get('https://api.exchangerate-api.com/v4/latest/USD');
-                if (res.data && res.data.rates && res.data.rates.BDT) {
-                    setExchangeRate(res.data.rates.BDT);
-                    console.log(`Live Exchange Rate: 1 USD = ${res.data.rates.BDT} BDT`);
-                }
-            } catch (error) {
-                console.error("Failed to fetch exchange rate, using fallback:", error);
+        // Exchange rate is strictly fixed as per requirement (Price Per GB is 125bdt)
+        setExchangeRate(125);
+
+        // If recharge is true, scroll to pricing section
+        if (isRecharge) {
+            const pricingSection = document.getElementById('pricing-section');
+            if (pricingSection) {
+                pricingSection.scrollIntoView({ behavior: 'smooth' });
             }
-        };
-        fetchRate();
-    }, []);
+        }
+    }, [isRecharge]);
 
     const handleBuyNowClick = () => {
         const token = localStorage.getItem('auth_token');
@@ -588,18 +579,18 @@ const Pricing = () => {
                         {proxyType === 'Rotating Res.' ? (
                             <motion.div key="rotating" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                                 <div className="white-card slider-card">
-                                    <h3 className="card-title">Pick Your Bandwidth</h3>
+                                    <h3 className="card-title">{isRecharge ? "Select a Pricing Plan" : "Pick Your Bandwidth"}</h3>
                                     <div className="slider-wrapper">
                                         <input
-                                            type="range" min="0.1" max="1000" step="0.1" value={bandwidth}
+                                            type="range" min="1" max="100" step="1" value={bandwidth}
                                             onChange={(e) => setBandwidth(parseFloat(e.target.value))}
                                             className="proxy-slider"
                                             style={{
-                                                background: `linear-gradient(to right, #0086FF 0%, #0086FF ${(bandwidth / 1000) * 100}%, #E8F4FF ${(bandwidth / 1000) * 100}%, #E8F4FF 100%)`
+                                                background: `linear-gradient(to right, #0086FF 0%, #0086FF ${(bandwidth / 100) * 100}%, #E8F4FF ${(bandwidth / 100) * 100}%, #E8F4FF 100%)`
                                             }}
                                         />
                                         <div className="slider-labels">
-                                            {[0.1, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000].map(v => <span key={v}>{v}</span>)}
+                                            {[1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(v => <span key={v}>{v}GB</span>)}
                                         </div>
                                     </div>
                                 </div>
@@ -609,10 +600,10 @@ const Pricing = () => {
                                         <label>Total GB</label>
                                         <div className="stat-content">
                                             <div className="stat-icon">📦</div>
-                                            <span className="stat-value">{bandwidth.toFixed(1)} <small>GB</small></span>
+                                            <span className="stat-value">{bandwidth} <small>GB</small></span>
                                             <div className="plus-minus">
-                                                <button onClick={() => setBandwidth(b => Math.min(1000, parseFloat((b + 0.1).toFixed(1))))}><Plus size={14} /></button>
-                                                <button onClick={() => setBandwidth(b => Math.max(0.1, parseFloat((b - 0.1).toFixed(1))))}><Minus size={14} /></button>
+                                                <button onClick={() => setBandwidth(b => Math.min(100, b + 1))}><Plus size={14} /></button>
+                                                <button onClick={() => setBandwidth(b => Math.max(1, b - 1))}><Minus size={14} /></button>
                                             </div>
                                         </div>
                                     </div>

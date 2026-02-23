@@ -54,7 +54,8 @@ const RegisterPage = () => {
 
         setIsLoading(true);
         try {
-            const response = await axios.post('https://api.realproxy.net/api/Auth/register', {
+            // const response = await axios.post('https://api.realproxy.net/api/Auth/register', {
+            const response = await axios.post('http://localhost:5157/api/Auth/register', {
                 email: formData.email,
                 password: formData.password,
                 invitationCode: formData.invitationCode
