@@ -21,7 +21,9 @@ import {
     MousePointer2,
     Settings,
     HelpCircle,
-    LogOut
+    LogOut,
+    Menu,
+    X
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -29,6 +31,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     const [expandedGroups, setExpandedGroups] = useState<string[]>(['SOCKSS PROXIES', 'TRAFFIC PLANS', 'REFERRAL', 'TOOL', 'Promotion Plan']);
     const router = useRouter();
     const [userEmail, setUserEmail] = useState<string | null>(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     React.useEffect(() => {
         const email = localStorage.getItem('user_email');
@@ -67,13 +70,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
     const sidebarItems: SidebarItem[] = [
         { name: 'Products & Pricing', icon: <LayoutDashboard size={18} />, path: '/residential-proxies' },
-        // {
-        //     group: 'SOCKSS PROXIES',
-        //     items: [
-        //         { name: 'ISP Proxies', icon: <RefreshCw size={18} />, path: '#' },
-        //         { name: 'Static Residential Proxies', icon: <RefreshCw size={18} />, path: '#' },
-        //     ]
-        // },
         {
             group: 'TRAFFIC PLANS',
             items: [
@@ -86,37 +82,35 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 { name: 'Affiliate Program', icon: <Users size={18} />, path: '#' }
             ]
         },
-        // {
-        //     group: 'TOOL',
-        //     items: [
-        //         { name: 'Online Proxy Checker', icon: <Shield size={18} />, path: '#' },
-        //         { name: 'Proxy manager', icon: <Download size={18} />, path: '#' },
-        //         { name: 'Browser Extensions', icon: <MousePointer2 size={18} />, path: '#' },
-        //     ]
-        // },
-        // {
-        //     group: 'Promotion Plan',
-        //     items: [
-        //         { name: 'CDKey Details', icon: <Zap size={18} />, path: '#' },
-        //         { name: 'Balance Recharge', icon: <CreditCard size={18} />, path: '#', badge: 'New', badgeColor: '#F53F3F' },
-        //         { name: 'Agent Console', icon: <User size={18} />, path: '#' },
-        //     ]
-        // }
     ];
 
     return (
-        <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f2f3f5', color: '#1D2129', fontFamily: 'Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+        <div className="dashboard-wrapper">
+            {/* Sidebar Backdrop for Mobile */}
+            {isSidebarOpen && (
+                <div
+                    className="sidebar-backdrop"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside style={{ width: '345px', backgroundColor: 'white', display: 'flex', flexDirection: 'column', flexShrink: 0, zIndex: 10, borderRight: '1px solid #f0f0f0' }}>
+            <aside className={`dashboard-sidebar ${isSidebarOpen ? 'show' : ''}`}>
                 {/* Logo Area */}
-                <div style={{ padding: '24px 32px', display: 'flex', alignItems: 'center' }}>
+                <div className="sidebar-logo">
                     <Link href="/" style={{ textDecoration: 'none' }}>
                         <img src="/logo.png" alt="Logo" style={{ height: '34px', width: 'auto' }} />
                     </Link>
+                    <button
+                        className="sidebar-close-btn"
+                        onClick={() => setIsSidebarOpen(false)}
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
                 {/* Navigation Menu */}
-                <div style={{ flex: 1, overflowY: 'auto', padding: '12px 0' }} className="custom-scrollbar">
+                <div className="sidebar-nav custom-scrollbar">
                     {sidebarItems.map((item, idx) => {
                         if ('group' in item) {
                             const isExpanded = expandedGroups.includes((item as any).group);
@@ -124,18 +118,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                                 <div key={idx} style={{ marginBottom: '8px' }}>
                                     <div
                                         onClick={() => toggleGroup(item.group as string)}
-                                        style={{
-                                            padding: '8px 32px',
-                                            fontSize: '11px',
-                                            color: '#86909C',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            cursor: 'pointer',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '1px',
-                                            fontWeight: '700'
-                                        }}
+                                        className="nav-group-header"
                                     >
                                         {item.group as string}
                                         {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
@@ -144,33 +127,15 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                                         <Link
                                             key={sIdx}
                                             href={subItem.path}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '12px',
-                                                padding: '0 32px',
-                                                height: '48px',
-                                                fontSize: '14px',
-                                                color: subItem.active ? '#0086ff' : '#4E5969',
-                                                backgroundColor: subItem.active ? '#e7f2ff' : 'transparent',
-                                                textDecoration: 'none',
-                                                transition: 'all 0.2s',
-                                                position: 'relative',
-                                                fontWeight: subItem.active ? '600' : '400'
-                                            }}
+                                            className={`nav-item ${subItem.active ? 'active' : ''}`}
+                                            onClick={() => setIsSidebarOpen(false)}
                                         >
-                                            <span style={{ color: subItem.active ? '#0086ff' : '#86909C' }}>{subItem.icon}</span>
-                                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subItem.name}</span>
+                                            <span className="nav-icon">{subItem.icon}</span>
+                                            <span className="nav-text">{subItem.name}</span>
                                             {subItem.badge && (
-                                                <span style={{
-                                                    backgroundColor: subItem.badgeColor,
-                                                    color: 'white',
-                                                    fontSize: '10px',
-                                                    padding: '1px 6px',
-                                                    borderRadius: '10px',
-                                                    fontWeight: '700',
-                                                    marginLeft: '4px'
-                                                }}>{subItem.badge}</span>
+                                                <span className="nav-badge" style={{ backgroundColor: subItem.badgeColor }}>
+                                                    {subItem.badge}
+                                                </span>
                                             )}
                                         </Link>
                                     ))}
@@ -181,20 +146,11 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                                 <Link
                                     key={idx}
                                     href={item.path}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        padding: '0 32px',
-                                        height: '48px',
-                                        fontSize: '14px',
-                                        color: '#4E5969',
-                                        textDecoration: 'none',
-                                        fontWeight: '600'
-                                    }}
+                                    className="nav-item"
+                                    onClick={() => setIsSidebarOpen(false)}
                                 >
-                                    <span style={{ color: '#86909C' }}>{item.icon}</span>
-                                    <span>{item.name}</span>
+                                    <span className="nav-icon">{item.icon}</span>
+                                    <span className="nav-text">{item.name}</span>
                                 </Link>
                             );
                         }
@@ -203,50 +159,51 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             </aside>
 
             {/* Main Content Area */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div className="main-container">
                 {/* Header */}
-                <header style={{ height: '64px', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 32px', gap: '24px', flexShrink: 0, borderBottom: '1px solid #f0f0f0' }}>
-                    <div style={{ display: 'flex', gap: '20px', color: '#86909C' }}>
-                        <RefreshCw size={20} style={{ cursor: 'pointer' }} />
-                        <HelpCircle size={20} style={{ cursor: 'pointer' }} />
-                        <Bell size={20} style={{ cursor: 'pointer' }} />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '32px', backgroundColor: '#f7f8fa', border: '1px solid #e5e6eb', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', color: '#4E5969' }}>
-                        <Globe size={16} />
-                        <span style={{ fontWeight: '500' }}>EN-English</span>
-                        <ChevronDown size={14} />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '16px', borderLeft: '1px solid #f0f0f0' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                            <CircleUser size={28} color="#0086ff" strokeWidth={1.5} />
-                            <span style={{ fontSize: '14px', fontWeight: '600', color: '#1D2129' }}>{userEmail || 'User'}</span>
-                            <ChevronDown size={14} color="#86909C" />
-                        </div>
+                <header className="dashboard-header">
+                    <div className="header-left">
                         <button
-                            onClick={handleLogout}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                padding: '6px 12px',
-                                marginLeft: '12px',
-                                border: '1px solid #ff4d4f',
-                                borderRadius: '4px',
-                                backgroundColor: 'transparent',
-                                color: '#ff4d4f',
-                                fontSize: '12px',
-                                fontWeight: '600',
-                                cursor: 'pointer'
-                            }}
+                            className="mobile-toggle"
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                         >
-                            <LogOut size={14} />
-                            Logout
+                            <Menu size={20} />
+                            <span style={{ fontSize: '14px', fontWeight: '600', marginLeft: '8px' }}>Menu</span>
                         </button>
+                    </div>
+
+                    <div className="header-right">
+                        <div className="header-actions">
+                            <RefreshCw size={20} className="header-icon" />
+                            <HelpCircle size={20} className="header-icon" />
+                            <Bell size={20} className="header-icon" />
+                        </div>
+
+                        <div className="language-selector">
+                            <Globe size={16} />
+                            <span className="lang-text">EN-English</span>
+                            <ChevronDown size={14} />
+                        </div>
+
+                        <div className="user-profile">
+                            <div className="user-info">
+                                <CircleUser size={28} color="#0086ff" strokeWidth={1.5} />
+                                <span className="user-name">{userEmail || 'User'}</span>
+                                <ChevronDown size={14} color="#86909C" />
+                            </div>
+                            <button
+                                onClick={handleLogout}
+                                className="logout-btn"
+                            >
+                                <LogOut size={14} />
+                                <span className="logout-text">Logout</span>
+                            </button>
+                        </div>
                     </div>
                 </header>
 
                 {/* Content */}
-                <main style={{ flex: 1, overflowY: 'auto', padding: '32px' }} className="custom-scrollbar">
+                <main className="dashboard-main custom-scrollbar">
                     {children}
                 </main>
             </div>
@@ -257,6 +214,214 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 body {
                     margin: 0;
                     padding: 0;
+                    overflow: hidden;
+                }
+
+                .dashboard-wrapper {
+                    display: flex;
+                    height: 100vh;
+                    background-color: #f2f3f5;
+                    color: #1D2129;
+                    font-family: 'Poppins', sans-serif;
+                }
+
+                .dashboard-sidebar {
+                    width: 300px;
+                    background-color: white;
+                    display: flex;
+                    flex-direction: column;
+                    flex-shrink: 0;
+                    z-index: 100;
+                    border-right: '1px solid #f0f0f0';
+                    transition: all 0.3s ease;
+                }
+
+                .sidebar-logo {
+                    padding: 24px 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+
+                .sidebar-close-btn {
+                    display: none;
+                    background: none;
+                    border: none;
+                    padding: 4px;
+                    color: #86909C;
+                    cursor: pointer;
+                }
+
+                .sidebar-nav {
+                    flex: 1;
+                    overflow-y: auto;
+                    padding: 12px 0;
+                }
+
+                .nav-group-header {
+                    padding: 8px 32px;
+                    fontSize: 11px;
+                    color: #86909C;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    cursor: pointer;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    font-weight: 700;
+                }
+
+                .nav-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 0 32px;
+                    height: 48px;
+                    fontSize: 14px;
+                    color: #4E5969;
+                    text-decoration: none;
+                    transition: all 0.2s;
+                    position: relative;
+                }
+
+                .nav-item:hover {
+                    background-color: #f7f8fa;
+                    color: #0086ff;
+                }
+
+                .nav-item.active {
+                    color: #0086ff;
+                    background-color: #e7f2ff;
+                    font-weight: 600;
+                }
+
+                .nav-icon {
+                    color: #86909C;
+                }
+
+                .nav-item.active .nav-icon {
+                    color: #0086ff;
+                }
+
+                .nav-text {
+                    flex: 1;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .nav-badge {
+                    color: white;
+                    font-size: 10px;
+                    padding: 1px 6px;
+                    border-radius: 10px;
+                    font-weight: 700;
+                    margin-left: 4px;
+                }
+
+                .main-container {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+
+                .dashboard-header {
+                    height: 64px;
+                    background-color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 32px;
+                    flex-shrink: 0;
+                    border-bottom: 1px solid #f0f0f0;
+                }
+
+                .header-left {
+                    display: flex;
+                    align-items: center;
+                }
+
+                .mobile-toggle {
+                    display: none;
+                    align-items: center;
+                    background: none;
+                    border: 1px solid #e5e6eb;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    color: #4E5969;
+                }
+
+                .header-right {
+                    display: flex;
+                    align-items: center;
+                    gap: 24px;
+                }
+
+                .header-actions {
+                    display: flex;
+                    gap: 20px;
+                    color: #86909C;
+                }
+
+                .header-icon {
+                    cursor: pointer;
+                }
+
+                .language-selector {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 0 12px;
+                    height: 32px;
+                    background-color: #f7f8fa;
+                    border: 1px solid #e5e6eb;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 13px;
+                    color: #4E5969;
+                }
+
+                .user-profile {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    padding-left: 16px;
+                    border-left: 1px solid #f0f0f0;
+                }
+
+                .user-info {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    cursor: pointer;
+                }
+
+                .user-name {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #1D2129;
+                }
+
+                .logout-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 6px 12px;
+                    border: 1px solid #ff4d4f;
+                    border-radius: 4px;
+                    background-color: transparent;
+                    color: #ff4d4f;
+                    font-size: 12px;
+                    font-weight: 600;
+                    cursor: pointer;
+                }
+
+                .dashboard-main {
+                    flex: 1;
+                    overflow-y: auto;
+                    padding: 32px;
                 }
 
                 .custom-scrollbar::-webkit-scrollbar {
@@ -271,6 +436,70 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
                     background: #c9cdd4;
+                }
+
+                @media (max-width: 1024px) {
+                    .dashboard-sidebar {
+                        position: fixed;
+                        left: -300px;
+                        top: 0;
+                        bottom: 0;
+                        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                    }
+
+                    .dashboard-sidebar.show {
+                        left: 0;
+                    }
+
+                    .sidebar-backdrop {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: rgba(0,0,0,0.4);
+                        z-index: 90;
+                        backdrop-filter: blur(2px);
+                    }
+
+                    .mobile-toggle {
+                        display: flex;
+                    }
+
+                    .sidebar-close-btn {
+                        display: flex;
+                    }
+
+                    .dashboard-header {
+                        padding: 0 16px;
+                    }
+
+                    .header-actions {
+                        display: none;
+                    }
+
+                    .user-name {
+                        display: none;
+                    }
+
+                    .logout-text {
+                        display: none;
+                    }
+
+                    .dashboard-main {
+                        padding: 20px 16px;
+                    }
+                }
+
+                @media (max-width: 640px) {
+                    .language-selector {
+                        display: none;
+                    }
+                    
+                    .user-profile {
+                        padding-left: 0;
+                        border-left: none;
+                    }
                 }
             `}</style>
         </div>

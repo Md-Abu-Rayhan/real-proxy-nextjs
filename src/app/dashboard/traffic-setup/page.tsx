@@ -34,22 +34,21 @@ interface Region {
     domain: any[];
 }
 
-interface State {
-    country_code: string;
-    state_code: string;
-    state_name: string;
+interface SubRegion {
+    id: string;
+    name: string;
+    country_code?: string;
 }
 
 interface City {
+    id: string;
+    name: string;
     country_code: string;
-    state_code: string;
-    city_code: string;
-    city_name: string;
 }
 
-interface ASN {
-    asn_code: string;
-    asn_name: string;
+interface ISP {
+    name: string;
+    value: string;
     country_code: string;
 }
 
@@ -65,30 +64,33 @@ const TrafficSetupPage = () => {
     const [isRegionsLoading, setIsRegionsLoading] = useState(true);
     const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
     const [countrySearchQuery, setCountrySearchQuery] = useState('');
-    const [states, setStates] = useState<State[]>([]);
-    const [selectedState, setSelectedState] = useState<State | null>(null);
-    const [isStatesLoading, setIsStatesLoading] = useState(false);
-    const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
-    const [stateSearchQuery, setStateSearchQuery] = useState('');
+    const [subRegions, setSubRegions] = useState<SubRegion[]>([]);
+    const [selectedSubRegion, setSelectedSubRegion] = useState<SubRegion | null>(null);
+    const [isSubRegionsLoading, setIsSubRegionsLoading] = useState(false);
+    const [isSubRegionDropdownOpen, setIsSubRegionDropdownOpen] = useState(false);
+    const [subRegionSearchQuery, setSubRegionSearchQuery] = useState('');
     const [cities, setCities] = useState<City[]>([]);
     const [selectedCity, setSelectedCity] = useState<City | null>(null);
     const [isCitiesLoading, setIsCitiesLoading] = useState(false);
     const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
     const [citySearchQuery, setCitySearchQuery] = useState('');
-    const [asns, setAsns] = useState<ASN[]>([]);
-    const [selectedAsn, setSelectedAsn] = useState<ASN | null>(null);
-    const [isAsnsLoading, setIsAsnsLoading] = useState(false);
-    const [isAsnDropdownOpen, setIsAsnDropdownOpen] = useState(false);
-    const [asnSearchQuery, setAsnSearchQuery] = useState('');
+    const [isps, setIsps] = useState<ISP[]>([]);
+    const [selectedIsp, setSelectedIsp] = useState<ISP | null>(null);
+    const [isIspsLoading, setIsIspsLoading] = useState(false);
+    const [isIspDropdownOpen, setIsIspDropdownOpen] = useState(false);
+    const [ispSearchQuery, setIspSearchQuery] = useState('');
+    const [allCitiesData, setAllCitiesData] = useState<City[]>([]);
+    const [allSubRegionsData, setAllSubRegionsData] = useState<SubRegion[]>([]);
+    const [allIspsData, setAllIspsData] = useState<ISP[]>([]);
     const [selectedHostname, setSelectedHostname] = useState('na.proxys5.net');
     const [isHostnameDropdownOpen, setIsHostnameDropdownOpen] = useState(false);
     const [selectedSessionType, setSelectedSessionType] = useState('Sticky IP');
     const [isSessionTypeDropdownOpen, setIsSessionTypeDropdownOpen] = useState(false);
     const [sessionDuration, setSessionDuration] = useState(15);
     const countryDropdownRef = useRef<HTMLDivElement>(null);
-    const stateDropdownRef = useRef<HTMLDivElement>(null);
+    const subRegionDropdownRef = useRef<HTMLDivElement>(null);
     const cityDropdownRef = useRef<HTMLDivElement>(null);
-    const asnDropdownRef = useRef<HTMLDivElement>(null);
+    const ispDropdownRef = useRef<HTMLDivElement>(null);
     const hostnameDropdownRef = useRef<HTMLDivElement>(null);
     const sessionTypeDropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
@@ -132,25 +134,55 @@ const TrafficSetupPage = () => {
         // Fetch regions from API
         const fetchRegions = async () => {
             try {
-                const response = await axios.get('https://api.realproxy.net/api/Location/regions', {
+                const response = await axios.get('https://api.realproxy.net/api/Proxy/settings', {
                     headers: {
                         'accept': '*/*'
                     }
                 });
 
-                if (response.data && response.data.data) {
-                    setRegions(response.data.data);
-                    // Set default to Global if it exists
-                    const global = response.data.data.find((r: Region) => r.country_name === 'Global');
-                    if (global) {
-                        setSelectedCountry(global);
-                    } else if (response.data.data.length > 0) {
-                        setSelectedCountry(response.data.data[0]);
+                if (response.data && response.data.data && response.data.data.residential && response.data.data.residential.countries) {
+                    const countriesData = response.data.data.residential.countries;
+
+                    // Transform { "US": "United States", ... } to Array of Region
+                    let regionsArray: Region[] = Object.entries(countriesData).map(([code, name]: [string, any]) => ({
+                        country_name: name as string,
+                        country_code: code,
+                        domain: []
+                    }));
+
+                    // Sort countries by name
+                    regionsArray.sort((a, b) => a.country_name.localeCompare(b.country_name));
+
+                    // Add Global option at the top (as it's often preferred for (ALL) Global)
+                    const globalRegion: Region = { country_name: 'Global', country_code: '', domain: [] };
+                    const finalRegions = [globalRegion, ...regionsArray];
+
+                    setRegions(finalRegions);
+
+                    if (response.data.data.residential.cities && response.data.data.residential.cities.data) {
+                        setAllCitiesData(response.data.data.residential.cities.data);
                     }
+
+                    if (response.data.data.residential.regions && response.data.data.residential.regions.data) {
+                        setAllSubRegionsData(response.data.data.residential.regions.data);
+                    }
+
+                    if (response.data.data.residential.isp) {
+                        const ispData = response.data.data.residential.isp;
+                        const ispArray: ISP[] = Object.entries(ispData).map(([name, detail]: [string, any]) => ({
+                            name: name,
+                            value: detail.value,
+                            country_code: detail.countryCode
+                        }));
+                        setAllIspsData(ispArray);
+                    }
+
+                    // Set default to Global
+                    setSelectedCountry(globalRegion);
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Error fetching regions:', error);
-                toast.error('Failed to fetch country list.');
+                toast.error('Failed to load location settings. Please refresh the page.');
             } finally {
                 setIsRegionsLoading(false);
             }
@@ -160,48 +192,10 @@ const TrafficSetupPage = () => {
         fetchRegions();
     }, [router]);
 
-    // Fetch states when country changes
-    useEffect(() => {
-        const fetchStates = async () => {
-            if (!selectedCountry || selectedCountry.country_name === 'Global') {
-                setStates([]);
-                setSelectedState(null);
-                return;
-            }
-
-            setIsStatesLoading(true);
-            try {
-                const response = await axios.get(`https://api.realproxy.net/api/Location/states?country_code=${selectedCountry.country_code}`, {
-                    headers: { 'accept': '*/*' }
-                });
-
-                if (response.data && response.data.data) {
-                    setStates(response.data.data);
-                    // Default to "Random" if found, else first state
-                    const randomState = response.data.data.find((s: State) => s.state_name === 'Random');
-                    if (randomState) {
-                        setSelectedState(randomState);
-                    } else if (response.data.data.length > 0) {
-                        setSelectedState(response.data.data[0]);
-                    } else {
-                        setSelectedState(null);
-                    }
-                }
-            } catch (error) {
-                console.error('Error fetching states:', error);
-                setSelectedState(null);
-            } finally {
-                setIsStatesLoading(false);
-            }
-        };
-
-        fetchStates();
-    }, [selectedCountry]);
-
-    // Fetch cities when state changes
+    // Fetch cities when country changes
     useEffect(() => {
         const fetchCities = async () => {
-            if (!selectedCountry || !selectedState || selectedState.state_name === 'Random') {
+            if (!selectedCountry || selectedCountry.country_name === 'Global') {
                 setCities([]);
                 setSelectedCity(null);
                 return;
@@ -209,24 +203,20 @@ const TrafficSetupPage = () => {
 
             setIsCitiesLoading(true);
             try {
-                const response = await axios.get(`https://api.realproxy.net/api/Location/citys?country_code=${selectedCountry.country_code}&state_code=${selectedState.state_code}`, {
-                    headers: { 'accept': '*/*' }
-                });
+                // Filter from the stored allCitiesData based on country_code
+                const countryCode = selectedCountry.country_code.toLowerCase();
+                const filteredCities = allCitiesData.filter(
+                    city => city.country_code && city.country_code.toLowerCase() === countryCode
+                );
 
-                if (response.data && response.data.data) {
-                    setCities(response.data.data);
-                    // Default to "Random" if found, else first city
-                    const randomCity = response.data.data.find((c: City) => c.city_name === 'Random');
-                    if (randomCity) {
-                        setSelectedCity(randomCity);
-                    } else if (response.data.data.length > 0) {
-                        setSelectedCity(response.data.data[0]);
-                    } else {
-                        setSelectedCity(null);
-                    }
-                }
+                // Sort cities by name
+                filteredCities.sort((a, b) => a.name.localeCompare(b.name));
+
+                setCities(filteredCities);
+                setSelectedCity(null); // Reset selection when country changes
             } catch (error) {
-                console.error('Error fetching cities:', error);
+                console.error('Error filtering cities:', error);
+                setCities([]);
                 setSelectedCity(null);
             } finally {
                 setIsCitiesLoading(false);
@@ -234,51 +224,87 @@ const TrafficSetupPage = () => {
         };
 
         fetchCities();
-    }, [selectedCountry, selectedState]);
+    }, [selectedCountry, allCitiesData]);
 
-    // Fetch ASNs when country changes
+    // Fetch subregions when country changes
     useEffect(() => {
-        const fetchAsns = async () => {
+        const fetchSubRegions = async () => {
             if (!selectedCountry || selectedCountry.country_name === 'Global') {
-                setAsns([]);
-                setSelectedAsn(null);
+                setSubRegions([]);
+                setSelectedSubRegion(null);
                 return;
             }
 
-            setIsAsnsLoading(true);
+            setIsSubRegionsLoading(true);
             try {
-                const response = await axios.get(`https://api.realproxy.net/api/Location/asn?country_code=${selectedCountry.country_code}`, {
-                    headers: { 'accept': '*/*' }
-                });
+                const countryCode = selectedCountry.country_code.toLowerCase();
+                // Attempt to filter by country_code if it exists in data, otherwise show all
+                const filteredRegions = allSubRegionsData.filter(
+                    region => {
+                        const regionCountryCode = region.country_code;
+                        return !regionCountryCode || regionCountryCode.toLowerCase() === countryCode;
+                    }
+                );
 
-                if (response.data && response.data.data) {
-                    setAsns(response.data.data);
-                    setSelectedAsn(null);
-                }
+                const sortedRegions = [...filteredRegions].sort((a, b) => a.name.localeCompare(b.name));
+                setSubRegions(sortedRegions);
+                setSelectedSubRegion(null);
             } catch (error) {
-                console.error('Error fetching asns:', error);
-                setSelectedAsn(null);
+                console.error('Error filtering sub-regions:', error);
+                setSubRegions([]);
+                setSelectedSubRegion(null);
             } finally {
-                setIsAsnsLoading(false);
+                setIsSubRegionsLoading(false);
             }
         };
 
-        fetchAsns();
-    }, [selectedCountry]);
+        fetchSubRegions();
+    }, [selectedCountry, allSubRegionsData]);
+
+    // Fetch ISPs when country changes
+    useEffect(() => {
+        const fetchIsps = async () => {
+            if (!selectedCountry || selectedCountry.country_name === 'Global') {
+                setIsps([]);
+                setSelectedIsp(null);
+                return;
+            }
+
+            setIsIspsLoading(true);
+            try {
+                const countryCode = selectedCountry.country_code.toLowerCase();
+                const filteredIsps = allIspsData.filter(
+                    isp => isp.country_code && isp.country_code.toLowerCase() === countryCode
+                );
+
+                filteredIsps.sort((a, b) => a.name.localeCompare(b.name));
+                setIsps(filteredIsps);
+                setSelectedIsp(null);
+            } catch (error) {
+                console.error('Error filtering isps:', error);
+                setIsps([]);
+                setSelectedIsp(null);
+            } finally {
+                setIsIspsLoading(false);
+            }
+        };
+
+        fetchIsps();
+    }, [selectedCountry, allIspsData]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target as Node)) {
                 setIsCountryDropdownOpen(false);
             }
-            if (stateDropdownRef.current && !stateDropdownRef.current.contains(event.target as Node)) {
-                setIsStateDropdownOpen(false);
+            if (subRegionDropdownRef.current && !subRegionDropdownRef.current.contains(event.target as Node)) {
+                setIsSubRegionDropdownOpen(false);
             }
             if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target as Node)) {
                 setIsCityDropdownOpen(false);
             }
-            if (asnDropdownRef.current && !asnDropdownRef.current.contains(event.target as Node)) {
-                setIsAsnDropdownOpen(false);
+            if (ispDropdownRef.current && !ispDropdownRef.current.contains(event.target as Node)) {
+                setIsIspDropdownOpen(false);
             }
             if (hostnameDropdownRef.current && !hostnameDropdownRef.current.contains(event.target as Node)) {
                 setIsHostnameDropdownOpen(false);
@@ -301,15 +327,15 @@ const TrafficSetupPage = () => {
         }
         setCountrySearchQuery('');
         setIsCountryDropdownOpen(false);
-        setSelectedState(null);
-        setStateSearchQuery('');
-        setIsStateDropdownOpen(false);
+        setSelectedSubRegion(null);
+        setSubRegionSearchQuery('');
+        setIsSubRegionDropdownOpen(false);
         setSelectedCity(null);
         setCitySearchQuery('');
         setIsCityDropdownOpen(false);
-        setSelectedAsn(null);
-        setAsnSearchQuery('');
-        setIsAsnDropdownOpen(false);
+        setSelectedIsp(null);
+        setIspSearchQuery('');
+        setIsIspDropdownOpen(false);
         setSelectedHostname('na.proxys5.net');
         setIsHostnameDropdownOpen(false);
         setSelectedSessionType('Sticky IP');
@@ -346,7 +372,7 @@ const TrafficSetupPage = () => {
     const renderProxySetup = () => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             {/* Top Cards Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+            <div className="setup-top-grid">
                 {/* Residential Proxies */}
                 <div style={cardStyle}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#4E5969', fontWeight: '500' }}>
@@ -443,8 +469,8 @@ const TrafficSetupPage = () => {
             <div style={{ backgroundColor: 'white', border: '1px solid #f0f0f0', borderRadius: '12px', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)' }}>
 
 
-                <div style={{ padding: '32px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.75fr', gap: '60px' }}>
+                <div style={{ padding: '24px 16px' }}>
+                    <div className="setup-main-grid">
                         {/* Form Column */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -523,11 +549,11 @@ const TrafficSetupPage = () => {
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                        {/* Country/Region */}
+                                        {/* Country */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    Country/Region <Info size={14} color="#c9cdd4" strokeWidth={1.5} />
+                                                    Country <Info size={14} color="#c9cdd4" strokeWidth={1.5} />
                                                 </label>
                                                 <a href="#" style={{ color: '#1677ff', fontSize: '13px', textDecoration: 'none', fontWeight: '500' }}>Country list</a>
                                             </div>
@@ -640,7 +666,6 @@ const TrafficSetupPage = () => {
                                                                                 <Globe size={14} color={selectedCountry?.country_name === 'Global' ? '#1677ff' : '#86909C'} />
                                                                             ) : (
                                                                                 <span style={{ fontSize: '14px' }}>
-                                                                                    {/* We could use flag icons here if we had them, defaulting to globe for now */}
                                                                                     <Globe size={14} color="#86909C" opacity={0.5} />
                                                                                 </span>
                                                                             )}
@@ -665,39 +690,41 @@ const TrafficSetupPage = () => {
                                             </div>
                                         </div>
 
-                                        {/* City */}
+                                        {/* Region Dropdown (from 'regions' API) */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                            <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>City</label>
-                                            <div style={{ position: 'relative' }} ref={cityDropdownRef}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>Region</label>
+                                            </div>
+                                            <div style={{ position: 'relative' }} ref={subRegionDropdownRef}>
                                                 <div
-                                                    onClick={() => !isStatesLoading && !isCitiesLoading && cities.length > 0 && setIsCityDropdownOpen(!isCityDropdownOpen)}
+                                                    onClick={() => !isRegionsLoading && !isSubRegionsLoading && subRegions.length > 0 && setIsSubRegionDropdownOpen(!isSubRegionDropdownOpen)}
                                                     style={{
                                                         ...inputContainerStyle,
-                                                        cursor: (cities.length > 0) ? 'pointer' : 'default',
-                                                        border: isCityDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
-                                                        backgroundColor: (cities.length === 0) ? '#f7f8fa' : 'white',
-                                                        boxShadow: isCityDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none',
-                                                        opacity: (cities.length === 0) ? 0.6 : 1
+                                                        cursor: (subRegions.length > 0) ? 'pointer' : 'default',
+                                                        border: isSubRegionDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
+                                                        backgroundColor: (subRegions.length === 0) ? '#f7f8fa' : 'white',
+                                                        boxShadow: isSubRegionDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none',
+                                                        opacity: (subRegions.length === 0) ? 0.6 : 1
                                                     }}
                                                 >
                                                     <span style={{ flex: 1, fontWeight: '500' }}>
-                                                        {isCitiesLoading ? 'Loading...' : (selectedCity?.city_name || (selectedState?.state_name === 'Random' ? 'Random' : (cities.length === 0 ? 'No cities' : 'Random')))}
+                                                        {isSubRegionsLoading ? 'Loading...' : (selectedSubRegion?.name || (selectedCountry?.country_name === 'Global' ? 'Random' : (subRegions.length === 0 ? 'No regions' : 'Random')))}
                                                     </span>
-                                                    {isCitiesLoading ? (
+                                                    {isSubRegionsLoading ? (
                                                         <Loader2 size={16} className="animate-spin" color="#86909C" />
-                                                    ) : cities.length > 0 && (
+                                                    ) : subRegions.length > 0 && (
                                                         <ChevronDown
                                                             size={16}
                                                             color="#86909C"
                                                             style={{
-                                                                transform: isCityDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                                transform: isSubRegionDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                                                                 transition: 'transform 0.2s'
                                                             }}
                                                         />
                                                     )}
                                                 </div>
 
-                                                {isCityDropdownOpen && (
+                                                {isSubRegionDropdownOpen && (
                                                     <div style={{
                                                         position: 'absolute',
                                                         top: 'calc(100% + 4px)',
@@ -723,9 +750,9 @@ const TrafficSetupPage = () => {
                                                                 <Search size={14} color="#86909C" style={{ marginRight: '6px' }} />
                                                                 <input
                                                                     type="text"
-                                                                    placeholder="Search city..."
-                                                                    value={citySearchQuery}
-                                                                    onChange={(e) => setCitySearchQuery(e.target.value)}
+                                                                    placeholder="Search region..."
+                                                                    value={subRegionSearchQuery}
+                                                                    onChange={(e) => setSubRegionSearchQuery(e.target.value)}
                                                                     autoFocus
                                                                     onClick={(e) => e.stopPropagation()}
                                                                     style={{
@@ -739,51 +766,51 @@ const TrafficSetupPage = () => {
                                                             </div>
                                                         </div>
                                                         <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="custom-scrollbar">
-                                                            {cities
-                                                                .filter(c => c.city_name.toLowerCase().includes(citySearchQuery.toLowerCase()))
-                                                                .map((city, idx) => (
+                                                            {subRegions
+                                                                .filter(s => s.name.toLowerCase().includes(subRegionSearchQuery.toLowerCase()))
+                                                                .map((region, idx) => (
                                                                     <div
-                                                                        key={city.city_code || `city-${idx}`}
+                                                                        key={region.id || `region-${idx}`}
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            setSelectedCity(city);
-                                                                            setIsCityDropdownOpen(false);
-                                                                            setCitySearchQuery('');
+                                                                            setSelectedSubRegion(region);
+                                                                            setIsSubRegionDropdownOpen(false);
+                                                                            setSubRegionSearchQuery('');
                                                                         }}
                                                                         style={{
                                                                             padding: '10px 12px',
                                                                             fontSize: '14px',
-                                                                            color: selectedCity?.city_name === city.city_name ? '#1677ff' : '#4E5969',
+                                                                            color: selectedSubRegion?.id === region.id ? '#1677ff' : '#4E5969',
                                                                             cursor: 'pointer',
                                                                             display: 'flex',
                                                                             alignItems: 'center',
                                                                             justifyContent: 'space-between',
-                                                                            backgroundColor: selectedCity?.city_name === city.city_name ? '#e7f2ff' : 'transparent',
+                                                                            backgroundColor: selectedSubRegion?.id === region.id ? '#e7f2ff' : 'transparent',
                                                                             transition: 'all 0.1s'
                                                                         }}
                                                                         onMouseEnter={(e) => {
-                                                                            if (selectedCity?.city_name !== city.city_name) {
+                                                                            if (selectedSubRegion?.id !== region.id) {
                                                                                 e.currentTarget.style.backgroundColor = '#f7f8fa';
                                                                             }
                                                                         }}
                                                                         onMouseLeave={(e) => {
-                                                                            if (selectedCity?.city_name !== city.city_name) {
+                                                                            if (selectedSubRegion?.id !== region.id) {
                                                                                 e.currentTarget.style.backgroundColor = 'transparent';
                                                                             }
                                                                         }}
                                                                     >
-                                                                        <span style={{ fontWeight: selectedCity?.city_name === city.city_name ? '600' : '400' }}>
-                                                                            {city.city_name}
+                                                                        <span style={{ fontWeight: selectedSubRegion?.id === region.id ? '600' : '400' }}>
+                                                                            {region.name}
                                                                         </span>
-                                                                        {selectedCity?.city_name === city.city_name && (
+                                                                        {selectedSubRegion?.id === region.id && (
                                                                             <Check size={14} color="#1677ff" />
                                                                         )}
                                                                     </div>
                                                                 ))
                                                             }
-                                                            {cities.filter(c => c.city_name.toLowerCase().includes(citySearchQuery.toLowerCase())).length === 0 && (
+                                                            {subRegions.filter(s => s.name.toLowerCase().includes(subRegionSearchQuery.toLowerCase())).length === 0 && (
                                                                 <div style={{ padding: '20px', textAlign: 'center', color: '#86909C', fontSize: '13px' }}>
-                                                                    No cities found
+                                                                    No regions found
                                                                 </div>
                                                             )}
                                                         </div>
@@ -882,41 +909,39 @@ const TrafficSetupPage = () => {
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                        {/* State */}
+                                        {/* City (Moved from left column) */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>State</label>
-                                            </div>
-                                            <div style={{ position: 'relative' }} ref={stateDropdownRef}>
+                                            <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>City</label>
+                                            <div style={{ position: 'relative' }} ref={cityDropdownRef}>
                                                 <div
-                                                    onClick={() => !isRegionsLoading && !isStatesLoading && states.length > 0 && setIsStateDropdownOpen(!isStateDropdownOpen)}
+                                                    onClick={() => !isCitiesLoading && cities.length > 0 && setIsCityDropdownOpen(!isCityDropdownOpen)}
                                                     style={{
                                                         ...inputContainerStyle,
-                                                        cursor: (states.length > 0) ? 'pointer' : 'default',
-                                                        border: isStateDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
-                                                        backgroundColor: (states.length === 0) ? '#f7f8fa' : 'white',
-                                                        boxShadow: isStateDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none',
-                                                        opacity: (states.length === 0) ? 0.6 : 1
+                                                        cursor: (cities.length > 0) ? 'pointer' : 'default',
+                                                        border: isCityDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
+                                                        backgroundColor: (cities.length === 0) ? '#f7f8fa' : 'white',
+                                                        boxShadow: isCityDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none',
+                                                        opacity: (cities.length === 0) ? 0.6 : 1
                                                     }}
                                                 >
                                                     <span style={{ flex: 1, fontWeight: '500' }}>
-                                                        {isStatesLoading ? 'Loading...' : (selectedState?.state_name || (selectedCountry?.country_name === 'Global' ? 'Random' : (states.length === 0 ? 'No states' : 'Random')))}
+                                                        {isCitiesLoading ? 'Loading...' : (selectedCity?.name || (cities.length === 0 ? 'No cities' : 'Random'))}
                                                     </span>
-                                                    {isStatesLoading ? (
+                                                    {isCitiesLoading ? (
                                                         <Loader2 size={16} className="animate-spin" color="#86909C" />
-                                                    ) : states.length > 0 && (
+                                                    ) : cities.length > 0 && (
                                                         <ChevronDown
                                                             size={16}
                                                             color="#86909C"
                                                             style={{
-                                                                transform: isStateDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                                transform: isCityDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                                                                 transition: 'transform 0.2s'
                                                             }}
                                                         />
                                                     )}
                                                 </div>
 
-                                                {isStateDropdownOpen && (
+                                                {isCityDropdownOpen && (
                                                     <div style={{
                                                         position: 'absolute',
                                                         top: 'calc(100% + 4px)',
@@ -942,9 +967,9 @@ const TrafficSetupPage = () => {
                                                                 <Search size={14} color="#86909C" style={{ marginRight: '6px' }} />
                                                                 <input
                                                                     type="text"
-                                                                    placeholder="Search state..."
-                                                                    value={stateSearchQuery}
-                                                                    onChange={(e) => setStateSearchQuery(e.target.value)}
+                                                                    placeholder="Search city..."
+                                                                    value={citySearchQuery}
+                                                                    onChange={(e) => setCitySearchQuery(e.target.value)}
                                                                     autoFocus
                                                                     onClick={(e) => e.stopPropagation()}
                                                                     style={{
@@ -958,51 +983,51 @@ const TrafficSetupPage = () => {
                                                             </div>
                                                         </div>
                                                         <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="custom-scrollbar">
-                                                            {states
-                                                                .filter(s => s.state_name.toLowerCase().includes(stateSearchQuery.toLowerCase()))
-                                                                .map((state, idx) => (
+                                                            {cities
+                                                                .filter(c => c.name.toLowerCase().includes(citySearchQuery.toLowerCase()))
+                                                                .map((city, idx) => (
                                                                     <div
-                                                                        key={state.state_code || `state-${idx}`}
+                                                                        key={city.id || `city-${idx}`}
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            setSelectedState(state);
-                                                                            setIsStateDropdownOpen(false);
-                                                                            setStateSearchQuery('');
+                                                                            setSelectedCity(city);
+                                                                            setIsCityDropdownOpen(false);
+                                                                            setCitySearchQuery('');
                                                                         }}
                                                                         style={{
                                                                             padding: '10px 12px',
                                                                             fontSize: '14px',
-                                                                            color: selectedState?.state_name === state.state_name ? '#1677ff' : '#4E5969',
+                                                                            color: (selectedCity?.id === city.id || selectedCity?.name === city.name) ? '#1677ff' : '#4E5969',
                                                                             cursor: 'pointer',
                                                                             display: 'flex',
                                                                             alignItems: 'center',
                                                                             justifyContent: 'space-between',
-                                                                            backgroundColor: selectedState?.state_name === state.state_name ? '#e7f2ff' : 'transparent',
+                                                                            backgroundColor: (selectedCity?.id === city.id || selectedCity?.name === city.name) ? '#e7f2ff' : 'transparent',
                                                                             transition: 'all 0.1s'
                                                                         }}
                                                                         onMouseEnter={(e) => {
-                                                                            if (selectedState?.state_name !== state.state_name) {
+                                                                            if (selectedCity?.id !== city.id && selectedCity?.name !== city.name) {
                                                                                 e.currentTarget.style.backgroundColor = '#f7f8fa';
                                                                             }
                                                                         }}
                                                                         onMouseLeave={(e) => {
-                                                                            if (selectedState?.state_name !== state.state_name) {
+                                                                            if (selectedCity?.id !== city.id && selectedCity?.name !== city.name) {
                                                                                 e.currentTarget.style.backgroundColor = 'transparent';
                                                                             }
                                                                         }}
                                                                     >
-                                                                        <span style={{ fontWeight: selectedState?.state_name === state.state_name ? '600' : '400' }}>
-                                                                            {state.state_name}
+                                                                        <span style={{ fontWeight: (selectedCity?.id === city.id || selectedCity?.name === city.name) ? '600' : '400' }}>
+                                                                            {city.name}
                                                                         </span>
-                                                                        {selectedState?.state_name === state.state_name && (
+                                                                        {(selectedCity?.id === city.id || selectedCity?.name === city.name) && (
                                                                             <Check size={14} color="#1677ff" />
                                                                         )}
                                                                     </div>
                                                                 ))
                                                             }
-                                                            {states.filter(s => s.state_name.toLowerCase().includes(stateSearchQuery.toLowerCase())).length === 0 && (
+                                                            {cities.filter(c => c.name.toLowerCase().includes(citySearchQuery.toLowerCase())).length === 0 && (
                                                                 <div style={{ padding: '20px', textAlign: 'center', color: '#86909C', fontSize: '13px' }}>
-                                                                    No states found
+                                                                    No cities found
                                                                 </div>
                                                             )}
                                                         </div>
@@ -1011,41 +1036,41 @@ const TrafficSetupPage = () => {
                                             </div>
                                         </div>
 
-                                        {/* ASN */}
+                                        {/* ISP (Formerly ASN) - Commented out per user request
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>ASN</label>
+                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>ISP</label>
                                             </div>
-                                            <div style={{ position: 'relative' }} ref={asnDropdownRef}>
+                                            <div style={{ position: 'relative' }} ref={ispDropdownRef}>
                                                 <div
-                                                    onClick={() => !isRegionsLoading && !isAsnsLoading && asns.length > 0 && setIsAsnDropdownOpen(!isAsnDropdownOpen)}
+                                                    onClick={() => !isRegionsLoading && !isIspsLoading && isps.length > 0 && setIsIspDropdownOpen(!isIspDropdownOpen)}
                                                     style={{
                                                         ...inputContainerStyle,
-                                                        cursor: (asns.length > 0) ? 'pointer' : 'default',
-                                                        border: isAsnDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
-                                                        backgroundColor: (asns.length === 0) ? '#f7f8fa' : 'white',
-                                                        boxShadow: isAsnDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none',
-                                                        opacity: (asns.length === 0) ? 0.6 : 1
+                                                        cursor: (isps.length > 0) ? 'pointer' : 'default',
+                                                        border: isIspDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
+                                                        backgroundColor: (isps.length === 0) ? '#f7f8fa' : 'white',
+                                                        boxShadow: isIspDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none',
+                                                        opacity: (isps.length === 0) ? 0.6 : 1
                                                     }}
                                                 >
                                                     <span style={{ flex: 1, fontWeight: '500' }}>
-                                                        {isAsnsLoading ? 'Loading...' : (selectedAsn?.asn_name || (selectedCountry?.country_name === 'Global' ? 'Random' : (asns.length === 0 ? 'No ASNs' : 'Random')))}
+                                                        {isIspsLoading ? 'Loading...' : (selectedIsp?.name || (selectedCountry?.country_name === 'Global' ? 'Random' : (isps.length === 0 ? 'No ISPs' : 'Random')))}
                                                     </span>
-                                                    {isAsnsLoading ? (
+                                                    {isIspsLoading ? (
                                                         <Loader2 size={16} className="animate-spin" color="#86909C" />
-                                                    ) : asns.length > 0 && (
+                                                    ) : isps.length > 0 && (
                                                         <ChevronDown
                                                             size={16}
                                                             color="#86909C"
                                                             style={{
-                                                                transform: isAsnDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                                transform: isIspDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                                                                 transition: 'transform 0.2s'
                                                             }}
                                                         />
                                                     )}
                                                 </div>
 
-                                                {isAsnDropdownOpen && (
+                                                {isIspDropdownOpen && (
                                                     <div style={{
                                                         position: 'absolute',
                                                         top: 'calc(100% + 4px)',
@@ -1071,9 +1096,9 @@ const TrafficSetupPage = () => {
                                                                 <Search size={14} color="#86909C" style={{ marginRight: '6px' }} />
                                                                 <input
                                                                     type="text"
-                                                                    placeholder="Search ASN..."
-                                                                    value={asnSearchQuery}
-                                                                    onChange={(e) => setAsnSearchQuery(e.target.value)}
+                                                                    placeholder="Search ISP..."
+                                                                    value={ispSearchQuery}
+                                                                    onChange={(e) => setIspSearchQuery(e.target.value)}
                                                                     autoFocus
                                                                     onClick={(e) => e.stopPropagation()}
                                                                     style={{
@@ -1087,54 +1112,54 @@ const TrafficSetupPage = () => {
                                                             </div>
                                                         </div>
                                                         <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="custom-scrollbar">
-                                                            {asns
-                                                                .filter(a => a.asn_name.toLowerCase().includes(asnSearchQuery.toLowerCase()) || a.asn_code.toLowerCase().includes(asnSearchQuery.toLowerCase()))
-                                                                .map((asn, idx) => (
+                                                            {isps
+                                                                .filter(i => i.name.toLowerCase().includes(ispSearchQuery.toLowerCase()))
+                                                                .map((isp, idx) => (
                                                                     <div
-                                                                        key={asn.asn_code || `asn-${idx}`}
+                                                                        key={isp.value || `isp-${idx}`}
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            setSelectedAsn(asn);
-                                                                            setIsAsnDropdownOpen(false);
-                                                                            setAsnSearchQuery('');
+                                                                            setSelectedIsp(isp);
+                                                                            setIsIspDropdownOpen(false);
+                                                                            setIspSearchQuery('');
                                                                         }}
                                                                         style={{
                                                                             padding: '10px 12px',
                                                                             fontSize: '14px',
-                                                                            color: selectedAsn?.asn_code === asn.asn_code ? '#1677ff' : '#4E5969',
+                                                                            color: selectedIsp?.value === isp.value ? '#1677ff' : '#4E5969',
                                                                             cursor: 'pointer',
                                                                             display: 'flex',
                                                                             alignItems: 'center',
                                                                             justifyContent: 'space-between',
-                                                                            backgroundColor: selectedAsn?.asn_code === asn.asn_code ? '#e7f2ff' : 'transparent',
+                                                                            backgroundColor: selectedIsp?.value === isp.value ? '#e7f2ff' : 'transparent',
                                                                             transition: 'all 0.1s'
                                                                         }}
                                                                         onMouseEnter={(e) => {
-                                                                            if (selectedAsn?.asn_code !== asn.asn_code) {
+                                                                            if (selectedIsp?.value !== isp.value) {
                                                                                 e.currentTarget.style.backgroundColor = '#f7f8fa';
                                                                             }
                                                                         }}
                                                                         onMouseLeave={(e) => {
-                                                                            if (selectedAsn?.asn_code !== asn.asn_code) {
+                                                                            if (selectedIsp?.value !== isp.value) {
                                                                                 e.currentTarget.style.backgroundColor = 'transparent';
                                                                             }
                                                                         }}
                                                                     >
                                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                                            <span style={{ fontWeight: selectedAsn?.asn_code === asn.asn_code ? '600' : '400' }}>
-                                                                                {asn.asn_name}
+                                                                            <span style={{ fontWeight: selectedIsp?.value === isp.value ? '600' : '400' }}>
+                                                                                {isp.name}
                                                                             </span>
-                                                                            <span style={{ fontSize: '11px', color: '#86909C' }}>{asn.asn_code}</span>
+                                                                            <span style={{ fontSize: '11px', color: '#86909C' }}>{isp.value}</span>
                                                                         </div>
-                                                                        {selectedAsn?.asn_code === asn.asn_code && (
+                                                                        {selectedIsp?.value === isp.value && (
                                                                             <Check size={14} color="#1677ff" />
                                                                         )}
                                                                     </div>
                                                                 ))
                                                             }
-                                                            {asns.filter(a => a.asn_name.toLowerCase().includes(asnSearchQuery.toLowerCase()) || a.asn_code.toLowerCase().includes(asnSearchQuery.toLowerCase())).length === 0 && (
+                                                            {isps.filter(i => i.name.toLowerCase().includes(ispSearchQuery.toLowerCase())).length === 0 && (
                                                                 <div style={{ padding: '20px', textAlign: 'center', color: '#86909C', fontSize: '13px' }}>
-                                                                    No ASNs found
+                                                                    No ISPs found
                                                                 </div>
                                                             )}
                                                         </div>
@@ -1142,6 +1167,7 @@ const TrafficSetupPage = () => {
                                                 )}
                                             </div>
                                         </div>
+                                        */}
 
                                         {/* Port */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -1173,7 +1199,7 @@ const TrafficSetupPage = () => {
                                         Session Settings <Info size={14} color="#c9cdd4" strokeWidth={1.5} style={{ marginLeft: '4px' }} />
                                     </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.75fr', gap: '60px' }}>
+                                    <div className="setup-input-row" style={{ gap: '32px' }}>
                                         {/* Session type */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                             <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>Session type</label>
@@ -1299,7 +1325,11 @@ const TrafficSetupPage = () => {
                                             color="#86909C"
                                             style={{ cursor: 'pointer' }}
                                             onClick={() => {
-                                                const curlCommand = `curl -x ${selectedHostname}:6200 -U "${proxyInfo?.proxyAccount || 'username'}-sessid-XcivyX4zy-sessTime-${sessionDuration}:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`;
+                                                const countryPart = selectedCountry && selectedCountry.country_name !== 'Global' ? `-country-${selectedCountry.country_code}` : '';
+                                                const cityPart = selectedCity ? `-city-${selectedCity.name.replace(/\s+/g, '_')}` : '';
+                                                const regionPart = selectedSubRegion ? `-region-${selectedSubRegion.name.replace(/\s+/g, '_')}` : '';
+
+                                                const curlCommand = `curl -x ${selectedHostname}:6200 -U "${proxyInfo?.proxyAccount || 'username'}${countryPart}${regionPart}${cityPart}-sessid-XcivyX4zy-sessTime-${sessionDuration}:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`;
                                                 navigator.clipboard.writeText(curlCommand);
                                                 toast.success('Example copied!');
                                             }}
@@ -1309,9 +1339,12 @@ const TrafficSetupPage = () => {
                                 <div style={{ fontSize: '13px', color: '#4E5969', lineHeight: '2', wordBreak: 'break-all', fontFamily: 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace', fontWeight: '500' }}>
                                     {isLoading ? (
                                         <span>Loading...</span>
-                                    ) : (
-                                        `curl -x ${selectedHostname}:6200 -U "${proxyInfo?.proxyAccount || 'username'}-sessid-XcivyX4zy-sessTime-${sessionDuration}:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`
-                                    )}
+                                    ) : (() => {
+                                        const countryPart = selectedCountry && selectedCountry.country_name !== 'Global' ? `-country-${selectedCountry.country_code}` : '';
+                                        const cityPart = selectedCity ? `-city-${selectedCity.name.replace(/\s+/g, '_')}` : '';
+                                        const regionPart = selectedSubRegion ? `-region-${selectedSubRegion.name.replace(/\s+/g, '_')}` : '';
+                                        return `curl -x ${selectedHostname}:6200 -U "${proxyInfo?.proxyAccount || 'username'}${countryPart}${regionPart}${cityPart}-sessid-XcivyX4zy-sessTime-${sessionDuration}:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`;
+                                    })()}
                                 </div>
                             </div>
 
@@ -1386,6 +1419,43 @@ const TrafficSetupPage = () => {
                 @keyframes spin {
                     from { transform: rotate(0deg); }
                     to { transform: rotate(360deg); }
+                }
+
+                .setup-top-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 20px;
+                }
+
+                .setup-main-grid {
+                    display: grid;
+                    grid-template-columns: 1.25fr 0.75fr;
+                    gap: 40px;
+                }
+
+                .setup-input-row {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 20px;
+                }
+
+                @media (max-width: 1200px) {
+                    .setup-main-grid {
+                        grid-template-columns: 1fr;
+                        gap: 32px;
+                    }
+                }
+
+                @media (max-width: 900px) {
+                    .setup-top-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+                @media (max-width: 640px) {
+                    .setup-input-row {
+                        grid-template-columns: 1fr;
+                    }
                 }
             `}</style>
         </div>

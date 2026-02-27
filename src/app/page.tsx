@@ -1,5 +1,6 @@
 "use client";
 
+import React, { Suspense } from "react";
 import PromoBanner from "@/components/layout/PromoBanner";
 import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/sections/Hero";
@@ -15,10 +16,9 @@ export default function Home() {
       <PromoBanner />
       <Navbar />
       <Hero />
-      <Pricing />
-
-
-
+      <Suspense fallback={<div className="container py-20 text-center">Loading pricing...</div>}>
+        <Pricing />
+      </Suspense>
       <Stats />
       <HowItWorks />
 
