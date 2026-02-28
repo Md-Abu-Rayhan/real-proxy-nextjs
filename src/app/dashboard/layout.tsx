@@ -32,6 +32,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     React.useEffect(() => {
         const email = localStorage.getItem('user_email');
@@ -95,7 +96,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             )}
 
             {/* Sidebar */}
-            <aside className={`dashboard-sidebar ${isSidebarOpen ? 'show' : ''}`}>
+            <aside className={`dashboard-sidebar ${isSidebarOpen ? 'show' : ''} ${isSidebarCollapsed ? 'collapsed' : ''}`}>
                 {/* Logo Area */}
                 <div className="sidebar-logo">
                     <Link href="/" style={{ textDecoration: 'none' }}>
@@ -128,7 +129,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                                             key={sIdx}
                                             href={subItem.path}
                                             className={`nav-item ${subItem.active ? 'active' : ''}`}
-                                            onClick={() => setIsSidebarOpen(false)}
+                                            onClick={() => { if (window.innerWidth < 1024) setIsSidebarOpen(false); }}
                                         >
                                             <span className="nav-icon">{subItem.icon}</span>
                                             <span className="nav-text">{subItem.name}</span>
@@ -147,7 +148,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                                     key={idx}
                                     href={item.path}
                                     className="nav-item"
-                                    onClick={() => setIsSidebarOpen(false)}
+                                    onClick={() => { if (window.innerWidth < 1024) setIsSidebarOpen(false); }}
                                 >
                                     <span className="nav-icon">{item.icon}</span>
                                     <span className="nav-text">{item.name}</span>
@@ -164,11 +165,21 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 <header className="dashboard-header">
                     <div className="header-left">
                         <button
-                            className="mobile-toggle"
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            className={`sidebar-toggle ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
+                            onClick={() => {
+                                if (window.innerWidth < 1024) {
+                                    setIsSidebarOpen(!isSidebarOpen);
+                                } else {
+                                    setIsSidebarCollapsed(!isSidebarCollapsed);
+                                }
+                            }}
                         >
                             <Menu size={20} />
-                            <span style={{ fontSize: '14px', fontWeight: '600', marginLeft: '8px' }}>Menu</span>
+                            <span className="toggle-label">
+                                {typeof window !== 'undefined' && window.innerWidth < 1024
+                                    ? (isSidebarOpen ? 'Close' : 'Menu')
+                                    : (isSidebarCollapsed ? 'Expand' : 'Collapse')}
+                            </span>
                         </button>
                     </div>
 
@@ -232,15 +243,34 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                     flex-direction: column;
                     flex-shrink: 0;
                     z-index: 100;
-                    border-right: '1px solid #f0f0f0';
-                    transition: all 0.3s ease;
+                    border-right: 1px solid #f0f0f0;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+
+                .dashboard-sidebar.collapsed {
+                    width: 80px;
                 }
 
                 .sidebar-logo {
-                    padding: 24px 32px;
+                    padding: 24px 20px;
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
+                    overflow: hidden;
+                }
+
+                .sidebar-logo img {
+                    transition: all 0.3s ease;
+                }
+
+                .dashboard-sidebar.collapsed .sidebar-logo {
+                    padding: 24px 10px;
+                    justify-content: center;
+                }
+
+                .dashboard-sidebar.collapsed .sidebar-logo img {
+                    width: 40px !important;
+                    height: auto !important;
                 }
 
                 .sidebar-close-btn {
@@ -259,8 +289,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 }
 
                 .nav-group-header {
-                    padding: 8px 32px;
-                    fontSize: 11px;
+                    padding: 12px 32px;
+                    font-size: 11px;
                     color: #86909C;
                     display: flex;
                     align-items: center;
@@ -277,7 +307,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                     gap: 12px;
                     padding: 0 32px;
                     height: 48px;
-                    fontSize: 14px;
+                    font-size: 14px;
                     color: #4E5969;
                     text-decoration: none;
                     transition: all 0.2s;
@@ -308,15 +338,38 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
+                    transition: opacity 0.2s ease;
                 }
 
-                .nav-badge {
-                    color: white;
-                    font-size: 10px;
-                    padding: 1px 6px;
-                    border-radius: 10px;
+                .dashboard-sidebar.collapsed .nav-text,
+                .dashboard-sidebar.collapsed .nav-group-header,
+                .dashboard-sidebar.collapsed .nav-badge {
+                    opacity: 0;
+                    pointer-events: none;
+                    width: 0;
+                    display: none;
+                }
+
+                .dashboard-sidebar.collapsed .nav-item {
+                    justify-content: center;
+                    padding: 0;
+                }
+
+                .dashboard-sidebar.collapsed .nav-icon {
+                    margin: 0;
+                }
+                .nav-group-header {
+                    padding: 12px 24px;
+                    font-size: 11px;
+                    color: #86909C;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    cursor: pointer;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
                     font-weight: 700;
-                    margin-left: 4px;
+                    transition: all 0.2s;
                 }
 
                 .main-container {
@@ -342,15 +395,28 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                     align-items: center;
                 }
 
-                .mobile-toggle {
-                    display: none;
+                .sidebar-toggle {
+                    display: flex;
                     align-items: center;
-                    background: none;
+                    background: white;
                     border: 1px solid #e5e6eb;
                     padding: 6px 12px;
-                    border-radius: 4px;
+                    border-radius: 6px;
                     cursor: pointer;
                     color: #4E5969;
+                    font-weight: 600;
+                    transition: all 0.2s;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                }
+
+                .sidebar-toggle:hover {
+                    background-color: #f7f8fa;
+                    border-color: #d1d5db;
+                }
+
+                .toggle-label {
+                    font-size: 14px;
+                    margin-left: 8px;
                 }
 
                 .header-right {
@@ -462,8 +528,21 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                         backdrop-filter: blur(2px);
                     }
 
-                    .mobile-toggle {
+                    .sidebar-toggle {
+                        background: transparent;
+                        border: 1px solid #e5e6eb;
+                    }
+
+                    .dashboard-header {
+                        padding: 0 16px;
+                    }
+
+                    .mobile-only {
                         display: flex;
+                    }
+
+                    .desktop-only {
+                        display: none;
                     }
 
                     .sidebar-close-btn {

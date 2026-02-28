@@ -57,7 +57,7 @@ const Navbar = () => {
                 <div className="desktop-menu">
                     <a href="/residential-proxies" className="nav-item">{t.nav.products}</a>
                     <a href="#" className="nav-item">{t.nav.contact}</a>
-                    <a href="#" className="nav-item">{t.nav.faq}</a>
+                    <a href="/#faq-section" className="nav-item">{t.nav.faq}</a>
                 </div>
 
                 {/* Desktop Actions */}
@@ -115,7 +115,7 @@ const Navbar = () => {
                     >
                         <a href="/residential-proxies" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.products}</a>
                         <a href="#" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.contact}</a>
-                        <a href="#" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.faq}</a>
+                        <a href="/#faq-section" onClick={() => setIsMobileMenuOpen(false)} style={{ padding: '10px 0', fontWeight: '600', borderBottom: '1px solid #f8f9fa' }}>{t.nav.faq}</a>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '10px' }}>
                             {isLoggedIn ? (
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>

@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { Facebook, Twitter, Youtube, Instagram, Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
@@ -29,7 +30,7 @@ const Footer = () => {
                             <li><a href="#">FAQ</a></li>
                             <li><a href="#">Support</a></li>
                             <li><a href="#">Privacy Policy</a></li>
-                            <li><a href="#">Terms and Conditions</a></li>
+                            <li><Link href="/terms">Terms of Service</Link></li>
                         </ul>
                     </div>
 
@@ -53,7 +54,7 @@ const Footer = () => {
                 </div>
 
                 <div className="footer-bottom">
-                    <p>© 2026 Real Proxy. All rights reserved. Privacy Policy | Terms of Service</p>
+                    <p>© 2026 Real Proxy. All rights reserved. Privacy Policy | <Link href="/terms" style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Service</Link></p>
                 </div>
             </div>
             <style jsx>{`

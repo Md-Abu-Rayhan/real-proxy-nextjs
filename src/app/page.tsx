@@ -7,6 +7,7 @@ import Hero from "@/components/sections/Hero";
 import Pricing from "@/components/sections/Pricing";
 import Stats from "@/components/sections/Stats";
 import HowItWorks from "@/components/sections/HowItWorks";
+import FAQ from "@/components/sections/FAQ";
 import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 
@@ -21,6 +22,7 @@ export default function Home() {
       </Suspense>
       <Stats />
       <HowItWorks />
+      <FAQ />
 
       {/* Simple CTA Section */}
       <section className="cta-section">

@@ -17,7 +17,8 @@ import {
     Search,
     Check,
     Plus,
-    Minus
+    Minus,
+    ArrowRight
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -82,11 +83,30 @@ const TrafficSetupPage = () => {
     const [allCitiesData, setAllCitiesData] = useState<City[]>([]);
     const [allSubRegionsData, setAllSubRegionsData] = useState<SubRegion[]>([]);
     const [allIspsData, setAllIspsData] = useState<ISP[]>([]);
-    const [selectedHostname, setSelectedHostname] = useState('na.proxys5.net');
+    const [selectedHostname, setSelectedHostname] = useState('rp.realproxy.net');
     const [isHostnameDropdownOpen, setIsHostnameDropdownOpen] = useState(false);
     const [selectedSessionType, setSelectedSessionType] = useState('Sticky IP');
     const [isSessionTypeDropdownOpen, setIsSessionTypeDropdownOpen] = useState(false);
     const [sessionDuration, setSessionDuration] = useState(15);
+
+    // New Generator State
+    const [selectedProtocol, setSelectedProtocol] = useState('HTTPS');
+    const [selectedFormat, setSelectedFormat] = useState('hostname:port:username:password');
+    const [selectedType, setSelectedType] = useState('Rotating');
+    const [sessionType, setSessionType] = useState('Normal Session');
+    const [amount, setAmount] = useState(1);
+    const [lifetime, setLifetime] = useState(30);
+
+    const theme = {
+        bg: '#F8FAFC',
+        card: '#FFFFFF',
+        input: '#F1F5F9',
+        active: '#3B82F6',
+        text: '#1E293B',
+        textMuted: '#64748B',
+        border: '#E2E8F0'
+    };
+
     const countryDropdownRef = useRef<HTMLDivElement>(null);
     const subRegionDropdownRef = useRef<HTMLDivElement>(null);
     const cityDropdownRef = useRef<HTMLDivElement>(null);
@@ -369,1004 +389,317 @@ const TrafficSetupPage = () => {
         transition: 'all 0.2s'
     };
 
-    const renderProxySetup = () => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            {/* Top Cards Grid */}
-            <div className="setup-top-grid">
-                {/* Residential Proxies */}
-                <div style={cardStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#4E5969', fontWeight: '500' }}>
-                        Residential Proxies <Info size={16} color="#c9cdd4" strokeWidth={1.5} />
-                    </div>
-                    <div style={{ display: 'flex', gap: '2px', backgroundColor: '#f2f3f5', padding: '2px', borderRadius: '4px', alignSelf: 'flex-start', marginTop: '4px' }}>
-                        <button
-                            onClick={() => setUnit('GB')}
+    const countryPart = selectedCountry && selectedCountry.country_name !== 'Global' ? `_country-${selectedCountry.country_code}` : '';
+    const cityPart = selectedCity ? `_city-${selectedCity.name.toLowerCase().replace(/\s+/g, '.')}` : '';
+    const regionPart = selectedSubRegion ? `_region-${selectedSubRegion.name.toLowerCase().replace(/\s+/g, '.')}` : '';
+
+    const generatedList = Array.from({ length: Math.min(Math.max(1, amount), 50) }, (_, i) => {
+        const protocol = selectedProtocol.toLowerCase();
+        const user = proxyInfo?.proxyAccount || 'user';
+        const basePass = proxyInfo?.proxyPassword || 'pass';
+
+        let passOptions = `${countryPart}${regionPart}${cityPart}`;
+
+        if (selectedType === 'Rotating') {
+            return `${protocol}://${selectedHostname}:1000:${user}:${basePass}${passOptions}`;
+        } else {
+            const randomId = Math.random().toString(36).substring(2, 11).toUpperCase();
+            return `${protocol}://${selectedHostname}:1000:${user}:${basePass}${passOptions}_session-${randomId}_lifetime-${lifetime}`;
+        }
+    });
+
+    const downloadProxies = () => {
+        const blob = new Blob([generatedList.join('\n')], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `proxies-${selectedCountry?.country_name || 'worldwide'}-${new Date().getTime()}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    return (
+        <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 24px', boxSizing: 'border-box' }}>
+            {/* Top Navigation Mode & Compact Balance Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', gap: '60px' }}>
+                    {['Proxy Setup', 'Statistics'].map(tab => (
+                        <div
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
                             style={{
-                                padding: '4px 18px', fontSize: '12px', borderRadius: '4px', border: 'none',
-                                backgroundColor: unit === 'GB' ? '#1677ff' : 'transparent',
-                                color: unit === 'GB' ? 'white' : '#4E5969',
-                                fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'
+                                padding: '13px 50px',
+                                fontSize: '18px',
+                                fontWeight: '700',
+                                color: activeTab === tab ? '#1677ff' : '#4E5969',
+                                borderBottom: activeTab === tab ? '2px solid #1677ff' : '2px solid transparent',
+                                cursor: 'pointer',
+                                marginBottom: '-1px',
+                                transition: 'all 0.2s',
+                                letterSpacing: '0.2px'
                             }}
-                        >GB</button>
-                        <button
-                            onClick={() => setUnit('MB')}
-                            style={{
-                                padding: '4px 18px', fontSize: '12px', borderRadius: '4px', border: 'none',
-                                backgroundColor: unit === 'MB' ? '#1677ff' : 'transparent',
-                                color: unit === 'MB' ? 'white' : '#4E5969',
-                                fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s'
-                            }}
-                        >MB</button>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginTop: '10px' }}>
-                        <span style={{ fontSize: '36px', fontWeight: '700', color: '#1D2129' }}>0.00</span>
-                        <span style={{ fontSize: '18px', fontWeight: '700', color: '#1D2129' }}>{unit}</span>
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#86909C', fontWeight: '500' }}>Expire Date:--</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: 'auto' }}>
-                        <button
-                            onClick={() => router.push('/?recharge=true#pricing-section')}
-                            style={{ backgroundColor: '#165DFF', color: 'white', border: 'none', height: '38px', padding: '0 24px', borderRadius: '4px', fontWeight: '600', fontSize: '14px', flex: 1, cursor: 'pointer', boxShadow: '0 2px 4px rgba(22, 93, 255, 0.2)' }}
                         >
-                            Recharge
-                        </button>
-                    </div>
+                            {tab}
+                        </div>
+                    ))}
                 </div>
 
-                {/* Traffic Left Reminder */}
-                <div style={cardStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#4E5969', fontWeight: '500' }}>
-                        Traffic Left Reminder <Info size={16} color="#c9cdd4" strokeWidth={1.5} />
+                {/* Remaining Balance (Small, Side-by-side, Right aligned) */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#e6f4ff', padding: '8px 16px', borderRadius: '8px', border: '1px solid #91caff' }}>
+                        <span style={{ color: '#4E5969', fontSize: '14px', fontWeight: '500' }}>Remaining Balance:</span>
+                        <span style={{ color: '#1677ff', fontSize: '16px', fontWeight: '800' }}>99.963 MB</span>
                     </div>
-                    <div
-                        onClick={() => setTrafficReminder(!trafficReminder)}
-                        style={{
-                            width: '50px', height: '24px', borderRadius: '12px',
-                            backgroundColor: trafficReminder ? '#165DFF' : '#c9cdd4',
-                            position: 'relative', cursor: 'pointer', transition: 'all 0.3s',
-                            marginTop: '12px'
-                        }}
-                    >
-                        <div style={{
-                            width: '20px', height: '20px', borderRadius: '50%', backgroundColor: 'white',
-                            position: 'absolute', top: '2px', left: trafficReminder ? '28px' : '2px',
-                            transition: 'all 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                        }} />
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#4E5969', lineHeight: '1.6', marginTop: '10px' }}>
-                        Email will be sent when the GB amount is below your selection.
-                    </div>
-                    <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', height: '40px', backgroundColor: '#f2f3f5', borderRadius: '4px', color: '#86909C', fontSize: '14px' }}>
-                        <span style={{ fontWeight: '600' }}>GB</span>
-                        <ChevronDown size={14} />
-                    </div>
+                    <button onClick={() => router.push('/dashboard/pricing')} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#1677ff', color: 'white', border: 'none', padding: '9px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 6px rgba(22, 119, 255, 0.2)' }}>
+                        Refill
+                        <ArrowRight size={15} strokeWidth={2.5} />
+                    </button>
                 </div>
-
-                {/* Tutorial */}
-                <div style={cardStyle}>
-                    <div style={{ fontSize: '14px', color: '#4E5969', fontWeight: '700' }}>Tutorial</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
-                        <a href="#" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#4e5969', fontSize: '13px', textDecoration: 'none', fontWeight: '500' }}>
-                            How to use Residential Proxies? <ChevronRight size={14} color="#86909C" />
-                        </a>
-                        <a href="#" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#4e5969', fontSize: '13px', textDecoration: 'none', fontWeight: '500' }}>
-                            IP Whitelist Authentication <ChevronRight size={14} color="#86909C" />
-                        </a>
-                        <a href="#" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#4e5969', fontSize: '13px', textDecoration: 'none', fontWeight: '500' }}>
-                            User&Pass Authentication <ChevronRight size={14} color="#86909C" />
-                        </a>
-                    </div>
-                    <div style={{ marginTop: 'auto', display: 'flex', gap: '16px' }}>
-                        <a href="#" style={{ color: '#165DFF', fontSize: '13px', textDecoration: 'none', fontWeight: '700' }}>More Tutorial</a>
-                        <a href="#" style={{ color: '#165DFF', fontSize: '13px', textDecoration: 'none', fontWeight: '700' }}>Using Feedback</a>
-                    </div>
-                </div>
-
-
             </div>
 
-            {/* Main Tabs Section */}
-            <div style={{ backgroundColor: 'white', border: '1px solid #f0f0f0', borderRadius: '12px', display: 'flex', flexDirection: 'column', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)' }}>
-
-
-                <div style={{ padding: '24px 16px' }}>
-                    <div className="setup-main-grid">
-                        {/* Form Column */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '15px', fontWeight: '700', color: '#1D2129' }}>
-                                        <div style={{ width: '4px', height: '16px', backgroundColor: '#1677ff', borderRadius: '2px' }} />
-                                        Account and Password Information
-                                    </div>
-                                    <a href="#" style={{ color: '#1677ff', fontSize: '13px', textDecoration: 'none', fontWeight: '500' }}>Tutorial</a>
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                            Username <Info size={14} color="#c9cdd4" strokeWidth={1.5} />
-                                        </label>
-                                        <div style={inputContainerStyle}>
-                                            {isLoading ? (
-                                                <Loader2 size={16} className="animate-spin" color="#86909C" />
-                                            ) : (
-                                                <>
-                                                    <span style={{ flex: 1, fontWeight: '500' }}>{proxyInfo?.proxyAccount || 'N/A'}</span>
-                                                    <Copy
-                                                        size={16}
-                                                        color="#86909C"
-                                                        style={{ cursor: 'pointer' }}
-                                                        onClick={() => {
-                                                            if (proxyInfo?.proxyAccount) {
-                                                                navigator.clipboard.writeText(proxyInfo.proxyAccount);
-                                                                toast.success('Username copied!');
-                                                            }
-                                                        }}
-                                                    />
-                                                </>
-                                            )}
+            {activeTab === 'Proxy Setup' ? (
+                <div className="proxy-setup-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '32px', alignItems: 'start' }}>
+                    <div className="proxy-generator-column">
+                        <div className="generator-container">
+                            {/* Upper Info Bar */}
+                            <div className="generator-header-info">
+                                <h2 className="generator-title">Proxy Generator</h2>
+                                <div className="info-bar-scroll custom-scrollbar">
+                                    <div className="info-bar">
+                                        <div className="info-item">
+                                            <span className="info-label">Username:</span>
+                                            <span className="info-value">{proxyInfo?.proxyAccount || '...'}</span>
+                                            <button className="info-copy-btn" onClick={() => { navigator.clipboard.writeText(proxyInfo?.proxyAccount || ''); toast.success('Copied!'); }}>
+                                                <Copy size={13} strokeWidth={2.5} />
+                                            </button>
                                         </div>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>Password</label>
-                                        <div style={inputContainerStyle}>
-                                            {isLoading ? (
-                                                <Loader2 size={16} className="animate-spin" color="#86909C" />
-                                            ) : (
-                                                <>
-                                                    <span style={{ flex: 1, fontWeight: '500' }}>{proxyInfo?.proxyPassword || 'N/A'}</span>
-                                                    <Copy
-                                                        size={16}
-                                                        color="#86909C"
-                                                        style={{ cursor: 'pointer' }}
-                                                        onClick={() => {
-                                                            if (proxyInfo?.proxyPassword) {
-                                                                navigator.clipboard.writeText(proxyInfo.proxyPassword);
-                                                                toast.success('Password copied!');
-                                                            }
-                                                        }}
-                                                    />
-                                                </>
-                                            )}
+                                        <div className="info-item">
+                                            <span className="info-label">Password:</span>
+                                            <span className="info-value">{proxyInfo ? `${proxyInfo.proxyPassword}${countryPart}${regionPart}${cityPart}` : '...'}</span>
+                                            <button className="info-copy-btn" onClick={() => {
+                                                const textToCopy = proxyInfo ? `${proxyInfo.proxyPassword}${countryPart}${regionPart}${cityPart}` : '';
+                                                navigator.clipboard.writeText(textToCopy);
+                                                toast.success('Copied!');
+                                            }}>
+                                                <Copy size={13} strokeWidth={2.5} />
+                                            </button>
+                                        </div>
+                                        <div className="info-item">
+                                            <span className="info-label">Hostname:</span>
+                                            <span className="info-value">rp.realproxy.net</span>
+                                            <button className="info-copy-btn" onClick={() => { navigator.clipboard.writeText('rp.realproxy.net'); toast.success('Copied!'); }}>
+                                                <Copy size={13} strokeWidth={2.5} />
+                                            </button>
+                                        </div>
+                                        <div className="info-item">
+                                            <span className="info-label">Port:</span>
+                                            <span className="info-value">1000</span>
+                                            <button className="info-copy-btn" onClick={() => { navigator.clipboard.writeText('1000'); toast.success('Copied!'); }}>
+                                                <Copy size={13} strokeWidth={2.5} />
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '15px', fontWeight: '700', color: '#1D2129' }}>
-                                        <div style={{ width: '4px', height: '16px', backgroundColor: '#1677ff', borderRadius: '2px' }} />
-                                        Location Settings
-                                    </div>
-                                    <span
-                                        onClick={resetSelection}
-                                        style={{ color: '#1677ff', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
-                                    >Reset</span>
-                                </div>
+                            <div className="generator-main-grid">
+                                {/* Left Column: Settings */}
+                                <div className="settings-column">
 
+                                    {/* Location Settings */}
+                                    <div className="settings-panel">
+                                        <div className="panel-header">
+                                            <h3 className="panel-title">Location Settings</h3>
+                                            <p className="panel-desc">Select a precise proxy location or leave it random.</p>
+                                        </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                        {/* Country */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    Country <Info size={14} color="#c9cdd4" strokeWidth={1.5} />
-                                                </label>
-                                                <a href="#" style={{ color: '#1677ff', fontSize: '13px', textDecoration: 'none', fontWeight: '500' }}>Country list</a>
-                                            </div>
-                                            <div style={{ position: 'relative' }} ref={countryDropdownRef}>
-                                                <div
-                                                    onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                                                    style={{
-                                                        ...inputContainerStyle,
-                                                        cursor: 'pointer',
-                                                        border: isCountryDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
-                                                        backgroundColor: 'white',
-                                                        boxShadow: isCountryDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none'
-                                                    }}
-                                                >
-                                                    <Globe size={16} color={selectedCountry?.country_name === 'Global' ? '#0086ff' : '#86909C'} style={{ marginRight: '8px' }} />
-                                                    <span style={{ flex: 1, fontWeight: '500' }}>
-                                                        {isRegionsLoading ? 'Loading countries...' : (selectedCountry?.country_name || '(ALL) Global')}
-                                                    </span>
-                                                    {isRegionsLoading ? (
-                                                        <Loader2 size={16} className="animate-spin" color="#86909C" />
-                                                    ) : (
-                                                        <ChevronDown
-                                                            size={16}
-                                                            color="#86909C"
-                                                            style={{
-                                                                transform: isCountryDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                                                                transition: 'transform 0.2s'
-                                                            }}
-                                                        />
-                                                    )}
+                                        <div className="setting-fieldset">
+                                            <label className="field-label">Country</label>
+                                            <div className="dark-dropdown" onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)} ref={countryDropdownRef}>
+                                                <div className="dropdown-val">
+                                                    <Globe size={16} color={selectedCountry?.country_name !== 'Global' ? '#3B82F6' : '#94A3B8'} />
+                                                    <span>{selectedCountry?.country_name || 'Worldwide'}</span>
                                                 </div>
+                                                <ChevronDown size={16} color="#94A3B8" style={{ transform: isCountryDropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
 
                                                 {isCountryDropdownOpen && (
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: 'calc(100% + 4px)',
-                                                        left: 0,
-                                                        right: 0,
-                                                        backgroundColor: 'white',
-                                                        borderRadius: '8px',
-                                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)',
-                                                        zIndex: 100,
-                                                        overflow: 'hidden',
-                                                        border: '1px solid #f0f0f0'
-                                                    }}>
-                                                        <div style={{ padding: '8px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa' }}>
-                                                            <div style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                backgroundColor: 'white',
-                                                                borderRadius: '4px',
-                                                                padding: '0 8px',
-                                                                height: '32px',
-                                                                border: '1px solid #e5e6eb'
-                                                            }}>
-                                                                <Search size={14} color="#86909C" style={{ marginRight: '6px' }} />
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Search country..."
-                                                                    value={countrySearchQuery}
-                                                                    onChange={(e) => setCountrySearchQuery(e.target.value)}
-                                                                    autoFocus
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                    style={{
-                                                                        border: 'none',
-                                                                        outline: 'none',
-                                                                        fontSize: '13px',
-                                                                        width: '100%',
-                                                                        color: '#1D2129'
-                                                                    }}
-                                                                />
-                                                            </div>
+                                                    <div className="dropdown-flyout custom-scrollbar">
+                                                        <div className="dropdown-search">
+                                                            <Search size={14} color="#94A3B8" />
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Search country..."
+                                                                value={countrySearchQuery}
+                                                                onChange={(e) => setCountrySearchQuery(e.target.value)}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            />
                                                         </div>
-                                                        <div style={{ maxHeight: '300px', overflowY: 'auto' }} className="custom-scrollbar">
-                                                            {regions
-                                                                .filter(r => r.country_name.toLowerCase().includes(countrySearchQuery.toLowerCase()))
-                                                                .map((country, idx) => (
-                                                                    <div
-                                                                        key={country.country_code || `global-${idx}`}
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setSelectedCountry(country);
-                                                                            setIsCountryDropdownOpen(false);
-                                                                            setCountrySearchQuery('');
-                                                                        }}
-                                                                        style={{
-                                                                            padding: '10px 12px',
-                                                                            fontSize: '14px',
-                                                                            color: selectedCountry?.country_name === country.country_name ? '#1677ff' : '#4E5969',
-                                                                            cursor: 'pointer',
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            justifyContent: 'space-between',
-                                                                            backgroundColor: selectedCountry?.country_name === country.country_name ? '#e7f2ff' : 'transparent',
-                                                                            transition: 'all 0.1s'
-                                                                        }}
-                                                                        onMouseEnter={(e) => {
-                                                                            if (selectedCountry?.country_name !== country.country_name) {
-                                                                                e.currentTarget.style.backgroundColor = '#f7f8fa';
-                                                                            }
-                                                                        }}
-                                                                        onMouseLeave={(e) => {
-                                                                            if (selectedCountry?.country_name !== country.country_name) {
-                                                                                e.currentTarget.style.backgroundColor = 'transparent';
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                            {country.country_name === 'Global' ? (
-                                                                                <Globe size={14} color={selectedCountry?.country_name === 'Global' ? '#1677ff' : '#86909C'} />
-                                                                            ) : (
-                                                                                <span style={{ fontSize: '14px' }}>
-                                                                                    <Globe size={14} color="#86909C" opacity={0.5} />
-                                                                                </span>
-                                                                            )}
-                                                                            <span style={{ fontWeight: selectedCountry?.country_name === country.country_name ? '600' : '400' }}>
-                                                                                {country.country_name === 'Global' ? '(ALL) Global' : country.country_name}
-                                                                            </span>
-                                                                        </div>
-                                                                        {selectedCountry?.country_name === country.country_name && (
-                                                                            <Check size={14} color="#1677ff" />
-                                                                        )}
-                                                                    </div>
-                                                                ))
-                                                            }
-                                                            {regions.filter(r => r.country_name.toLowerCase().includes(countrySearchQuery.toLowerCase())).length === 0 && (
-                                                                <div style={{ padding: '20px', textAlign: 'center', color: '#86909C', fontSize: '13px' }}>
-                                                                    No countries found
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Region Dropdown (from 'regions' API) */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>Region</label>
-                                            </div>
-                                            <div style={{ position: 'relative' }} ref={subRegionDropdownRef}>
-                                                <div
-                                                    onClick={() => !isRegionsLoading && !isSubRegionsLoading && subRegions.length > 0 && setIsSubRegionDropdownOpen(!isSubRegionDropdownOpen)}
-                                                    style={{
-                                                        ...inputContainerStyle,
-                                                        cursor: (subRegions.length > 0) ? 'pointer' : 'default',
-                                                        border: isSubRegionDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
-                                                        backgroundColor: (subRegions.length === 0) ? '#f7f8fa' : 'white',
-                                                        boxShadow: isSubRegionDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none',
-                                                        opacity: (subRegions.length === 0) ? 0.6 : 1
-                                                    }}
-                                                >
-                                                    <span style={{ flex: 1, fontWeight: '500' }}>
-                                                        {isSubRegionsLoading ? 'Loading...' : (selectedSubRegion?.name || (selectedCountry?.country_name === 'Global' ? 'Random' : (subRegions.length === 0 ? 'No regions' : 'Random')))}
-                                                    </span>
-                                                    {isSubRegionsLoading ? (
-                                                        <Loader2 size={16} className="animate-spin" color="#86909C" />
-                                                    ) : subRegions.length > 0 && (
-                                                        <ChevronDown
-                                                            size={16}
-                                                            color="#86909C"
-                                                            style={{
-                                                                transform: isSubRegionDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                                                                transition: 'transform 0.2s'
-                                                            }}
-                                                        />
-                                                    )}
-                                                </div>
-
-                                                {isSubRegionDropdownOpen && (
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: 'calc(100% + 4px)',
-                                                        left: 0,
-                                                        right: 0,
-                                                        backgroundColor: 'white',
-                                                        borderRadius: '8px',
-                                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)',
-                                                        zIndex: 100,
-                                                        overflow: 'hidden',
-                                                        border: '1px solid #f0f0f0'
-                                                    }}>
-                                                        <div style={{ padding: '8px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa' }}>
-                                                            <div style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                backgroundColor: 'white',
-                                                                borderRadius: '4px',
-                                                                padding: '0 8px',
-                                                                height: '32px',
-                                                                border: '1px solid #e5e6eb'
-                                                            }}>
-                                                                <Search size={14} color="#86909C" style={{ marginRight: '6px' }} />
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Search region..."
-                                                                    value={subRegionSearchQuery}
-                                                                    onChange={(e) => setSubRegionSearchQuery(e.target.value)}
-                                                                    autoFocus
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                    style={{
-                                                                        border: 'none',
-                                                                        outline: 'none',
-                                                                        fontSize: '13px',
-                                                                        width: '100%',
-                                                                        color: '#1D2129'
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="custom-scrollbar">
-                                                            {subRegions
-                                                                .filter(s => s.name.toLowerCase().includes(subRegionSearchQuery.toLowerCase()))
-                                                                .map((region, idx) => (
-                                                                    <div
-                                                                        key={region.id || `region-${idx}`}
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setSelectedSubRegion(region);
-                                                                            setIsSubRegionDropdownOpen(false);
-                                                                            setSubRegionSearchQuery('');
-                                                                        }}
-                                                                        style={{
-                                                                            padding: '10px 12px',
-                                                                            fontSize: '14px',
-                                                                            color: selectedSubRegion?.id === region.id ? '#1677ff' : '#4E5969',
-                                                                            cursor: 'pointer',
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            justifyContent: 'space-between',
-                                                                            backgroundColor: selectedSubRegion?.id === region.id ? '#e7f2ff' : 'transparent',
-                                                                            transition: 'all 0.1s'
-                                                                        }}
-                                                                        onMouseEnter={(e) => {
-                                                                            if (selectedSubRegion?.id !== region.id) {
-                                                                                e.currentTarget.style.backgroundColor = '#f7f8fa';
-                                                                            }
-                                                                        }}
-                                                                        onMouseLeave={(e) => {
-                                                                            if (selectedSubRegion?.id !== region.id) {
-                                                                                e.currentTarget.style.backgroundColor = 'transparent';
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        <span style={{ fontWeight: selectedSubRegion?.id === region.id ? '600' : '400' }}>
-                                                                            {region.name}
-                                                                        </span>
-                                                                        {selectedSubRegion?.id === region.id && (
-                                                                            <Check size={14} color="#1677ff" />
-                                                                        )}
-                                                                    </div>
-                                                                ))
-                                                            }
-                                                            {subRegions.filter(s => s.name.toLowerCase().includes(subRegionSearchQuery.toLowerCase())).length === 0 && (
-                                                                <div style={{ padding: '20px', textAlign: 'center', color: '#86909C', fontSize: '13px' }}>
-                                                                    No regions found
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Hostname */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    Hostname <Info size={14} color="#c9cdd4" strokeWidth={1.5} />
-                                                </label>
-                                                <Copy
-                                                    size={14}
-                                                    color="#86909C"
-                                                    style={{ cursor: 'pointer' }}
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(selectedHostname);
-                                                        toast.success('Hostname copied!');
-                                                    }}
-                                                />
-                                            </div>
-                                            <div style={{ position: 'relative' }} ref={hostnameDropdownRef}>
-                                                <div
-                                                    onClick={() => setIsHostnameDropdownOpen(!isHostnameDropdownOpen)}
-                                                    style={{
-                                                        ...inputContainerStyle,
-                                                        cursor: 'pointer',
-                                                        border: isHostnameDropdownOpen ? '1px solid #1677ff' : '1px solid #e5e6eb',
-                                                        backgroundColor: 'white',
-                                                        boxShadow: isHostnameDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none'
-                                                    }}
-                                                >
-                                                    <span style={{ flex: 1, fontWeight: '500' }}>{selectedHostname}</span>
-                                                    <ChevronDown
-                                                        size={16}
-                                                        color="#86909C"
-                                                        style={{
-                                                            transform: isHostnameDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                                                            transition: 'transform 0.2s'
-                                                        }}
-                                                    />
-                                                </div>
-
-                                                {isHostnameDropdownOpen && (
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: 'calc(100% + 4px)',
-                                                        left: 0,
-                                                        right: 0,
-                                                        backgroundColor: 'white',
-                                                        borderRadius: '8px',
-                                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)',
-                                                        zIndex: 100,
-                                                        overflow: 'hidden',
-                                                        border: '1px solid #f0f0f0'
-                                                    }}>
-                                                        {['na.proxys5.net', 'as.proxys5.net', 'eu.proxys5.net', 'ea.proxys5.net'].map((host) => (
+                                                        {regions.filter(r => r.country_name.toLowerCase().includes(countrySearchQuery.toLowerCase())).map(r => (
                                                             <div
-                                                                key={host}
-                                                                onClick={() => {
-                                                                    setSelectedHostname(host);
-                                                                    setIsHostnameDropdownOpen(false);
-                                                                }}
-                                                                style={{
-                                                                    padding: '10px 12px',
-                                                                    fontSize: '14px',
-                                                                    color: selectedHostname === host ? '#1677ff' : '#4E5969',
-                                                                    cursor: 'pointer',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'space-between',
-                                                                    backgroundColor: selectedHostname === host ? '#e7f2ff' : 'transparent',
-                                                                    transition: 'all 0.1s'
-                                                                }}
-                                                                onMouseEnter={(e) => {
-                                                                    if (selectedHostname !== host) {
-                                                                        e.currentTarget.style.backgroundColor = '#f7f8fa';
-                                                                    }
-                                                                }}
-                                                                onMouseLeave={(e) => {
-                                                                    if (selectedHostname !== host) {
-                                                                        e.currentTarget.style.backgroundColor = 'transparent';
-                                                                    }
-                                                                }}
+                                                                key={r.country_code}
+                                                                className={`dropdown-option ${selectedCountry?.country_code === r.country_code ? 'active' : ''}`}
+                                                                onClick={(e) => { e.stopPropagation(); setSelectedCountry(r); setIsCountryDropdownOpen(false); }}
                                                             >
-                                                                <span>{host}</span>
-                                                                {selectedHostname === host && <Check size={14} color="#1677ff" />}
+                                                                {r.country_name}
                                                             </div>
                                                         ))}
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                        {/* City (Moved from left column) */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                            <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>City</label>
-                                            <div style={{ position: 'relative' }} ref={cityDropdownRef}>
-                                                <div
-                                                    onClick={() => !isCitiesLoading && cities.length > 0 && setIsCityDropdownOpen(!isCityDropdownOpen)}
-                                                    style={{
-                                                        ...inputContainerStyle,
-                                                        cursor: (cities.length > 0) ? 'pointer' : 'default',
-                                                        border: isCityDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
-                                                        backgroundColor: (cities.length === 0) ? '#f7f8fa' : 'white',
-                                                        boxShadow: isCityDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none',
-                                                        opacity: (cities.length === 0) ? 0.6 : 1
-                                                    }}
-                                                >
-                                                    <span style={{ flex: 1, fontWeight: '500' }}>
-                                                        {isCitiesLoading ? 'Loading...' : (selectedCity?.name || (cities.length === 0 ? 'No cities' : 'Random'))}
-                                                    </span>
-                                                    {isCitiesLoading ? (
-                                                        <Loader2 size={16} className="animate-spin" color="#86909C" />
-                                                    ) : cities.length > 0 && (
-                                                        <ChevronDown
-                                                            size={16}
-                                                            color="#86909C"
-                                                            style={{
-                                                                transform: isCityDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                                                                transition: 'transform 0.2s'
-                                                            }}
-                                                        />
-                                                    )}
-                                                </div>
 
-                                                {isCityDropdownOpen && (
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: 'calc(100% + 4px)',
-                                                        left: 0,
-                                                        right: 0,
-                                                        backgroundColor: 'white',
-                                                        borderRadius: '8px',
-                                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)',
-                                                        zIndex: 100,
-                                                        overflow: 'hidden',
-                                                        border: '1px solid #f0f0f0'
-                                                    }}>
-                                                        <div style={{ padding: '8px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa' }}>
-                                                            <div style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                backgroundColor: 'white',
-                                                                borderRadius: '4px',
-                                                                padding: '0 8px',
-                                                                height: '32px',
-                                                                border: '1px solid #e5e6eb'
-                                                            }}>
-                                                                <Search size={14} color="#86909C" style={{ marginRight: '6px' }} />
+                                        <div className="split-fields">
+                                            <div className="setting-fieldset">
+                                                <label className="field-label">City</label>
+                                                <div className="dark-dropdown" onClick={() => cities.length > 0 && setIsCityDropdownOpen(!isCityDropdownOpen)} ref={cityDropdownRef}>
+                                                    <div className="dropdown-val">
+                                                        <Monitor size={16} color={selectedCity ? '#3B82F6' : '#94A3B8'} />
+                                                        <span>{selectedCity?.name || 'Random'}</span>
+                                                    </div>
+                                                    <ChevronDown size={16} color="#94A3B8" />
+                                                    {isCityDropdownOpen && (
+                                                        <div className="dropdown-flyout custom-scrollbar">
+                                                            <div className="dropdown-search">
+                                                                <Search size={14} color="#94A3B8" />
                                                                 <input
                                                                     type="text"
                                                                     placeholder="Search city..."
                                                                     value={citySearchQuery}
                                                                     onChange={(e) => setCitySearchQuery(e.target.value)}
-                                                                    autoFocus
                                                                     onClick={(e) => e.stopPropagation()}
-                                                                    style={{
-                                                                        border: 'none',
-                                                                        outline: 'none',
-                                                                        fontSize: '13px',
-                                                                        width: '100%',
-                                                                        color: '#1D2129'
-                                                                    }}
                                                                 />
                                                             </div>
-                                                        </div>
-                                                        <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="custom-scrollbar">
-                                                            {cities
-                                                                .filter(c => c.name.toLowerCase().includes(citySearchQuery.toLowerCase()))
-                                                                .map((city, idx) => (
-                                                                    <div
-                                                                        key={city.id || `city-${idx}`}
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setSelectedCity(city);
-                                                                            setIsCityDropdownOpen(false);
-                                                                            setCitySearchQuery('');
-                                                                        }}
-                                                                        style={{
-                                                                            padding: '10px 12px',
-                                                                            fontSize: '14px',
-                                                                            color: (selectedCity?.id === city.id || selectedCity?.name === city.name) ? '#1677ff' : '#4E5969',
-                                                                            cursor: 'pointer',
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            justifyContent: 'space-between',
-                                                                            backgroundColor: (selectedCity?.id === city.id || selectedCity?.name === city.name) ? '#e7f2ff' : 'transparent',
-                                                                            transition: 'all 0.1s'
-                                                                        }}
-                                                                        onMouseEnter={(e) => {
-                                                                            if (selectedCity?.id !== city.id && selectedCity?.name !== city.name) {
-                                                                                e.currentTarget.style.backgroundColor = '#f7f8fa';
-                                                                            }
-                                                                        }}
-                                                                        onMouseLeave={(e) => {
-                                                                            if (selectedCity?.id !== city.id && selectedCity?.name !== city.name) {
-                                                                                e.currentTarget.style.backgroundColor = 'transparent';
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        <span style={{ fontWeight: (selectedCity?.id === city.id || selectedCity?.name === city.name) ? '600' : '400' }}>
-                                                                            {city.name}
-                                                                        </span>
-                                                                        {(selectedCity?.id === city.id || selectedCity?.name === city.name) && (
-                                                                            <Check size={14} color="#1677ff" />
-                                                                        )}
-                                                                    </div>
-                                                                ))
-                                                            }
-                                                            {cities.filter(c => c.name.toLowerCase().includes(citySearchQuery.toLowerCase())).length === 0 && (
-                                                                <div style={{ padding: '20px', textAlign: 'center', color: '#86909C', fontSize: '13px' }}>
-                                                                    No cities found
+                                                            {cities.filter(c => c.name.toLowerCase().includes(citySearchQuery.toLowerCase())).map(c => (
+                                                                <div key={c.id} className="dropdown-option" onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setSelectedCity(c);
+                                                                    setSelectedSubRegion(null); // Mutually exclusive
+                                                                    setIsCityDropdownOpen(false);
+                                                                    setCitySearchQuery('');
+                                                                    toast.success('City selected. Region targeting disabled.');
+                                                                }}>
+                                                                    {c.name}
                                                                 </div>
-                                                            )}
+                                                            ))}
                                                         </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* ISP (Formerly ASN) - Commented out per user request
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>ISP</label>
-                                            </div>
-                                            <div style={{ position: 'relative' }} ref={ispDropdownRef}>
-                                                <div
-                                                    onClick={() => !isRegionsLoading && !isIspsLoading && isps.length > 0 && setIsIspDropdownOpen(!isIspDropdownOpen)}
-                                                    style={{
-                                                        ...inputContainerStyle,
-                                                        cursor: (isps.length > 0) ? 'pointer' : 'default',
-                                                        border: isIspDropdownOpen ? '1px solid #1677ff' : '1px solid transparent',
-                                                        backgroundColor: (isps.length === 0) ? '#f7f8fa' : 'white',
-                                                        boxShadow: isIspDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none',
-                                                        opacity: (isps.length === 0) ? 0.6 : 1
-                                                    }}
-                                                >
-                                                    <span style={{ flex: 1, fontWeight: '500' }}>
-                                                        {isIspsLoading ? 'Loading...' : (selectedIsp?.name || (selectedCountry?.country_name === 'Global' ? 'Random' : (isps.length === 0 ? 'No ISPs' : 'Random')))}
-                                                    </span>
-                                                    {isIspsLoading ? (
-                                                        <Loader2 size={16} className="animate-spin" color="#86909C" />
-                                                    ) : isps.length > 0 && (
-                                                        <ChevronDown
-                                                            size={16}
-                                                            color="#86909C"
-                                                            style={{
-                                                                transform: isIspDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                                                                transition: 'transform 0.2s'
-                                                            }}
-                                                        />
                                                     )}
                                                 </div>
-
-                                                {isIspDropdownOpen && (
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: 'calc(100% + 4px)',
-                                                        left: 0,
-                                                        right: 0,
-                                                        backgroundColor: 'white',
-                                                        borderRadius: '8px',
-                                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)',
-                                                        zIndex: 100,
-                                                        overflow: 'hidden',
-                                                        border: '1px solid #f0f0f0'
-                                                    }}>
-                                                        <div style={{ padding: '8px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa' }}>
-                                                            <div style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                backgroundColor: 'white',
-                                                                borderRadius: '4px',
-                                                                padding: '0 8px',
-                                                                height: '32px',
-                                                                border: '1px solid #e5e6eb'
-                                                            }}>
-                                                                <Search size={14} color="#86909C" style={{ marginRight: '6px' }} />
+                                            </div>
+                                            <div className="setting-fieldset">
+                                                <label className="field-label">Region</label>
+                                                <div className="dark-dropdown" onClick={() => subRegions.length > 0 && setIsSubRegionDropdownOpen(!isSubRegionDropdownOpen)} ref={subRegionDropdownRef}>
+                                                    <div className="dropdown-val">
+                                                        <Monitor size={16} color={selectedSubRegion ? '#3B82F6' : '#94A3B8'} />
+                                                        <span>{selectedSubRegion?.name || 'Random'}</span>
+                                                    </div>
+                                                    <ChevronDown size={16} color="#94A3B8" />
+                                                    {isSubRegionDropdownOpen && (
+                                                        <div className="dropdown-flyout custom-scrollbar">
+                                                            <div className="dropdown-search">
+                                                                <Search size={14} color="#94A3B8" />
                                                                 <input
                                                                     type="text"
-                                                                    placeholder="Search ISP..."
-                                                                    value={ispSearchQuery}
-                                                                    onChange={(e) => setIspSearchQuery(e.target.value)}
-                                                                    autoFocus
+                                                                    placeholder="Search region..."
+                                                                    value={subRegionSearchQuery}
+                                                                    onChange={(e) => setSubRegionSearchQuery(e.target.value)}
                                                                     onClick={(e) => e.stopPropagation()}
-                                                                    style={{
-                                                                        border: 'none',
-                                                                        outline: 'none',
-                                                                        fontSize: '13px',
-                                                                        width: '100%',
-                                                                        color: '#1D2129'
-                                                                    }}
                                                                 />
                                                             </div>
-                                                        </div>
-                                                        <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="custom-scrollbar">
-                                                            {isps
-                                                                .filter(i => i.name.toLowerCase().includes(ispSearchQuery.toLowerCase()))
-                                                                .map((isp, idx) => (
-                                                                    <div
-                                                                        key={isp.value || `isp-${idx}`}
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setSelectedIsp(isp);
-                                                                            setIsIspDropdownOpen(false);
-                                                                            setIspSearchQuery('');
-                                                                        }}
-                                                                        style={{
-                                                                            padding: '10px 12px',
-                                                                            fontSize: '14px',
-                                                                            color: selectedIsp?.value === isp.value ? '#1677ff' : '#4E5969',
-                                                                            cursor: 'pointer',
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            justifyContent: 'space-between',
-                                                                            backgroundColor: selectedIsp?.value === isp.value ? '#e7f2ff' : 'transparent',
-                                                                            transition: 'all 0.1s'
-                                                                        }}
-                                                                        onMouseEnter={(e) => {
-                                                                            if (selectedIsp?.value !== isp.value) {
-                                                                                e.currentTarget.style.backgroundColor = '#f7f8fa';
-                                                                            }
-                                                                        }}
-                                                                        onMouseLeave={(e) => {
-                                                                            if (selectedIsp?.value !== isp.value) {
-                                                                                e.currentTarget.style.backgroundColor = 'transparent';
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                                            <span style={{ fontWeight: selectedIsp?.value === isp.value ? '600' : '400' }}>
-                                                                                {isp.name}
-                                                                            </span>
-                                                                            <span style={{ fontSize: '11px', color: '#86909C' }}>{isp.value}</span>
-                                                                        </div>
-                                                                        {selectedIsp?.value === isp.value && (
-                                                                            <Check size={14} color="#1677ff" />
-                                                                        )}
-                                                                    </div>
-                                                                ))
-                                                            }
-                                                            {isps.filter(i => i.name.toLowerCase().includes(ispSearchQuery.toLowerCase())).length === 0 && (
-                                                                <div style={{ padding: '20px', textAlign: 'center', color: '#86909C', fontSize: '13px' }}>
-                                                                    No ISPs found
+                                                            {subRegions.filter(s => s.name.toLowerCase().includes(subRegionSearchQuery.toLowerCase())).map(s => (
+                                                                <div key={s.id} className="dropdown-option" onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setSelectedSubRegion(s);
+                                                                    setSelectedCity(null); // Mutually exclusive
+                                                                    setIsSubRegionDropdownOpen(false);
+                                                                    setSubRegionSearchQuery('');
+                                                                    toast.success('Region selected. City targeting disabled.');
+                                                                }}>
+                                                                    {s.name}
                                                                 </div>
-                                                            )}
+                                                            ))}
                                                         </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        */}
-
-                                        {/* Port */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    Port <Info size={14} color="#c9cdd4" strokeWidth={1.5} />
-                                                </label>
-                                                <Copy
-                                                    size={14}
-                                                    color="#86909C"
-                                                    style={{ cursor: 'pointer' }}
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText('6200');
-                                                        toast.success('Port copied!');
-                                                    }}
-                                                />
-                                            </div>
-                                            <div style={{ ...inputContainerStyle, backgroundColor: '#f7f8fa', border: '1px solid #e5e6eb', cursor: 'default' }}>
-                                                <span style={{ fontWeight: '500', color: '#1D2129' }}>6200</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Session Settings */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '12px', borderTop: '1px solid #f0f0f0', paddingTop: '32px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '15px', fontWeight: '700', color: '#1D2129' }}>
-                                        <div style={{ width: '4px', height: '16px', backgroundColor: '#1677ff', borderRadius: '2px' }} />
-                                        Session Settings <Info size={14} color="#c9cdd4" strokeWidth={1.5} style={{ marginLeft: '4px' }} />
-                                    </div>
+                                    {/* Session Settings */}
+                                    <div className="settings-panel">
+                                        <div className="panel-header">
+                                            <h3 className="panel-title">Session Settings</h3>
+                                        </div>
 
-                                    <div className="setup-input-row" style={{ gap: '32px' }}>
-                                        {/* Session type */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                            <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>Session type</label>
-                                            <div style={{ position: 'relative' }} ref={sessionTypeDropdownRef}>
-                                                <div
-                                                    onClick={() => setIsSessionTypeDropdownOpen(!isSessionTypeDropdownOpen)}
-                                                    style={{
-                                                        ...inputContainerStyle,
-                                                        cursor: 'pointer',
-                                                        border: isSessionTypeDropdownOpen ? '1px solid #1677ff' : '1px solid #e5e6eb',
-                                                        backgroundColor: 'white',
-                                                        boxShadow: isSessionTypeDropdownOpen ? '0 0 0 2px rgba(22, 119, 255, 0.1)' : 'none'
-                                                    }}
-                                                >
-                                                    <span style={{ flex: 1, fontWeight: '500' }}>{selectedSessionType}</span>
-                                                    <ChevronDown
-                                                        size={16}
-                                                        color="#86909C"
-                                                        style={{
-                                                            transform: isSessionTypeDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                                                            transition: 'transform 0.2s'
+                                        <div className="setting-fieldset">
+                                            <label className="field-label">Type</label>
+                                            <div className="protocol-tabs">
+                                                {['Rotating', 'Sticky Session'].map(t => (
+                                                    <button
+                                                        key={t}
+                                                        className={`tab-item ${selectedType === t ? 'active' : ''}`}
+                                                        onClick={() => {
+                                                            setSelectedType(t);
+                                                            if (t === 'Rotating') setAmount(1);
                                                         }}
+                                                    >
+                                                        {t}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {selectedType === 'Sticky Session' && (
+                                            <div className="split-fields">
+                                                <div className="setting-fieldset">
+                                                    <label className="field-label">Amount</label>
+                                                    <input
+                                                        type="number"
+                                                        className="dark-input"
+                                                        value={amount}
+                                                        onChange={(e) => setAmount(Number(e.target.value))}
                                                     />
                                                 </div>
-
-                                                {isSessionTypeDropdownOpen && (
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: 'calc(100% + 4px)',
-                                                        left: 0,
-                                                        right: 0,
-                                                        backgroundColor: 'white',
-                                                        borderRadius: '8px',
-                                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)',
-                                                        zIndex: 100,
-                                                        overflow: 'hidden',
-                                                        border: '1px solid #f0f0f0'
-                                                    }}>
-                                                        {['Sticky IP', 'Rotating IP'].map((type) => (
-                                                            <div
-                                                                key={type}
-                                                                onClick={() => {
-                                                                    setSelectedSessionType(type);
-                                                                    setIsSessionTypeDropdownOpen(false);
-                                                                }}
-                                                                style={{
-                                                                    padding: '10px 12px',
-                                                                    fontSize: '14px',
-                                                                    color: selectedSessionType === type ? '#1677ff' : '#4E5969',
-                                                                    cursor: 'pointer',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'space-between',
-                                                                    backgroundColor: selectedSessionType === type ? '#e7f2ff' : 'transparent',
-                                                                    transition: 'all 0.1s'
-                                                                }}
-                                                                onMouseEnter={(e) => {
-                                                                    if (selectedSessionType !== type) {
-                                                                        e.currentTarget.style.backgroundColor = '#f7f8fa';
-                                                                    }
-                                                                }}
-                                                                onMouseLeave={(e) => {
-                                                                    if (selectedSessionType !== type) {
-                                                                        e.currentTarget.style.backgroundColor = 'transparent';
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <span>{type}</span>
-                                                                {selectedSessionType === type && <Check size={14} color="#1677ff" />}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Duration */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                            <label style={{ fontSize: '13px', color: '#4E5969', fontWeight: '600' }}>Duration</label>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <div style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    border: '1px solid #e5e6eb',
-                                                    borderRadius: '4px',
-                                                    overflow: 'hidden',
-                                                    height: '40px',
-                                                    backgroundColor: 'white'
-                                                }}>
-                                                    <button
-                                                        onClick={() => setSessionDuration(prev => Math.max(1, prev - 1))}
-                                                        style={{ width: '36px', height: '100%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#86909C' }}
-                                                    >
-                                                        <Minus size={14} />
-                                                    </button>
-                                                    <div style={{ width: '60px', textAlign: 'center', fontSize: '14px', fontWeight: '600', borderLeft: '1px solid #e5e6eb', borderRight: '1px solid #e5e6eb', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                        {sessionDuration}
-                                                    </div>
-                                                    <button
-                                                        onClick={() => setSessionDuration(prev => Math.min(120, prev + 1))}
-                                                        style={{ width: '36px', height: '100%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1677ff' }}
-                                                    >
-                                                        <Plus size={14} />
-                                                    </button>
+                                                <div className="setting-fieldset">
+                                                    <label className="field-label">Lifetime (min)</label>
+                                                    <input
+                                                        type="number"
+                                                        className="dark-input"
+                                                        value={lifetime}
+                                                        onChange={(e) => setLifetime(Number(e.target.value))}
+                                                    />
                                                 </div>
-                                                <span style={{ fontSize: '13px', color: '#86909C' }}>(1-120 minutes)</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Right Column: Result */}
+                                <div className="result-column">
+                                    <div className="result-panel">
+                                        <div className="result-header">
+                                            <h3 className="panel-title">Generated String</h3>
+                                            <div className="result-actions">
+                                                <button className="action-btn" onClick={() => { navigator.clipboard.writeText(generatedList.join('\n')); toast.success('All strings copied!'); }}>
+                                                    <Copy size={13} /> Copy all
+                                                </button>
+                                                <button className="action-btn" onClick={resetSelection}>
+                                                    <RefreshCw size={13} /> Reset
+                                                </button>
+                                                <button className="action-btn" onClick={downloadProxies}>
+                                                    <Download size={13} /> Download
+                                                </button>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Result Column */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                            <div style={{ backgroundColor: '#f7f8fa', borderRadius: '8px', padding: '20px', border: 'none' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '14px', color: '#1D2129', fontWeight: '700' }}>Example</span>
-                                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '12px', color: '#1677ff', cursor: 'pointer', fontWeight: '600' }}>Other languages</span>
-                                        <Copy
-                                            size={20}
-                                            color="#86909C"
-                                            style={{ cursor: 'pointer' }}
-                                            onClick={() => {
-                                                const countryPart = selectedCountry && selectedCountry.country_name !== 'Global' ? `-country-${selectedCountry.country_code}` : '';
-                                                const cityPart = selectedCity ? `-city-${selectedCity.name.replace(/\s+/g, '_')}` : '';
-                                                const regionPart = selectedSubRegion ? `-region-${selectedSubRegion.name.replace(/\s+/g, '_')}` : '';
-
-                                                const curlCommand = `curl -x ${selectedHostname}:6200 -U "${proxyInfo?.proxyAccount || 'username'}${countryPart}${regionPart}${cityPart}-sessid-XcivyX4zy-sessTime-${sessionDuration}:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`;
-                                                navigator.clipboard.writeText(curlCommand);
-                                                toast.success('Example copied!');
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                                <div style={{ fontSize: '13px', color: '#4E5969', lineHeight: '2', wordBreak: 'break-all', fontFamily: 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace', fontWeight: '500' }}>
-                                    {isLoading ? (
-                                        <span>Loading...</span>
-                                    ) : (() => {
-                                        const countryPart = selectedCountry && selectedCountry.country_name !== 'Global' ? `-country-${selectedCountry.country_code}` : '';
-                                        const cityPart = selectedCity ? `-city-${selectedCity.name.replace(/\s+/g, '_')}` : '';
-                                        const regionPart = selectedSubRegion ? `-region-${selectedSubRegion.name.replace(/\s+/g, '_')}` : '';
-                                        return `curl -x ${selectedHostname}:6200 -U "${proxyInfo?.proxyAccount || 'username'}${countryPart}${regionPart}${cityPart}-sessid-XcivyX4zy-sessTime-${sessionDuration}:${proxyInfo?.proxyPassword || 'password'}" ipinfo.io`;
-                                    })()}
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                <div style={{ fontSize: '15px', fontWeight: '700', color: '#1D2129' }}>Formatted Proxy List</div>
-                                <div style={{ display: 'flex', padding: '4px', backgroundColor: '#f2f3f5', borderRadius: '6px' }}>
-                                    <button style={{ flex: 1, height: '36px', border: 'none', borderRadius: '4px', fontSize: '14px', fontWeight: '700', backgroundColor: '#0086ff', color: 'white', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0, 134, 255, 0.2)' }}>Link</button>
-                                    <button style={{ flex: 1, height: '36px', border: 'none', borderRadius: '4px', fontSize: '14px', fontWeight: '600', backgroundColor: 'transparent', color: '#4E5969', cursor: 'pointer' }}>QR Code</button>
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontSize: '12px', color: '#86909C', fontWeight: '600' }}>Protocol</label>
-                                        <div style={{ ...inputContainerStyle, backgroundColor: 'white', border: '1px solid #f0f0f0' }}>
-                                            <span style={{ flex: 1, fontWeight: '500' }}>Endpoint port</span>
-                                            <ChevronDown size={14} color="#86909C" />
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontSize: '12px', color: '#86909C', fontWeight: '600' }}>Format</label>
-                                        <div style={{ ...inputContainerStyle, backgroundColor: 'white', border: '1px solid #f0f0f0' }}>
-                                            <span style={{ flex: 1, fontSize: '12px', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis' }}>hostname:port:username...</span>
-                                            <ChevronDown size={14} color="#86909C" />
+                                        <div className="generated-viewer custom-scrollbar">
+                                            {generatedList.map((str, idx) => (
+                                                <div key={idx} className="proxy-line">
+                                                    <span className="line-num">{idx + 1}.</span>
+                                                    <span className="line-content">{str}</span>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
@@ -1374,36 +707,7 @@ const TrafficSetupPage = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    );
-
-    return (
-        <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
-            {/* Top Navigation Mode */}
-            <div style={{ display: 'flex', gap: '60px', borderBottom: '1px solid #f0f0f0', marginBottom: '36px' }}>
-                {['Proxy Setup', 'Statistics'].map(tab => (
-                    <div
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        style={{
-                            padding: '13px 50px',
-                            fontSize: '18px',
-                            fontWeight: '700',
-                            color: activeTab === tab ? '#1677ff' : '#4E5969',
-                            borderBottom: activeTab === tab ? '2px solid #1677ff' : '2px solid transparent',
-                            cursor: 'pointer',
-                            marginBottom: '-1px',
-                            transition: 'all 0.2s',
-                            letterSpacing: '0.2px'
-                        }}
-                    >
-                        {tab}
-                    </div>
-                ))}
-            </div>
-
-            {activeTab === 'Proxy Setup' ? renderProxySetup() : (
+            ) : (
                 <div style={{ padding: '120px 40px', textAlign: 'center', color: '#86909C', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                     <RefreshCw size={48} style={{ opacity: 0.1, marginBottom: '24px' }} />
                     <div style={{ fontSize: '18px', fontWeight: '600', color: '#1D2129', marginBottom: '8px' }}>No Data Available</div>
@@ -1411,7 +715,387 @@ const TrafficSetupPage = () => {
                 </div>
             )}
 
-            <style jsx>{`
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @media (max-width: 1024px) {
+                    .proxy-setup-layout {
+                        grid-template-columns: 1fr !important;
+                    }
+                }
+
+                .generator-container {
+                    color: ${theme.text};
+                    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                }
+
+                .generator-header-info {
+                    background: ${theme.card};
+                    border: 1px solid ${theme.border};
+                    border-radius: 12px;
+                    padding: 24px;
+                    margin-bottom: 32px;
+                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+                }
+
+                .generator-title {
+                    font-size: 20px;
+                    font-weight: 700;
+                    margin-bottom: 20px;
+                    color: ${theme.text};
+                }
+
+                .info-bar-scroll {
+                    overflow-x: auto;
+                    padding-bottom: 8px;
+                }
+
+                .info-bar {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 16px;
+                }
+                
+                @media (max-width: 1300px) {
+                    .info-bar {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                
+                @media (max-width: 640px) {
+                    .info-bar {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+                .info-item {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 12px;
+                    background: ${theme.input};
+                    padding: 10px 16px;
+                    border-radius: 8px;
+                    border: 1px solid ${theme.border};
+                    overflow: hidden;
+                }
+
+                .info-label {
+                    color: ${theme.textMuted};
+                    font-size: 13px;
+                    font-weight: 500;
+                }
+
+                .info-value {
+                    color: ${theme.text};
+                    font-size: 14px;
+                    font-weight: 600;
+                    font-family: 'JetBrains Mono', 'SFMono-Regular', monospace;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    flex: 1;
+                    margin-right: 8px;
+                }
+
+                .info-copy-btn {
+                    background: rgba(59, 130, 246, 0.1);
+                    border: none;
+                    color: ${theme.active};
+                    padding: 4px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s;
+                }
+
+                .info-copy-btn:hover {
+                    background: rgba(59, 130, 246, 0.2);
+                    transform: scale(1.05);
+                }
+
+                .generator-main-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 32px;
+                }
+
+                .settings-column {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 24px;
+                }
+
+                .settings-panel {
+                    background: ${theme.card};
+                    border: 1px solid ${theme.border};
+                    border-radius: 12px;
+                    padding: 24px;
+                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+                    transition: transform 0.2s;
+                }
+
+                .settings-panel:hover {
+                    border-color: rgba(59, 130, 246, 0.3);
+                }
+
+                .panel-header {
+                    margin-bottom: 20px;
+                }
+
+                .panel-title {
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: ${theme.text};
+                    margin-bottom: 4px;
+                }
+
+                .panel-desc {
+                    font-size: 13px;
+                    color: ${theme.textMuted};
+                }
+
+                .setting-fieldset {
+                    margin-bottom: 20px;
+                }
+
+                .field-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: ${theme.textMuted};
+                    margin-bottom: 10px;
+                }
+
+                .info-icon {
+                    color: rgba(148, 163, 184, 0.8);
+                    cursor: help;
+                }
+
+                .protocol-tabs {
+                    display: flex;
+                    background: ${theme.input};
+                    padding: 4px;
+                    border-radius: 8px;
+                    gap: 4px;
+                    border: 1px solid ${theme.border};
+                }
+
+                .tab-item {
+                    flex: 1;
+                    padding: 8px;
+                    border: none;
+                    background: transparent;
+                    color: ${theme.textMuted};
+                    font-size: 13px;
+                    font-weight: 600;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .tab-item.active {
+                    background: ${theme.active};
+                    color: white;
+                    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+                }
+
+                .dark-dropdown {
+                    background: ${theme.input};
+                    border: 1px solid ${theme.border};
+                    border-radius: 8px;
+                    padding: 10px 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    cursor: pointer;
+                    position: relative;
+                }
+
+                .dropdown-val {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    font-size: 14px;
+                    font-weight: 500;
+                }
+
+                .dropdown-flyout {
+                    position: absolute;
+                    top: calc(100% + 8px);
+                    left: 0;
+                    right: 0;
+                    background: ${theme.card};
+                    border: 1px solid ${theme.border};
+                    border-radius: 12px;
+                    z-index: 100;
+                    max-height: 250px;
+                    overflow-y: auto;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+                    animation: slideDown 0.2s ease-out;
+                }
+
+                @keyframes slideDown {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
+                .dropdown-search {
+                    padding: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    border-bottom: 1px solid ${theme.border};
+                    position: sticky;
+                    top: 0;
+                    background: ${theme.card};
+                    z-index: 1;
+                }
+
+                .dropdown-search input {
+                    background: transparent;
+                    border: none;
+                    color: ${theme.text};
+                    font-size: 13px;
+                    outline: none;
+                    width: 100%;
+                }
+
+                .dropdown-option {
+                    padding: 12px 16px;
+                    font-size: 14px;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                    color: ${theme.text};
+                }
+
+                .dropdown-option:hover {
+                    background: #F1F5F9;
+                }
+
+                .dropdown-option.active {
+                    background: rgba(59, 130, 246, 0.05);
+                    color: ${theme.active};
+                    font-weight: 600;
+                }
+
+                .split-fields {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 16px;
+                }
+
+                .dark-input {
+                    background: ${theme.input};
+                    border: 1px solid ${theme.border};
+                    border-radius: 8px;
+                    padding: 10px 16px;
+                    color: ${theme.text};
+                    width: 100%;
+                    outline: none;
+                    font-size: 14px;
+                }
+
+                .dark-input:focus {
+                    border-color: ${theme.active};
+                    background: ${theme.card};
+                }
+
+                .result-panel {
+                    background: ${theme.card};
+                    border: 1px solid ${theme.border};
+                    border-radius: 12px;
+                    padding: 24px;
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+                }
+
+                .result-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                }
+
+                .result-actions {
+                    display: flex;
+                    gap: 8px;
+                }
+
+                .action-btn {
+                    background: #F1F5F9;
+                    border: 1px solid ${theme.border};
+                    border-radius: 6px;
+                    padding: 6px 12px;
+                    color: ${theme.textMuted};
+                    font-size: 12px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    transition: all 0.2s;
+                }
+
+                .action-btn:hover {
+                    background: #E2E8F0;
+                    color: ${theme.text};
+                }
+
+                .generated-viewer {
+                    background: ${theme.input};
+                    border: 1px solid ${theme.border};
+                    border-radius: 8px;
+                    padding: 16px;
+                    flex-grow: 1;
+                    height: 500px;
+                    overflow-y: auto;
+                    font-family: 'JetBrains Mono', 'SFMono-Regular', monospace;
+                }
+
+                .proxy-line {
+                    display: flex;
+                    gap: 12px;
+                    padding: 8px 0;
+                    border-bottom: 1px solid ${theme.border};
+                    font-size: 13px;
+                }
+
+                .line-num {
+                    color: ${theme.textMuted};
+                    opacity: 0.8;
+                    user-select: none;
+                    min-width: 24px;
+                }
+
+                .line-content {
+                    color: ${theme.text};
+                    word-break: break-all;
+                }
+
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                    height: 6px;
+                }
+
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(148, 163, 184, 0.3);
+                    border-radius: 10px;
+                }
+
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(148, 163, 184, 0.5);
+                }
+
                 .animate-spin {
                     animation: spin 1s linear infinite;
                 }
@@ -1421,44 +1105,26 @@ const TrafficSetupPage = () => {
                     to { transform: rotate(360deg); }
                 }
 
-                .setup-top-grid {
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 20px;
-                }
-
-                .setup-main-grid {
-                    display: grid;
-                    grid-template-columns: 1.25fr 0.75fr;
-                    gap: 40px;
-                }
-
-                .setup-input-row {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 20px;
-                }
-
-                @media (max-width: 1200px) {
-                    .setup-main-grid {
+                @media (max-width: 1024px) {
+                    .generator-main-grid {
                         grid-template-columns: 1fr;
-                        gap: 32px;
                     }
-                }
-
-                @media (max-width: 900px) {
-                    .setup-top-grid {
-                        grid-template-columns: 1fr;
+                    
+                    .generated-viewer {
+                        height: 400px;
                     }
                 }
 
                 @media (max-width: 640px) {
-                    .setup-input-row {
+                    .info-bar {
+                        gap: 12px;
+                    }
+                    .split-fields {
                         grid-template-columns: 1fr;
                     }
                 }
-            `}</style>
-        </div>
+            ` }} />
+        </div >
     );
 };
 
