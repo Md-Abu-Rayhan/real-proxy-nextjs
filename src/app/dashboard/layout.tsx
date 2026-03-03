@@ -26,6 +26,7 @@ import {
     X
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { triggerContactModal } from '@/components/ui/ContactModal';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     const [expandedGroups, setExpandedGroups] = useState<string[]>(['SOCKSS PROXIES', 'TRAFFIC PLANS', 'REFERRAL', 'TOOL', 'Promotion Plan']);
@@ -186,7 +187,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                     <div className="header-right">
                         <div className="header-actions">
                             <RefreshCw size={20} className="header-icon" />
-                            <HelpCircle size={20} className="header-icon" />
+                            <HelpCircle size={20} className="header-icon" onClick={triggerContactModal} style={{ cursor: 'pointer' }} />
                             <Bell size={20} className="header-icon" />
                         </div>
 

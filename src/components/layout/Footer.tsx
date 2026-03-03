@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Facebook, Twitter, Youtube, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { triggerContactModal } from '@/components/ui/ContactModal';
 
 const Footer = () => {
     return (
@@ -28,7 +29,7 @@ const Footer = () => {
                         <h4 className="footer-heading">Help Center</h4>
                         <ul className="footer-links">
                             <li><a href="#">FAQ</a></li>
-                            <li><a href="#">Support</a></li>
+                            <li><a href="#" onClick={(e) => { e.preventDefault(); triggerContactModal(); }}>Support</a></li>
                             <li><a href="#">Privacy Policy</a></li>
                             <li><Link href="/terms">Terms of Service</Link></li>
                         </ul>
@@ -48,7 +49,7 @@ const Footer = () => {
                         <h4 className="footer-heading">Partnership</h4>
                         <ul className="footer-links">
                             <li><a href="#">Affiliate Program</a></li>
-                            <li><a href="#">Contact Us</a></li>
+                            <li><a href="#" onClick={(e) => { e.preventDefault(); triggerContactModal(); }}>Contact Us</a></li>
                         </ul>
                     </div>
                 </div>
@@ -163,6 +164,9 @@ const Footer = () => {
                     .social-links { justify-content: center; }
                     .footer-column {
                         text-align: center;
+                    }
+                    .footer-heading::after {
+                        display: none;
                     }
                 }
             `}</style>

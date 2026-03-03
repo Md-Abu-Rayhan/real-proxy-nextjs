@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Plus, Minus, MessageSquare, Zap, CreditCard, Shield, Globe } from 'lucide-react';
+import { triggerContactModal } from '@/components/ui/ContactModal';
 
 const FAQ = () => {
     const [activeTab, setActiveTab] = useState('All');
@@ -291,7 +292,7 @@ const FAQ = () => {
                     <h3 style={{ fontSize: '24px', fontWeight: '800', color: '#041026', marginBottom: '12px' }}>Still have questions?</h3>
                     <p style={{ color: '#667085', fontSize: '16px', marginBottom: '32px' }}>Can't find the answer you're looking for? Our support team is here to help you 24/7.</p>
                     <button
-                        onClick={() => window.location.href = 'mailto:support@realproxy.net'}
+                        onClick={triggerContactModal}
                         style={{
                             background: '#041026',
                             color: 'white',

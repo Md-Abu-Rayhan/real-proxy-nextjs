@@ -60,6 +60,8 @@ const TrafficSetupPage = () => {
     const [unit, setUnit] = useState('GB');
     const [proxyInfo, setProxyInfo] = useState<ProxyInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [residentialBalance, setResidentialBalance] = useState<number | null>(null);
+    const [isBalanceLoading, setIsBalanceLoading] = useState(false);
     const [regions, setRegions] = useState<Region[]>([]);
     const [selectedCountry, setSelectedCountry] = useState<Region | null>(null);
     const [isRegionsLoading, setIsRegionsLoading] = useState(true);
@@ -90,12 +92,14 @@ const TrafficSetupPage = () => {
     const [sessionDuration, setSessionDuration] = useState(15);
 
     // New Generator State
-    const [selectedProtocol, setSelectedProtocol] = useState('HTTPS');
+    const [selectedProtocol, setSelectedProtocol] = useState('HTTP');
     const [selectedFormat, setSelectedFormat] = useState('hostname:port:username:password');
     const [selectedType, setSelectedType] = useState('Rotating');
     const [sessionType, setSessionType] = useState('Normal Session');
     const [amount, setAmount] = useState(1);
     const [lifetime, setLifetime] = useState(30);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [isResettingKey, setIsResettingKey] = useState(false);
 
     const theme = {
         bg: '#F8FAFC',
@@ -148,6 +152,19 @@ const TrafficSetupPage = () => {
                 }
             } finally {
                 setIsLoading(false);
+            }
+        };
+
+        const fetchResidentialBalance = async (username: string) => {
+            setIsBalanceLoading(true);
+            try {
+                const res = await axios.get(`https://api.realproxy.net/api/Proxy/sub_user?username=${username}`);
+                const balance = res.data?.data?.products?.residential?.balance ?? null;
+                setResidentialBalance(balance);
+            } catch (error) {
+                console.error('Error fetching residential balance:', error);
+            } finally {
+                setIsBalanceLoading(false);
             }
         };
 
@@ -208,9 +225,60 @@ const TrafficSetupPage = () => {
             }
         };
 
-        fetchProxyInfo();
+        fetchProxyInfo().then(() => {
+            // proxyInfo is not yet in state here because setState is async,
+            // so we read it directly from the API response inside fetchProxyInfo.
+        });
         fetchRegions();
     }, [router]);
+
+    const handleResetProxyKey = async () => {
+        if (!proxyInfo?.proxyAccount) return;
+        setIsResettingKey(true);
+        try {
+            const res = await axios.post(
+                'https://api.realproxy.net/api/Proxy/reset_auth_key',
+                { username: proxyInfo.proxyAccount },
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+            const newKey = res.data?.data?.products?.residential?.proxy_key;
+            if (newKey && proxyInfo) {
+                setProxyInfo({ ...proxyInfo, proxyPassword: newKey });
+                toast.success('Proxy key reset successfully!');
+            } else {
+                toast.error('Reset succeeded but could not read new key.');
+            }
+        } catch (error) {
+            console.error('Error resetting proxy key:', error);
+            toast.error('Failed to reset proxy key. Please try again.');
+        } finally {
+            setIsResettingKey(false);
+            setShowResetConfirm(false);
+        }
+    };
+
+    // Fetch balance after proxyInfo is available
+    const refreshBalance = async (username?: string) => {
+        const user = username ?? proxyInfo?.proxyAccount;
+        if (!user) return;
+        setIsBalanceLoading(true);
+        try {
+            const res = await axios.get(`https://api.realproxy.net/api/Proxy/sub_user?username=${user}`);
+            const balance = res.data?.data?.products?.residential?.balance ?? null;
+            setResidentialBalance(balance);
+        } catch (error) {
+            console.error('Error fetching residential balance:', error);
+            toast.error('Failed to refresh balance.');
+        } finally {
+            setIsBalanceLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (proxyInfo?.proxyAccount) {
+            refreshBalance(proxyInfo.proxyAccount);
+        }
+    }, [proxyInfo?.proxyAccount]);
 
     // Fetch cities when country changes
     useEffect(() => {
@@ -395,16 +463,17 @@ const TrafficSetupPage = () => {
 
     const generatedList = Array.from({ length: Math.min(Math.max(1, amount), 50) }, (_, i) => {
         const protocol = selectedProtocol.toLowerCase();
+        const prefix = protocol === 'socks5' ? 'socks5: ' : 'http://';
         const user = proxyInfo?.proxyAccount || 'user';
         const basePass = proxyInfo?.proxyPassword || 'pass';
 
         let passOptions = `${countryPart}${regionPart}${cityPart}`;
 
         if (selectedType === 'Rotating') {
-            return `${protocol}://${selectedHostname}:1000:${user}:${basePass}${passOptions}`;
+            return `${prefix}${selectedHostname}:1000:${user}:${basePass}${passOptions}`;
         } else {
             const randomId = Math.random().toString(36).substring(2, 11).toUpperCase();
-            return `${protocol}://${selectedHostname}:1000:${user}:${basePass}${passOptions}_session-${randomId}_lifetime-${lifetime}`;
+            return `${prefix}${selectedHostname}:1000:${user}:${basePass}${passOptions}_session-${randomId}_lifetime-${lifetime}`;
         }
     });
 
@@ -421,39 +490,49 @@ const TrafficSetupPage = () => {
     };
 
     return (
-        <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '0 24px', boxSizing: 'border-box' }}>
+        <div className="main-responsive-container">
             {/* Top Navigation Mode & Compact Balance Row */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0', marginBottom: '32px' }}>
-                <div style={{ display: 'flex', gap: '60px' }}>
+            <div className="dashboard-header-container">
+                <div className="header-nav-tabs">
                     {['Proxy Setup', 'Statistics'].map(tab => (
                         <div
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            style={{
-                                padding: '13px 50px',
-                                fontSize: '18px',
-                                fontWeight: '700',
-                                color: activeTab === tab ? '#1677ff' : '#4E5969',
-                                borderBottom: activeTab === tab ? '2px solid #1677ff' : '2px solid transparent',
-                                cursor: 'pointer',
-                                marginBottom: '-1px',
-                                transition: 'all 0.2s',
-                                letterSpacing: '0.2px'
-                            }}
+                            className={`nav-tab-item ${activeTab === tab ? 'active' : ''}`}
                         >
                             {tab}
                         </div>
                     ))}
                 </div>
 
-                {/* Remaining Balance (Small, Side-by-side, Right aligned) */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#e6f4ff', padding: '8px 16px', borderRadius: '8px', border: '1px solid #91caff' }}>
-                        <span style={{ color: '#4E5969', fontSize: '14px', fontWeight: '500' }}>Remaining Balance:</span>
-                        <span style={{ color: '#1677ff', fontSize: '16px', fontWeight: '800' }}>99.963 MB</span>
+                <div className="header-balance-section">
+                    <div className="balance-info-chip">
+                        <span className="balance-label">Remaining Balance:</span>
+                        {isBalanceLoading ? (
+                            <Loader2 size={16} className="animate-spin" style={{ color: '#1677ff' }} />
+                        ) : residentialBalance !== null ? (
+                            <span className="balance-value">
+                                {residentialBalance >= 1000
+                                    ? `${(residentialBalance / 1000).toFixed(2)} GB`
+                                    : `${Number(residentialBalance).toFixed(2)} MB`}
+                            </span>
+                        ) : (
+                            <span style={{ color: '#aaa', fontSize: '14px' }}>—</span>
+                        )}
+                        <button
+                            onClick={() => refreshBalance()}
+                            disabled={isBalanceLoading}
+                            title="Refresh balance"
+                            className="balance-refresh-btn"
+                        >
+                            <RefreshCw size={13} strokeWidth={2.5} style={{ animation: isBalanceLoading ? 'spin 1s linear infinite' : 'none' }} />
+                        </button>
                     </div>
-                    <button onClick={() => router.push('/dashboard/pricing')} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#1677ff', color: 'white', border: 'none', padding: '9px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 6px rgba(22, 119, 255, 0.2)' }}>
-                        Refill
+                    <button
+                        onClick={() => router.push('/residential-proxies?recharge=true#bandwidth-section')}
+                        className="header-refill-btn"
+                    >
+                        Refill Balance
                         <ArrowRight size={15} strokeWidth={2.5} />
                     </button>
                 </div>
@@ -507,6 +586,27 @@ const TrafficSetupPage = () => {
                             <div className="generator-main-grid">
                                 {/* Left Column: Settings */}
                                 <div className="settings-column">
+
+                                    <div className="settings-panel">
+                                        <div className="panel-header">
+                                            <h3 className="panel-title">Protocol Settings</h3>
+                                        </div>
+
+                                        <div className="setting-fieldset">
+                                            <label className="field-label">Protocol</label>
+                                            <div className="protocol-tabs">
+                                                {['HTTP', 'SOCKS5'].map(t => (
+                                                    <button
+                                                        key={t}
+                                                        className={`tab-item ${selectedProtocol.toUpperCase() === t ? 'active' : ''}`}
+                                                        onClick={() => setSelectedProtocol(t)}
+                                                    >
+                                                        {t}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {/* Location Settings */}
                                     <div className="settings-panel">
@@ -684,11 +784,11 @@ const TrafficSetupPage = () => {
                                                 <button className="action-btn" onClick={() => { navigator.clipboard.writeText(generatedList.join('\n')); toast.success('All strings copied!'); }}>
                                                     <Copy size={13} /> Copy all
                                                 </button>
-                                                <button className="action-btn" onClick={resetSelection}>
-                                                    <RefreshCw size={13} /> Reset
-                                                </button>
                                                 <button className="action-btn" onClick={downloadProxies}>
                                                     <Download size={13} /> Download
+                                                </button>
+                                                <button className="action-btn" onClick={() => setShowResetConfirm(true)} style={{ color: '#cf1322' }}>
+                                                    <RefreshCw size={13} /> Reset Proxy Key
                                                 </button>
                                             </div>
                                         </div>
@@ -712,6 +812,37 @@ const TrafficSetupPage = () => {
                     <RefreshCw size={48} style={{ opacity: 0.1, marginBottom: '24px' }} />
                     <div style={{ fontSize: '18px', fontWeight: '600', color: '#1D2129', marginBottom: '8px' }}>No Data Available</div>
                     <div style={{ fontSize: '14px', color: '#86909C' }}>Statistics dynamic data will be displayed once there is usage.</div>
+                </div>
+            )}
+
+            {/* Reset Proxy Key Confirmation Modal */}
+            {showResetConfirm && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(2px)' }}>
+                    <div style={{ background: 'white', borderRadius: '16px', padding: '36px 40px', maxWidth: '440px', width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)', textAlign: 'center' }}>
+                        <div style={{ width: '56px', height: '56px', background: '#fff1f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                            <RefreshCw size={26} color="#cf1322" strokeWidth={2.5} />
+                        </div>
+                        <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1D2129', marginBottom: '12px' }}>Reset Proxy Key?</h3>
+                        <p style={{ fontSize: '14px', color: '#64748B', lineHeight: '1.6', marginBottom: '28px' }}>
+                            If you reset your proxy key, your current password will <strong>stop working immediately</strong>. All existing proxy connections using this key will be disconnected. Are you sure you want to continue?
+                        </p>
+                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                            <button
+                                onClick={() => setShowResetConfirm(false)}
+                                disabled={isResettingKey}
+                                style={{ flex: 1, padding: '11px 20px', borderRadius: '8px', border: '1px solid #E2E8F0', background: 'white', color: '#4E5969', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+                            >
+                                No, Cancel
+                            </button>
+                            <button
+                                onClick={handleResetProxyKey}
+                                disabled={isResettingKey}
+                                style={{ flex: 1, padding: '11px 20px', borderRadius: '8px', border: 'none', background: isResettingKey ? '#ffa39e' : '#cf1322', color: 'white', fontSize: '14px', fontWeight: '600', cursor: isResettingKey ? 'not-allowed' : 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                            >
+                                {isResettingKey ? <><Loader2 size={14} className="animate-spin" /> Resetting...</> : 'Yes, Reset Key'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -752,7 +883,7 @@ const TrafficSetupPage = () => {
                 .info-bar {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
-                    gap: 16px;
+                    gap: 12px;
                 }
                 
                 @media (max-width: 1300px) {
@@ -1025,6 +1156,7 @@ const TrafficSetupPage = () => {
                 .result-actions {
                     display: flex;
                     gap: 8px;
+                    flex-wrap: wrap;
                 }
 
                 .action-btn {
@@ -1105,22 +1237,201 @@ const TrafficSetupPage = () => {
                     to { transform: rotate(360deg); }
                 }
 
+                .main-responsive-container {
+                    max-width: 1440px;
+                    margin: 0 auto;
+                    padding: 0 24px;
+                    box-sizing: border-box;
+                    width: 100%;
+                    overflow-x: hidden;
+                }
+
+                .dashboard-header-container {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-bottom: 1px solid #f0f0f0;
+                    margin-bottom: 32px;
+                    flex-wrap: wrap;
+                    gap: 16px;
+                }
+
+                .header-nav-tabs {
+                    display: flex;
+                    gap: 16px;
+                }
+
+                .nav-tab-item {
+                    padding: 12px 32px;
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #4E5969;
+                    border-bottom: 2px solid transparent;
+                    cursor: pointer;
+                    margin-bottom: -1px;
+                    transition: all 0.2s;
+                    white-space: nowrap;
+                }
+
+                .nav-tab-item.active {
+                    color: #1677ff;
+                    border-bottom-color: #1677ff;
+                }
+
+                .header-balance-section {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding-bottom: 8px;
+                    flex-wrap: wrap;
+                }
+
+                .balance-info-chip {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: #e6f4ff;
+                    padding: 8px 14px;
+                    border-radius: 8px;
+                    border: 1px solid #91caff;
+                }
+
+                .balance-label {
+                    color: #4E5969;
+                    font-size: 13px;
+                    font-weight: 500;
+                }
+
+                .balance-value {
+                    color: #1677ff;
+                    font-size: 15px;
+                    font-weight: 800;
+                }
+
+                .balance-refresh-btn {
+                    display: flex;
+                    align-items: center;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    color: #1677ff;
+                    opacity: 0.7;
+                    transition: opacity 0.2s;
+                    padding: 2px;
+                }
+
+                .balance-refresh-btn:hover { opacity: 1; }
+                .balance-refresh-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+                .header-refill-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: #1677ff;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    box-shadow: 0 2px 6px rgba(22, 119, 255, 0.2);
+                    white-space: nowrap;
+                }
+
+                .header-refill-btn:hover { background: #4096ff; }
+
                 @media (max-width: 1024px) {
+                    .main-responsive-container {
+                        padding: 0 12px;
+                    }
+                    .dashboard-header-container {
+                        flex-direction: column;
+                        align-items: stretch;
+                        gap: 16px;
+                        padding-bottom: 8px;
+                    }
+                    .header-nav-tabs {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                    .header-balance-section {
+                        width: 100%;
+                        justify-content: center;
+                    }
                     .generator-main-grid {
                         grid-template-columns: 1fr;
                     }
-                    
                     .generated-viewer {
                         height: 400px;
+                    }
+                    .generator-header-info {
+                        padding: 12px;
                     }
                 }
 
                 @media (max-width: 640px) {
-                    .info-bar {
+                    .main-responsive-container {
+                        padding: 0 8px;
+                    }
+                    .nav-tab-item {
+                        padding: 12px 8px;
+                        font-size: 13px;
+                        flex: 1;
+                        text-align: center;
+                    }
+                    .header-balance-section {
+                        flex-direction: column;
+                        align-items: center;
                         gap: 12px;
+                    }
+                    .balance-info-chip {
+                        justify-content: center;
+                        width: 100%;
+                    }
+                    .header-nav-tabs {
+                        gap: 4px;
+                    }
+                    .header-refill-btn {
+                        width: 100%;
+                        justify-content: center;
+                    }
+                    .info-bar {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
                     }
                     .split-fields {
                         grid-template-columns: 1fr;
+                    }
+                    .settings-panel, .result-panel {
+                        padding: 12px;
+                    }
+                    .info-item {
+                        padding: 8px 10px;
+                    }
+                    .result-header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 12px;
+                    }
+                    .result-actions {
+                        width: 100%;
+                        justify-content: space-between;
+                    }
+                    .action-btn {
+                        flex: 1;
+                        justify-content: center;
+                        padding: 8px 4px;
+                        font-size: 11px;
+                    }
+                    .protocol-tabs {
+                        flex-wrap: wrap;
+                    }
+                    .tab-item {
+                        padding: 8px 4px;
+                        font-size: 12px;
                     }
                 }
             ` }} />

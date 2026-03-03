@@ -33,7 +33,20 @@ const ResidentialHero = () => {
                         >
                             Get Started
                         </button>
-                        <button className="btn-outline" style={{ padding: '18px 44px', fontSize: '18px', borderRadius: '12px', color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
+                        <button
+                            className="btn-outline"
+                            style={{
+                                padding: '18px 44px',
+                                fontSize: '18px',
+                                borderRadius: '12px',
+                                color: 'white',
+                                border: '1px solid rgba(255,255,255,0.5)',
+                                background: 'transparent',
+                                transition: 'all 0.3s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
                             View Pricing
                         </button>
                     </div>
@@ -89,8 +102,14 @@ const ResidentialHero = () => {
                 }
                 .dot { color: #ff4d4d; }
                 .res-title { font-size: 56px; line-height: 1.1; margin-bottom: 24px; color: white; }
-                .res-desc { font-size: 20px; color: rgba(255,255,255,0.8); marginBottom: 40px; max-width: 540px; line-height: 1.6; }
-                .res-actions { display: flex; gap: 20px; }
+                .res-desc { 
+                    font-size: 20px; 
+                    color: rgba(255,255,255,0.8); 
+                    margin-bottom: 48px; 
+                    max-width: 540px; 
+                    line-height: 1.6; 
+                }
+                .res-actions { display: flex; gap: 24px; }
                 .res-visual-card {
                     background-color: rgba(255,255,255,0.05);
                     backdrop-filter: blur(10px);

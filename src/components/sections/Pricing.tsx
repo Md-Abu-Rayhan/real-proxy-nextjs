@@ -387,14 +387,17 @@ const Pricing = () => {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    margin-top: 10px;
+                    justify-content: center;
+                    margin-top: 50px;
+                    width: 100%;
+                    text-align: center;
                 }
                 .btn-buy-premium {
                     background: linear-gradient(135deg, #0086FF 0%, #0066FF 100%);
                     color: #ffffff;
-                    padding: 12px 36px;
+                    padding: 12px 48px;
                     border-radius: 100px;
-                    font-size: 15px;
+                    font-size: 16px;
                     font-weight: 700;
                     border: none;
                     cursor: pointer;
@@ -402,34 +405,45 @@ const Pricing = () => {
                     align-items: center;
                     justify-content: center;
                     gap: 12px;
-                    box-shadow: 0 8px 16px rgba(0, 134, 255, 0.2);
-                    transition: all 0.3s;
+                    box-shadow: 0 8px 24px rgba(0, 134, 255, 0.25);
+                    transition: all 0.3s ease;
                 }
                 .btn-buy-premium:hover {
-                    transform: translateY(-2px);
+                    transform: translateY(-3px);
+                    box-shadow: 0 12px 32px rgba(0, 134, 255, 0.35);
                 }
                 .pay-logos {
-                    margin-top: 20px;
+                    margin-top: 40px;
                     opacity: 0.9;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    width: 100%;
                 }
                 .pay-logos-text {
                     font-size: 11px;
                     font-weight: 700;
                     color: #98a2b3;
-                    margin-bottom: 12px;
+                    margin-bottom: 20px;
                     text-transform: uppercase;
-                    letter-spacing: 1px;
+                    letter-spacing: 2px;
                 }
                 .logos-row {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 24px;
+                    gap: 40px;
+                    flex-wrap: wrap;
                 }
                 .logos-row img {
-                    height: 28px;
+                    height: 30px;
                     width: auto;
-                    filter: brightness(1);
+                    filter: none;
+                    opacity: 1;
+                    transition: all 0.3s ease;
+                }
+                .logos-row img:hover {
+                    transform: scale(1.1);
                 }
 
                 .cs-card {
@@ -612,7 +626,7 @@ const Pricing = () => {
                     }
                     .pricing-header h2 { font-size: 28px; }
                     .pricing-header p { font-size: 14px; }
-                    .btn-buy-premium { width: 100%; padding: 14px 24px; font-size: 16px; }
+                    .btn-buy-premium { width: 100%; max-width: 320px; padding: 13px 24px; font-size: 15px; }
                     .logos-row { gap: 16px; flex-wrap: wrap; }
                     .logos-row img { height: 24px; }
                     .tabs-container { overflow-x: auto; width: 100%; justify-content: flex-start; padding: 4px; }
@@ -648,7 +662,7 @@ const Pricing = () => {
                     <AnimatePresence mode="wait">
                         {proxyType === 'Rotating Res.' ? (
                             <motion.div key="rotating" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} transition={{ duration: 0.4 }}>
-                                <div className="pricing-main-card">
+                                <div className="pricing-main-card" id="bandwidth-section">
                                     <div className="bandwidth-header">
                                         <ShoppingCart size={28} color="#0086FF" />
                                         <h3>{isRecharge ? "Recharge Account" : "Pick Your Bandwidth"}</h3>
@@ -711,7 +725,7 @@ const Pricing = () => {
 
                                     <div className="final-cta-area">
                                         <button onClick={handleBuyNowClick} disabled={isLoading} className="btn-buy-premium">
-                                            <ShoppingCart size={22} fill="white" /> {isLoading ? 'Processing...' : 'Activate Plan Now'}
+                                            <ShoppingCart size={20} fill="white" /> {isLoading ? 'Processing...' : 'Buy Now'}
                                         </button>
 
                                         <div className="pay-logos">

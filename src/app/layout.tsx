@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 import StyledJsxRegistry from "./registry";
 import { Toaster } from 'react-hot-toast';
 import { LanguageProvider } from '@/context/LanguageContext';
+import { ContactModal } from '@/components/ui/ContactModal';
 
 export default function RootLayout({
   children,
@@ -22,6 +23,7 @@ export default function RootLayout({
         <StyledJsxRegistry>
           <LanguageProvider>
             {children}
+            <ContactModal />
           </LanguageProvider>
         </StyledJsxRegistry>
       </body>
