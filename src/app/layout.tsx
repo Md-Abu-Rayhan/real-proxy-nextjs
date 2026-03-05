@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Script from "next/script";
+import StyledJsxRegistry from "./registry";
+import { Toaster } from 'react-hot-toast';
+import { LanguageProvider } from '@/context/LanguageContext';
+import { ContactModal } from '@/components/ui/ContactModal';
 
 export const metadata: Metadata = {
   title: "Real Proxy - Best Residential IP Proxy Service Provider",
   description: "Best residential ip proxy service provider to help companies get more profit. Real Proxy provides the most stable and high-speed residential proxies.",
 };
-
-import StyledJsxRegistry from "./registry";
-import { Toaster } from 'react-hot-toast';
-import { LanguageProvider } from '@/context/LanguageContext';
-import { ContactModal } from '@/components/ui/ContactModal';
 
 export default function RootLayout({
   children,
@@ -27,11 +26,20 @@ export default function RootLayout({
             <ContactModal />
           </LanguageProvider>
         </StyledJsxRegistry>
-        <Script id="crisp-script" strategy="afterInteractive">
-          {`window.$crisp=[];window.CRISP_WEBSITE_ID="d47ade8c-f795-4cd9-be9a-366b5eaa177c";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`}
+        <Script id="crisp-config" strategy="afterInteractive">
+          {`
+            window.$crisp=[];
+            window.CRISP_WEBSITE_ID="d47ade8c-f795-4cd9-be9a-366b5eaa177c";
+            (function(){
+              d=document;s=d.createElement("script");
+              s.src="https://client.crisp.chat/l.js";
+              s.async=1;
+              d.getElementsByTagName("head")[0].appendChild(s);
+            })();
+            window.$crisp.push(["set", "chat:icon", ["chat"]]);
+          `}
         </Script>
       </body>
     </html>
   );
 }
-
