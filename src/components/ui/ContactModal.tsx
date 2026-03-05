@@ -119,7 +119,7 @@ export const ContactModal = () => {
                         </a>
 
                         <a
-                            href="https://web.whatsapp.com/send?phone=8801404566732"
+                            href="https://wa.me/message/K4I5YCLO2D6TH1"
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{

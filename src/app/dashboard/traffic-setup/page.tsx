@@ -464,16 +464,17 @@ const TrafficSetupPage = () => {
     const generatedList = Array.from({ length: Math.min(Math.max(1, amount), 50) }, (_, i) => {
         const protocol = selectedProtocol.toLowerCase();
         const prefix = protocol === 'socks5' ? 'socks5: ' : 'http://';
+        const port = protocol === 'socks5' ? '1002' : '1000';
         const user = proxyInfo?.proxyAccount || 'user';
         const basePass = proxyInfo?.proxyPassword || 'pass';
 
         let passOptions = `${countryPart}${regionPart}${cityPart}`;
 
         if (selectedType === 'Rotating') {
-            return `${prefix}${selectedHostname}:1000:${user}:${basePass}${passOptions}`;
+            return `${prefix}${selectedHostname}:${port}:${user}:${basePass}${passOptions}`;
         } else {
             const randomId = Math.random().toString(36).substring(2, 11).toUpperCase();
-            return `${prefix}${selectedHostname}:1000:${user}:${basePass}${passOptions}_session-${randomId}_lifetime-${lifetime}`;
+            return `${prefix}${selectedHostname}:${port}:${user}:${basePass}${passOptions}_session-${randomId}_lifetime-${lifetime}`;
         }
     });
 
@@ -574,8 +575,12 @@ const TrafficSetupPage = () => {
                                         </div>
                                         <div className="info-item">
                                             <span className="info-label">Port:</span>
-                                            <span className="info-value">1000</span>
-                                            <button className="info-copy-btn" onClick={() => { navigator.clipboard.writeText('1000'); toast.success('Copied!'); }}>
+                                            <span className="info-value">{selectedProtocol.toLowerCase() === 'socks5' ? '1002' : '1000'}</span>
+                                            <button className="info-copy-btn" onClick={() => {
+                                                const port = selectedProtocol.toLowerCase() === 'socks5' ? '1002' : '1000';
+                                                navigator.clipboard.writeText(port);
+                                                toast.success('Copied!');
+                                            }}>
                                                 <Copy size={13} strokeWidth={2.5} />
                                             </button>
                                         </div>

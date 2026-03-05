@@ -12,7 +12,7 @@ const Footer = () => {
                 <div className="footer-grid">
                     <div className="footer-info">
                         <div className="footer-logo">
-                            <img src="/logo.png" alt="Logo" style={{ height: '40px', width: 'auto' }} />
+                            <img src="/logo.png" alt="Logo" style={{ height: '80px', width: 'auto' }} />
                         </div>
                         <p className="footer-desc">
                             The world's leading residential proxy service provider. We provide global real residential IP addresses with high anonymity and speed.

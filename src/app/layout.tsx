@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Real Proxy - Best Residential IP Proxy Service Provider",
@@ -26,6 +27,9 @@ export default function RootLayout({
             <ContactModal />
           </LanguageProvider>
         </StyledJsxRegistry>
+        <Script id="crisp-script" strategy="afterInteractive">
+          {`window.$crisp=[];window.CRISP_WEBSITE_ID="d47ade8c-f795-4cd9-be9a-366b5eaa177c";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();`}
+        </Script>
       </body>
     </html>
   );

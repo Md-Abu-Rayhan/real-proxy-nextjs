@@ -42,7 +42,7 @@ const Navbar = () => {
             boxShadow: isScrolled ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
             borderBottom: isScrolled ? 'none' : '1px solid #f0f0f0',
             zIndex: 1000,
-            height: isScrolled ? '70px' : '80px',
+            height: isScrolled ? '70px' : '85px',
             display: 'flex',
             alignItems: 'center',
             transition: 'all 0.3s ease',
@@ -51,8 +51,8 @@ const Navbar = () => {
             <div className="container nav-container">
                 {/* Logo */}
                 <Link href="/" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', textDecoration: 'none' }}>
-                    <img src="/logo.png" alt="Logo" style={{ height: '40px', width: 'auto' }} />
-                </Link>
+                    <img src="/logo.png" alt="Logo" style={{ height: '70px', width: 'auto' }} />
+                </Link>     
 
                 {/* Desktop Menu Items */}
                 <div className="desktop-menu">
