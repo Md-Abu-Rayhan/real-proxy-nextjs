@@ -34,6 +34,16 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [windowWidth, setWindowWidth] = useState(1200);
+    const [isMounted, setIsMounted] = useState(false);
+
+    React.useEffect(() => {
+        setIsMounted(true);
+        setWindowWidth(window.innerWidth);
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     React.useEffect(() => {
         const email = localStorage.getItem('user_email');
@@ -130,7 +140,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                                             key={sIdx}
                                             href={subItem.path}
                                             className={`nav-item ${subItem.active ? 'active' : ''}`}
-                                            onClick={() => { if (window.innerWidth < 1024) setIsSidebarOpen(false); }}
+                                            onClick={() => { if (windowWidth < 1024) setIsSidebarOpen(false); }}
                                         >
                                             <span className="nav-icon">{subItem.icon}</span>
                                             <span className="nav-text">{subItem.name}</span>
@@ -149,7 +159,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                                     key={idx}
                                     href={item.path}
                                     className="nav-item"
-                                    onClick={() => { if (window.innerWidth < 1024) setIsSidebarOpen(false); }}
+                                    onClick={() => { if (windowWidth < 1024) setIsSidebarOpen(false); }}
                                 >
                                     <span className="nav-icon">{item.icon}</span>
                                     <span className="nav-text">{item.name}</span>
@@ -177,9 +187,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                         >
                             <Menu size={20} />
                             <span className="toggle-label">
-                                {typeof window !== 'undefined' && window.innerWidth < 1024
+                                {!isMounted ? 'Collapse' : (windowWidth < 1024
                                     ? (isSidebarOpen ? 'Close' : 'Menu')
-                                    : (isSidebarCollapsed ? 'Expand' : 'Collapse')}
+                                    : (isSidebarCollapsed ? 'Expand' : 'Collapse'))}
                             </span>
                         </button>
                     </div>
@@ -235,6 +245,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                     background-color: #f2f3f5;
                     color: #1D2129;
                     font-family: 'Poppins', sans-serif;
+                    overflow-x: hidden;
+                    width: 100vw;
                 }
 
                 .dashboard-sidebar {

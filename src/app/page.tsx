@@ -8,6 +8,7 @@ import Pricing from "@/components/sections/Pricing";
 import Stats from "@/components/sections/Stats";
 import HowItWorks from "@/components/sections/HowItWorks";
 import FAQ from "@/components/sections/FAQ";
+import Tutorials from "@/components/sections/Tutorials";
 import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 
@@ -23,6 +24,7 @@ export default function Home() {
       <Stats />
       <HowItWorks />
       <FAQ />
+      <Tutorials />
 
       {/* Simple CTA Section */}
       <section className="cta-section">

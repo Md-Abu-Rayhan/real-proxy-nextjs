@@ -4,6 +4,7 @@ export const translations = {
             products: "Products & Pricing",
             contact: "Contact",
             faq: "FAQ",
+            tutorial: "Tutorial",
             login: "Log In",
             signup: "Sign Up"
         },
@@ -88,6 +89,7 @@ export const translations = {
             products: "পণ্য ও মূল্যতালিকা",
             contact: "যোগাযোগ",
             faq: "প্রশ্নাবলী",
+            tutorial: "টিউটোরিয়াল",
             login: "লগ ইন",
             signup: "সাইন আপ"
         },

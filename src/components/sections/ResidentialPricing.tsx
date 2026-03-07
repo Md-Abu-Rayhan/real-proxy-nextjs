@@ -12,6 +12,8 @@ const ResidentialPricing = () => {
     const [planType, setPlanType] = useState('Personal');
     const [isLoading, setIsLoading] = useState<number | null>(null);
 
+    const [promoCode, setPromoCode] = useState("");
+
     const handleOrderNow = async (planGb: string, index: number) => {
         const token = localStorage.getItem('auth_token');
         if (!token) {
@@ -29,6 +31,7 @@ const ResidentialPricing = () => {
             if (planGb.includes('100GB')) packageId = "res_100gb";
             else if (planGb.includes('50GB') || planGb.includes('40GB')) packageId = "res_50gb";
             else if (planGb.includes('10GB')) packageId = "res_10gb";
+            else if (parseInt(planGb) >= 500) packageId = "res_500gb";
             else if (parseInt(planGb) >= 100) packageId = "res_100gb";
 
             const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {
@@ -41,7 +44,8 @@ const ResidentialPricing = () => {
                 customerCity: "Dhaka",
                 customerState: "Dhaka",
                 customerPostcode: "1212",
-                customerCountry: "BD"
+                customerCountry: "BD",
+                promoCode: promoCode
             }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -86,6 +90,35 @@ const ResidentialPricing = () => {
                 <div style={{ textAlign: 'center', marginBottom: '60px' }}>
                     <h2 style={{ fontSize: '36px', marginBottom: '20px' }}>Enjoy Unlimited Residential Proxies</h2>
                     <p style={{ color: '#666', fontSize: '18px', maxWidth: '700px', margin: '0 auto' }}>Choose a traffic package that meets your business needs with 99.9% IP availability.</p>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '30px' }}>
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        backgroundColor: '#fff',
+                        padding: '10px 20px',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                        border: '1px solid #E2E8F0'
+                    }}>
+                        <span style={{ fontWeight: '600', color: '#163561' }}>Have a Promo Code?</span>
+                        <input
+                            type="text"
+                            placeholder="Enter Code"
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value)}
+                            style={{
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                border: '1px solid #CBD5E0',
+                                outline: 'none',
+                                fontSize: '14px',
+                                width: '150px'
+                            }}
+                        />
+                    </div>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '50px' }}>

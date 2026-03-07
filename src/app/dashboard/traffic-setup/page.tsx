@@ -94,7 +94,7 @@ const TrafficSetupPage = () => {
     // New Generator State
     const [selectedProtocol, setSelectedProtocol] = useState('HTTP');
     const [selectedFormat, setSelectedFormat] = useState('hostname:port:username:password');
-    const [selectedType, setSelectedType] = useState('Rotating');
+    const [selectedType, setSelectedType] = useState('Sticky Session');
     const [sessionType, setSessionType] = useState('Normal Session');
     const [amount, setAmount] = useState(1);
     const [lifetime, setLifetime] = useState(30);
@@ -740,7 +740,7 @@ const TrafficSetupPage = () => {
                                         <div className="setting-fieldset">
                                             <label className="field-label">Type</label>
                                             <div className="protocol-tabs">
-                                                {['Rotating', 'Sticky Session'].map(t => (
+                                            {['Sticky Session', 'Rotating'].map(t => (
                                                     <button
                                                         key={t}
                                                         className={`tab-item ${selectedType === t ? 'active' : ''}`}
@@ -853,12 +853,6 @@ const TrafficSetupPage = () => {
 
             <style dangerouslySetInnerHTML={{
                 __html: `
-                @media (max-width: 1024px) {
-                    .proxy-setup-layout {
-                        grid-template-columns: 1fr !important;
-                    }
-                }
-
                 .generator-container {
                     color: ${theme.text};
                     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -891,18 +885,6 @@ const TrafficSetupPage = () => {
                     gap: 12px;
                 }
                 
-                @media (max-width: 1300px) {
-                    .info-bar {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-                }
-                
-                @media (max-width: 640px) {
-                    .info-bar {
-                        grid-template-columns: 1fr;
-                    }
-                }
-
                 .info-item {
                     display: flex;
                     align-items: center;
@@ -919,6 +901,7 @@ const TrafficSetupPage = () => {
                     color: ${theme.textMuted};
                     font-size: 13px;
                     font-weight: 500;
+                    white-space: nowrap;
                 }
 
                 .info-value {
@@ -931,6 +914,7 @@ const TrafficSetupPage = () => {
                     text-overflow: ellipsis;
                     flex: 1;
                     margin-right: 8px;
+                    text-align: right;
                 }
 
                 .info-copy-btn {
@@ -944,6 +928,7 @@ const TrafficSetupPage = () => {
                     align-items: center;
                     justify-content: center;
                     transition: all 0.2s;
+                    flex-shrink: 0;
                 }
 
                 .info-copy-btn:hover {
@@ -1022,7 +1007,7 @@ const TrafficSetupPage = () => {
 
                 .tab-item {
                     flex: 1;
-                    padding: 8px;
+                    padding: 8px 12px;
                     border: none;
                     background: transparent;
                     color: ${theme.textMuted};
@@ -1031,6 +1016,10 @@ const TrafficSetupPage = () => {
                     border-radius: 6px;
                     cursor: pointer;
                     transition: all 0.2s;
+                    white-space: nowrap;
+                    min-width: 0;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
 
                 .tab-item.active {
@@ -1057,6 +1046,14 @@ const TrafficSetupPage = () => {
                     gap: 12px;
                     font-size: 14px;
                     font-weight: 500;
+                    overflow: hidden;
+                    flex: 1;
+                }
+
+                .dropdown-val span {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
 
                 .dropdown-flyout {
@@ -1192,12 +1189,16 @@ const TrafficSetupPage = () => {
                     flex-grow: 1;
                     height: 500px;
                     overflow-y: auto;
+                    overflow-x: hidden;
                     font-family: 'JetBrains Mono', 'SFMono-Regular', monospace;
+                    width: 100%;
+                    box-sizing: border-box;
                 }
 
                 .proxy-line {
-                    display: flex;
-                    gap: 12px;
+                    display: grid;
+                    grid-template-columns: 24px 1fr;
+                    gap: 8px;
                     padding: 8px 0;
                     border-bottom: 1px solid ${theme.border};
                     font-size: 13px;
@@ -1207,12 +1208,14 @@ const TrafficSetupPage = () => {
                     color: ${theme.textMuted};
                     opacity: 0.8;
                     user-select: none;
-                    min-width: 24px;
+                    font-weight: 500;
                 }
 
                 .line-content {
                     color: ${theme.text};
                     word-break: break-all;
+                    overflow-wrap: break-word;
+                    min-width: 0;
                 }
 
                 .custom-scrollbar::-webkit-scrollbar {
@@ -1347,9 +1350,21 @@ const TrafficSetupPage = () => {
 
                 .header-refill-btn:hover { background: #4096ff; }
 
+                @media (max-width: 1300px) {
+                    .info-bar {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+                
                 @media (max-width: 1024px) {
+                    .proxy-setup-layout {
+                        grid-template-columns: minmax(0, 1fr) !important;
+                        width: 100% !important;
+                        overflow-x: hidden;
+                    }
                     .main-responsive-container {
                         padding: 0 12px;
+                        min-width: 0;
                     }
                     .dashboard-header-container {
                         flex-direction: column;
@@ -1366,16 +1381,22 @@ const TrafficSetupPage = () => {
                         justify-content: center;
                     }
                     .generator-main-grid {
-                        grid-template-columns: 1fr;
+                        grid-template-columns: minmax(0, 1fr) !important;
+                        width: 100% !important;
+                    }
+                    .proxy-generator-column, .generator-container {
+                        width: 100% !important;
+                        overflow-x: hidden;
                     }
                     .generated-viewer {
                         height: 400px;
+                        width: 100% !important;
                     }
                     .generator-header-info {
-                        padding: 12px;
+                        padding: 16px;
                     }
                 }
-
+                
                 @media (max-width: 640px) {
                     .main-responsive-container {
                         padding: 0 8px;
@@ -1411,10 +1432,13 @@ const TrafficSetupPage = () => {
                         grid-template-columns: 1fr;
                     }
                     .settings-panel, .result-panel {
-                        padding: 12px;
+                        padding: 16px 12px;
+                        width: 100% !important;
+                        box-sizing: border-box !important;
+                        min-width: 0 !important;
                     }
                     .info-item {
-                        padding: 8px 10px;
+                        padding: 8px 12px;
                     }
                     .result-header {
                         flex-direction: column;
@@ -1423,20 +1447,58 @@ const TrafficSetupPage = () => {
                     }
                     .result-actions {
                         width: 100%;
-                        justify-content: space-between;
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 8px;
                     }
                     .action-btn {
-                        flex: 1;
                         justify-content: center;
-                        padding: 8px 4px;
-                        font-size: 11px;
+                        padding: 10px 4px;
+                        font-size: 12px;
+                    }
+                    .action-btn:last-child {
+                        grid-column: span 2;
                     }
                     .protocol-tabs {
                         flex-wrap: wrap;
+                        width: 100%;
                     }
                     .tab-item {
                         padding: 8px 4px;
+                        font-size: 11px;
+                        white-space: normal;
+                        word-break: break-word;
+                        height: auto;
+                        min-height: 44px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        line-height: 1.2;
+                    }
+                }
+
+                @media (max-width: 400px) {
+                    .settings-panel, .result-panel {
+                        padding: 16px 10px;
+                        margin-left: 0;
+                        margin-right: 0;
+                        width: 100%;
+                    }
+                    .main-responsive-container {
+                        padding: 0 4px;
+                    }
+                    .action-btn {
+                        font-size: 11px;
+                        gap: 4px;
+                    }
+                    .info-item {
+                        padding: 8px 10px;
+                    }
+                    .info-label {
                         font-size: 12px;
+                    }
+                    .info-value {
+                        font-size: 13px;
                     }
                 }
             ` }} />

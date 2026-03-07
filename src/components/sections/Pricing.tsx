@@ -15,6 +15,9 @@ const Pricing = () => {
     const isRecharge = searchParams.get('recharge') === 'true';
     const [isLoading, setIsLoading] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [promoCode, setPromoCode] = useState("");
+    const [isValidatingPromo, setIsValidatingPromo] = useState(false);
+    const [appliedDiscount, setAppliedDiscount] = useState<number | null>(null);
 
     const getPricing = (gb: number) => {
         let pricePerGb = 1.00; // Fixed at $1.00 per GB
@@ -37,6 +40,81 @@ const Pricing = () => {
             }
         }
     }, [isRecharge]);
+
+    // Handle Promo Code Application
+    const handleApplyPromo = async () => {
+        if (!promoCode || promoCode.length < 3) {
+            setAppliedDiscount(null);
+            return;
+        }
+
+        setIsValidatingPromo(true);
+        try {
+            const token = localStorage.getItem('auth_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+            const currentBDT = (bandwidth * 1.00 * 125);
+
+            const response = await axios.get(`${apiUrl}/api/Payment/validate-promo`, {
+                params: {
+                    code: promoCode,
+                    packageId: bandwidth === 10 ? "res_10gb" : (bandwidth === 50 ? "res_50gb" : (bandwidth === 100 ? "res_100gb" : "custom")),
+                    amount: currentBDT
+                },
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.data && response.data.discountPercentage) {
+                setAppliedDiscount(response.data.discountPercentage);
+                toast.success(`Promo applied! ${response.data.discountPercentage}% discount`);
+            } else {
+                setAppliedDiscount(null);
+                toast.error("Invalid promo code");
+            }
+        } catch (error: any) {
+            setAppliedDiscount(null);
+            toast.error(error.response?.data?.message || "Invalid promo code");
+        } finally {
+            setIsValidatingPromo(false);
+        }
+    };
+
+    // Re-validate promo if bandwidth changes
+    React.useEffect(() => {
+        if (appliedDiscount && promoCode) {
+            const reValidate = async () => {
+                const token = localStorage.getItem('auth_token');
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+                const currentBDT = (bandwidth * 1.00 * 125);
+
+                try {
+                    const response = await axios.get(`${apiUrl}/api/Payment/validate-promo`, {
+                        params: {
+                            code: promoCode,
+                            packageId: bandwidth === 10 ? "res_10gb" : (bandwidth === 50 ? "res_50gb" : (bandwidth === 100 ? "res_100gb" : "custom")),
+                            amount: currentBDT
+                        },
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (!(response.data && response.data.discountPercentage)) {
+                        setAppliedDiscount(null);
+                        toast.error("Promo removed: Bandwidth requirement not met");
+                    }
+                } catch (error) {
+                    setAppliedDiscount(null);
+                    toast.error("Promo removed: Bandwidth requirement not met");
+                }
+            };
+            reValidate();
+        }
+    }, [bandwidth]);
+
+    // Auto-clear discount if code is removed
+    React.useEffect(() => {
+        if (!promoCode) {
+            setAppliedDiscount(null);
+        }
+    }, [promoCode]);
 
     const handleBuyNowClick = () => {
         const token = localStorage.getItem('auth_token');
@@ -64,7 +142,8 @@ const Pricing = () => {
             const response = await axios.post(`${apiUrl}/api/CryptoPayment/initialize`, {
                 orderId: orderId,
                 amount: amount,
-                quoteAssetId: "usd"
+                quoteAssetId: "usd",
+                promoCode: promoCode
             }, {
                 headers: {
                     'accept': '*/*',
@@ -114,7 +193,8 @@ const Pricing = () => {
                 customerCity: "Dhaka",
                 customerState: "Dhaka",
                 customerPostcode: "1212",
-                customerCountry: "BD"
+                customerCountry: "BD",
+                promoCode: promoCode
             }, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -442,6 +522,9 @@ const Pricing = () => {
                     opacity: 1;
                     transition: all 0.3s ease;
                 }
+                .logos-row img.binance-logo {
+                    height: 22px;
+                }
                 .logos-row img:hover {
                     transform: scale(1.1);
                 }
@@ -613,6 +696,119 @@ const Pricing = () => {
                 @keyframes spin-anim { to { transform: rotate(360deg); } }
                 @keyframes spin-anim-reverse { to { transform: rotate(-360deg); } }
 
+                /* Modern Promo Code Styles */
+                .promo-wrapper {
+                    margin-bottom: 32px;
+                    width: 100%;
+                    max-width: 500px;
+                }
+                .promo-input-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 6px;
+                    background: #f8f9fc;
+                    border: 2px solid #eaecf0;
+                    border-radius: 20px;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    position: relative;
+                }
+                .promo-input-group:focus-within {
+                    border-color: #0086FF;
+                    background: #ffffff;
+                    box-shadow: 0 8px 24px rgba(0, 134, 255, 0.08);
+                }
+                .promo-input-group.applied {
+                    border-color: #00b67a;
+                    background: rgba(0, 182, 122, 0.03);
+                }
+                .promo-icon-box {
+                    width: 44px;
+                    height: 44px;
+                    background: #ffffff;
+                    border-radius: 14px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #0086FF;
+                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+                }
+                .promo-input {
+                    flex: 1;
+                    background: transparent;
+                    border: none;
+                    outline: none;
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #041026;
+                    padding: 8px 4px;
+                    min-width: 0;
+                }
+                .promo-input::placeholder {
+                    color: #98a2b3;
+                    font-weight: 500;
+                }
+                .promo-btn {
+                    padding: 12px 24px;
+                    border-radius: 14px;
+                    font-size: 14px;
+                    font-weight: 800;
+                    border: none;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    white-space: nowrap;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .promo-btn.default {
+                    background: #0086FF;
+                    color: #ffffff;
+                }
+                .promo-btn.applied {
+                    background: #00b67a;
+                    color: #ffffff;
+                }
+                .promo-btn:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    filter: brightness(1.1);
+                }
+                .promo-btn:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+                @keyframes pulse-success {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.05); }
+                    100% { transform: scale(1); }
+                }
+                .promo-input-group.applied .promo-icon-box {
+                    animation: pulse-success 1s ease-in-out;
+                    color: #00b67a;
+                }
+
+                @media (max-width: 480px) {
+                    .promo-input-group {
+                        flex-direction: column;
+                        align-items: stretch;
+                        padding: 12px;
+                        gap: 16px;
+                    }
+                    .promo-icon-box {
+                        display: none;
+                    }
+                    .promo-input {
+                        text-align: center;
+                        padding: 4px;
+                        font-size: 18px;
+                    }
+                    .promo-btn {
+                        width: 100%;
+                        justify-content: center;
+                        padding: 14px;
+                    }
+                }
+
                 @media (max-width: 1024px) {
                     .grid-stats { grid-template-columns: repeat(2, 1fr); gap: 16px; }
                     .pricing-header h2 { font-size: 36px; }
@@ -708,22 +904,62 @@ const Pricing = () => {
                                             <span className="stat-label">Total Amount</span>
                                             <div className="stat-main-value">
                                                 <span className="del-price">${current.originalTotal}</span>
-                                                ${current.total}
+                                                {appliedDiscount ? (
+                                                    <span style={{ color: '#00b67a' }}>
+                                                        ${(parseFloat(current.total) * (1 - appliedDiscount / 100)).toFixed(2)}
+                                                    </span>
+                                                ) : `$${current.total}`}
                                             </div>
-                                            <div className="stat-sub-value" style={{ fontSize: '20px' }}>৳ {current.totalBDT} BDT</div>
+                                            <div className="stat-sub-value" style={{ fontSize: '20px' }}>
+                                                ৳ {appliedDiscount ? (parseFloat(current.totalBDT) * (1 - appliedDiscount / 100)).toFixed(2) : current.totalBDT} BDT
+                                            </div>
                                         </div>
 
                                         <div className="card-stat">
                                             <div className="stat-box-icon"><TrendingDown size={24} /></div>
                                             <span className="stat-label">Discount Applied</span>
-                                            <div style={{ margin: '8px 0' }}>
+                                            <div style={{ margin: '8px 0', display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
                                                 <span className="discounting">-{current.discount}% OFF</span>
+                                                {appliedDiscount && (
+                                                    <span className="discounting" style={{ backgroundColor: '#0086FF', fontSize: '12px' }}>
+                                                        + {appliedDiscount}% (Promo)
+                                                    </span>
+                                                )}
                                             </div>
-                                            <span style={{ fontSize: '13px', color: '#667085', fontWeight: '600' }}>Member Pricing</span>
+                                            <span style={{ fontSize: '13px', color: appliedDiscount ? '#00b67a' : '#667085', fontWeight: '700' }}>
+                                                {appliedDiscount ? 'Promo Applied' : 'Member Pricing'}
+                                            </span>
                                         </div>
                                     </div>
 
                                     <div className="final-cta-area">
+                                        <div className="promo-wrapper">
+                                            <div className={`promo-input-group ${appliedDiscount ? 'applied' : ''}`}>
+                                                <div className="promo-icon-box">
+                                                    <Tag size={20} />
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Have a promo code?"
+                                                    value={promoCode}
+                                                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                                    className="promo-input"
+                                                />
+                                                <button
+                                                    onClick={handleApplyPromo}
+                                                    disabled={isValidatingPromo || !promoCode}
+                                                    className={`promo-btn ${appliedDiscount ? 'applied' : 'default'}`}
+                                                >
+                                                    {isValidatingPromo ? 'Validating...' : (appliedDiscount ? (
+                                                        <>
+                                                            <Check size={16} />
+                                                            Applied
+                                                        </>
+                                                    ) : 'Apply')}
+                                                </button>
+                                            </div>
+                                        </div>
+
                                         <button onClick={handleBuyNowClick} disabled={isLoading} className="btn-buy-premium">
                                             <ShoppingCart size={20} fill="white" /> {isLoading ? 'Processing...' : 'Buy Now'}
                                         </button>
@@ -731,9 +967,13 @@ const Pricing = () => {
                                         <div className="pay-logos">
                                             <div className="pay-logos-text">Securely Pay with</div>
                                             <div className="logos-row">
+                                                <img src="/binance-pay.png" alt="binance-pay" className="binance-logo" />
                                                 <img src="/Bitcoin-Logo.png" alt="bitcoin" />
                                                 <img src="/bKash-Logo.png" alt="bkash" />
                                                 <img src="/Nagad-Logo.png" alt="nagad" />
+                                                <img src="/rocket.png" alt="rocket" />
+                                                <img src="/visa.png" alt="visa" />
+                                                <img src="/mastercard.png" alt="mastercard" />
                                             </div>
                                         </div>
                                     </div>
@@ -775,7 +1015,7 @@ const Pricing = () => {
                                 <button className="pm-btn pm-card" style={{ padding: '24px', borderRadius: '24px', border: '1.5px solid #f2f4f7', marginBottom: '16px' }} onClick={handleCryptoPayment} disabled={isLoading}>
                                     <div className="option-icon"><Zap size={24} /></div>
                                     <div className="option-info">
-                                        <h4>Cryptocurrency</h4>
+                                        <h4>Cryptocurrency (Binance Pay)</h4>
                                         <p>Fast and anonymous. BTC, ETH, USDT & more.</p>
                                     </div>
                                     <Check size={20} color="#0086FF" style={{ marginLeft: 'auto', opacity: 0.5 }} />
@@ -784,7 +1024,7 @@ const Pricing = () => {
                                 <button className="pm-btn pm-card" style={{ padding: '24px', borderRadius: '24px', border: '1.5px solid #f2f4f7' }} onClick={handleFiatPayment} disabled={isLoading}>
                                     <div className="option-icon"><ShoppingCart size={24} /></div>
                                     <div className="option-info">
-                                        <h4>Fiat & Digital Wallet</h4>
+                                        <h4>Bkash, Nagad, Bank Payment</h4>
                                         <p>Secure local payment via bKash, Nagad or Cards.</p>
                                     </div>
                                     <Check size={20} color="#0086FF" style={{ marginLeft: 'auto', opacity: 0.5 }} />
