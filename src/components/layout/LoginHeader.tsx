@@ -7,7 +7,7 @@ const LoginHeader = () => {
 
     return (
         <header style={{
-            height: '60px',
+            height: '80px',
             display: 'flex',
             alignItems: 'center',
             backgroundColor: 'white',
@@ -17,7 +17,7 @@ const LoginHeader = () => {
             <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 {/* Logo */}
                 <Link href="/" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', textDecoration: 'none' }}>
-                    <img src="/logo.png" alt="Logo" style={{ height: '36px', width: 'auto' }} />
+                    <img src="/logo.png" alt="Logo" style={{ height: '55px', width: 'auto' }} />
                 </Link>
 
                 {/* Language Selector */}

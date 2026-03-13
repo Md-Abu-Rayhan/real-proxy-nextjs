@@ -100,6 +100,7 @@ const TrafficSetupPage = () => {
     const [lifetime, setLifetime] = useState(30);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [isResettingKey, setIsResettingKey] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
     const theme = {
         bg: '#F8FAFC',
@@ -171,51 +172,150 @@ const TrafficSetupPage = () => {
         // Fetch regions from API
         const fetchRegions = async () => {
             try {
+                // Check cache first
+                const CACHE_KEY = 'proxy_location_settings_v6';
+                const CACHE_TIME_KEY = 'proxy_location_settings_time';
+                const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+
+                const cachedData = localStorage.getItem(CACHE_KEY);
+                const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+                const now = Date.now();
+
+                const processData = (data: any) => {
+                    if (data && data.residential && data.residential.countries) {
+                        const countriesData = data.residential.countries;
+
+                        // Transform { "US": "United States", ... } to Array of Region
+                        let regionsArray: Region[] = Object.entries(countriesData).map(([code, name]: [string, any]) => ({
+                            country_name: name as string,
+                            country_code: code,
+                            domain: []
+                        }));
+
+                        // Sort countries by name
+                        regionsArray.sort((a, b) => a.country_name.localeCompare(b.country_name));
+
+                        // Add Global option at the top
+                        const globalRegion: Region = { country_name: 'Global', country_code: '', domain: [] };
+                        const finalRegions = [globalRegion, ...regionsArray];
+
+                        setRegions(finalRegions);
+
+                        const citiesRaw = data.residential.cities?.data || (Array.isArray(data.residential.cities) ? data.residential.cities : []);
+                        const cityToCountryMap = new Map<string, string>();
+                        
+                        if (citiesRaw && citiesRaw.length > 0) {
+                            const normalizedCities = citiesRaw.map((c: any) => {
+                                const cc = (c.country_code || c.countryCode || c.country_id || c.country || '').toString().trim();
+                                const cid = (c.id || c.name || '').toString().toLowerCase();
+                                
+                                if (cc && cc.toUpperCase() !== 'N/A' && cid) {
+                                    cityToCountryMap.set(cid, cc.toUpperCase());
+                                }
+                                
+                                return {
+                                    id: c.id || c.name,
+                                    name: c.name,
+                                    country_code: cc
+                                };
+                            });
+                            setAllCitiesData(normalizedCities);
+                        }
+
+                        // List of US states for fallback
+                        const usStates = new Set(['alabama', 'alaska', 'arizona', 'arkansas', 'calaware', 'california', 'colorado', 'connecticut', 'delaware', 'florida', 'georgia', 'hawaii', 'idaho', 'illinois', 'indiana', 'iowa', 'kansas', 'kentucky', 'louisiana', 'maine', 'maryland', 'massachusetts', 'michigan', 'minnesota', 'mississippi', 'missouri', 'montana', 'nebraska', 'nevada', 'new.hampshire', 'new.jersey', 'new.mexico', 'new.york', 'north.carolina', 'north.dakota', 'ohio', 'oklahoma', 'oregon', 'pennsylvania', 'rhode.island', 'south.carolina', 'south.dakota', 'tennessee', 'texas', 'utah', 'vermont', 'virginia', 'washington', 'west.virginia', 'wisconsin', 'wyoming']);
+
+                        const regionsRaw = data.residential.regions?.data || (Array.isArray(data.residential.regions) ? data.residential.regions : data.residential.regions || []);
+                        if (regionsRaw) {
+                            let normalizedRegions: SubRegion[] = [];
+                            if (Array.isArray(regionsRaw)) {
+                                normalizedRegions = regionsRaw.map((r: any) => {
+                                    const id = (r.id || r.name || '').toString().toLowerCase();
+                                    let cc = (r.country_code || r.countryCode || r.country_id || r.country || '').toString().toUpperCase();
+                                    
+                                    // Fallback 1: US States
+                                    if (!cc || cc === 'N/A') {
+                                        if (usStates.has(id)) cc = 'US';
+                                        else if (id.includes('california') || id.includes('texas') || id.includes('florida') || id.includes('new.york')) cc = 'US';
+                                    }
+                                    
+                                    // Fallback 2: Match with current city mapping
+                                    if (!cc || cc === 'N/A') {
+                                        if (cityToCountryMap.has(id)) {
+                                            cc = cityToCountryMap.get(id)!;
+                                        }
+                                    }
+                                    
+                                    // Fallback 3: Prefix split logic
+                                    if (!cc || cc === 'N/A') {
+                                        const prefix = id.split(/[-._]/)[0];
+                                        if (prefix.length === 2 && prefix !== 'st') {
+                                            cc = prefix.toUpperCase();
+                                        }
+                                    }
+
+                                    return {
+                                        id: r.id || r.name || '',
+                                        name: r.name || '',
+                                        country_code: cc
+                                    };
+                                });
+                            } else if (typeof regionsRaw === 'object') {
+                                normalizedRegions = Object.entries(regionsRaw).map(([id, name]) => {
+                                    const rid = id.toLowerCase();
+                                    let rcc = rid.split(/[-._]/)[0].toUpperCase();
+                                    
+                                    if (usStates.has(rid)) rcc = 'US';
+                                    else if (cityToCountryMap.has(rid)) rcc = cityToCountryMap.get(rid)!;
+
+                                    return {
+                                        id: id,
+                                        name: name as string,
+                                        country_code: rcc
+                                    };
+                                });
+                            }
+                            setAllSubRegionsData(normalizedRegions);
+                        }
+
+                        if (data.residential.isp) {
+                            const ispData = data.residential.isp;
+                            const ispArray: ISP[] = Object.entries(ispData).map(([name, detail]: [string, any]) => ({
+                                name: name,
+                                value: detail.value,
+                                country_code: detail.countryCode
+                            }));
+                            setAllIspsData(ispArray);
+                        }
+
+                        // Set default to Global
+                        setSelectedCountry(globalRegion);
+                    }
+                };
+
+                if (cachedData && cachedTime && (now - parseInt(cachedTime) < CACHE_EXPIRY)) {
+                    try {
+                        const parsed = JSON.parse(cachedData);
+                        processData(parsed);
+                        setIsRegionsLoading(false);
+                        return;
+                    } catch (e) {
+                        console.error('Error parsing cached location data');
+                    }
+                }
+
                 const response = await axios.get('https://api.realproxy.net/api/Proxy/settings', {
                     headers: {
                         'accept': '*/*'
                     }
                 });
 
-                if (response.data && response.data.data && response.data.data.residential && response.data.data.residential.countries) {
-                    const countriesData = response.data.data.residential.countries;
+                if (response.data && response.data.data) {
+                    processData(response.data.data);
 
-                    // Transform { "US": "United States", ... } to Array of Region
-                    let regionsArray: Region[] = Object.entries(countriesData).map(([code, name]: [string, any]) => ({
-                        country_name: name as string,
-                        country_code: code,
-                        domain: []
-                    }));
-
-                    // Sort countries by name
-                    regionsArray.sort((a, b) => a.country_name.localeCompare(b.country_name));
-
-                    // Add Global option at the top (as it's often preferred for (ALL) Global)
-                    const globalRegion: Region = { country_name: 'Global', country_code: '', domain: [] };
-                    const finalRegions = [globalRegion, ...regionsArray];
-
-                    setRegions(finalRegions);
-
-                    if (response.data.data.residential.cities && response.data.data.residential.cities.data) {
-                        setAllCitiesData(response.data.data.residential.cities.data);
-                    }
-
-                    if (response.data.data.residential.regions && response.data.data.residential.regions.data) {
-                        setAllSubRegionsData(response.data.data.residential.regions.data);
-                    }
-
-                    if (response.data.data.residential.isp) {
-                        const ispData = response.data.data.residential.isp;
-                        const ispArray: ISP[] = Object.entries(ispData).map(([name, detail]: [string, any]) => ({
-                            name: name,
-                            value: detail.value,
-                            country_code: detail.countryCode
-                        }));
-                        setAllIspsData(ispArray);
-                    }
-
-                    // Set default to Global
-                    setSelectedCountry(globalRegion);
+                    // Save to cache
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(response.data.data));
+                    localStorage.setItem(CACHE_TIME_KEY, now.toString());
                 }
             } catch (error: any) {
                 console.error('Error fetching regions:', error);
@@ -225,11 +325,9 @@ const TrafficSetupPage = () => {
             }
         };
 
-        fetchProxyInfo().then(() => {
-            // proxyInfo is not yet in state here because setState is async,
-            // so we read it directly from the API response inside fetchProxyInfo.
-        });
+        fetchProxyInfo();
         fetchRegions();
+        setIsMounted(true);
     }, [router]);
 
     const handleResetProxyKey = async () => {
@@ -297,10 +395,12 @@ const TrafficSetupPage = () => {
                     city => city.country_code && city.country_code.toLowerCase() === countryCode
                 );
 
-                // Sort cities by name
-                filteredCities.sort((a, b) => a.name.localeCompare(b.name));
+                // Sort and deduplicate cities by name
+                const uniqueCities = Array.from(new Set(filteredCities.map(c => c.name)))
+                    .map(name => filteredCities.find(c => c.name === name)!)
+                    .sort((a, b) => a.name.localeCompare(b.name));
 
-                setCities(filteredCities);
+                setCities(uniqueCities);
                 setSelectedCity(null); // Reset selection when country changes
             } catch (error) {
                 console.error('Error filtering cities:', error);
@@ -326,14 +426,34 @@ const TrafficSetupPage = () => {
             setIsSubRegionsLoading(true);
             try {
                 const countryCode = selectedCountry.country_code.toLowerCase();
-                // Attempt to filter by country_code if it exists in data, otherwise show all
+                if (!countryCode) {
+                    setSubRegions([]);
+                    return;
+                }
+
+                // Filter by country_code
                 const filteredRegions = allSubRegionsData.filter(
                     region => {
-                        const regionCountryCode = region.country_code;
-                        return !regionCountryCode || regionCountryCode.toLowerCase() === countryCode;
+                        const regionCC = region.country_code ? region.country_code.toLowerCase() : '';
+                        const regionId = region.id ? region.id.toLowerCase() : '';
+                        
+                        // 1. Direct country code match
+                        if (regionCC === countryCode) return true;
+                        
+                        // 2. ID prefix match (e.g. "us-alabama")
+                        if (regionId.startsWith(`${countryCode}-`) || 
+                            regionId.startsWith(`${countryCode}.`) || 
+                            regionId.startsWith(`${countryCode}_`)) return true;
+
+                        // 3. Fallback: If region ID is exactly the country code
+                        if (regionId === countryCode) return true;
+
+                        return false;
                     }
                 );
 
+                console.log(`Filtered ${filteredRegions.length} regions for ${countryCode}`);
+                
                 const sortedRegions = [...filteredRegions].sort((a, b) => a.name.localeCompare(b.name));
                 setSubRegions(sortedRegions);
                 setSelectedSubRegion(null);
@@ -461,7 +581,7 @@ const TrafficSetupPage = () => {
     const cityPart = selectedCity ? `_city-${selectedCity.name.toLowerCase().replace(/\s+/g, '.')}` : '';
     const regionPart = selectedSubRegion ? `_region-${selectedSubRegion.name.toLowerCase().replace(/\s+/g, '.')}` : '';
 
-    const generatedList = Array.from({ length: Math.min(Math.max(1, amount), 50) }, (_, i) => {
+    const generatedList = isMounted ? Array.from({ length: Math.min(Math.max(1, amount), 50) }, (_, i) => {
         const protocol = selectedProtocol.toLowerCase();
         const prefix = protocol === 'socks5' ? 'socks5: ' : 'http://';
         const port = protocol === 'socks5' ? '1002' : '1000';
@@ -476,7 +596,7 @@ const TrafficSetupPage = () => {
             const randomId = Math.random().toString(36).substring(2, 11).toUpperCase();
             return `${prefix}${selectedHostname}:${port}:${user}:${basePass}${passOptions}_session-${randomId}_lifetime-${lifetime}`;
         }
-    });
+    }) : [];
 
     const downloadProxies = () => {
         const blob = new Blob([generatedList.join('\n')], { type: 'text/plain' });
@@ -680,10 +800,10 @@ const TrafficSetupPage = () => {
                                                                 <div key={c.id} className="dropdown-option" onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     setSelectedCity(c);
-                                                                    setSelectedSubRegion(null); // Mutually exclusive
+                                                                    setSelectedSubRegion(null); // Mutual Reset: Clear Region
                                                                     setIsCityDropdownOpen(false);
                                                                     setCitySearchQuery('');
-                                                                    toast.success('City selected. Region targeting disabled.');
+                                                                    toast.success('City selected. Region reset.');
                                                                 }}>
                                                                     {c.name}
                                                                 </div>
@@ -716,10 +836,10 @@ const TrafficSetupPage = () => {
                                                                 <div key={s.id} className="dropdown-option" onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     setSelectedSubRegion(s);
-                                                                    setSelectedCity(null); // Mutually exclusive
+                                                                    setSelectedCity(null); // Mutual Reset: Clear City
                                                                     setIsSubRegionDropdownOpen(false);
                                                                     setSubRegionSearchQuery('');
-                                                                    toast.success('Region selected. City targeting disabled.');
+                                                                    toast.success('Region selected. City reset.');
                                                                 }}>
                                                                     {s.name}
                                                                 </div>
@@ -740,7 +860,7 @@ const TrafficSetupPage = () => {
                                         <div className="setting-fieldset">
                                             <label className="field-label">Type</label>
                                             <div className="protocol-tabs">
-                                            {['Sticky Session', 'Rotating'].map(t => (
+                                                {['Sticky Session', 'Rotating'].map(t => (
                                                     <button
                                                         key={t}
                                                         className={`tab-item ${selectedType === t ? 'active' : ''}`}

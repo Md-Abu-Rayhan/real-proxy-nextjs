@@ -111,7 +111,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 {/* Logo Area */}
                 <div className="sidebar-logo">
                     <Link href="/" style={{ textDecoration: 'none' }}>
-                        <img src="/logo.png" alt="Logo" style={{ height: '34px', width: 'auto' }} />
+                        <img src="/logo.png" alt="Logo" className="logo-img" />
                     </Link>
                     <button
                         className="sidebar-close-btn"
@@ -265,11 +265,25 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 }
 
                 .sidebar-logo {
-                    padding: 24px 20px;
+                    padding: 15px 20px;
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
                     overflow: hidden;
+                    min-height: 100px;
+                }
+
+                .logo-img {
+                    height: 75px;
+                    width: auto;
+                    transition: all 0.3s ease;
+                    display: block;
+                }
+
+                @media (max-width: 1024px) {
+                    .logo-img {
+                        height: 65px;
+                    }
                 }
 
                 .sidebar-logo img {
@@ -282,7 +296,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 }
 
                 .dashboard-sidebar.collapsed .sidebar-logo img {
-                    width: 40px !important;
+                    width: 60px !important;
                     height: auto !important;
                 }
 
