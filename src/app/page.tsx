@@ -15,7 +15,7 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main>
-      <PromoBanner />
+      {/* <PromoBanner /> */}
       <Navbar />
       <Hero />
       <Suspense fallback={<div className="container py-20 text-center">Loading pricing...</div>}>

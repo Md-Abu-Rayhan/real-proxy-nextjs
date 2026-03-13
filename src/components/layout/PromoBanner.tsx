@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 
 const PromoBanner = () => {
+    return null;
 
     const router = useRouter();
     const { t } = useLanguage();

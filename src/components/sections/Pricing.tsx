@@ -1038,7 +1038,9 @@ const Pricing = () => {
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <span style={{ fontSize: '14px', color: '#98a2b3', fontWeight: '1000' }}>Total Price</span>
-                                    <span style={{ fontSize: '18px', color: '#0086FF', fontWeight: '800' }}>৳{current.totalBDT}</span>
+                                    <span style={{ fontSize: '18px', color: '#0086FF', fontWeight: '800' }}>
+                                        ৳ {appliedDiscount ? (parseFloat(current.totalBDT) * (1 - appliedDiscount / 100)).toFixed(2) : current.totalBDT}
+                                    </span>
                                 </div>
                             </div>
                         </motion.div>
