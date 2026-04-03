@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
     Info,
     ChevronDown,
@@ -18,7 +18,8 @@ import {
     Check,
     Plus,
     Minus,
-    ArrowRight
+    ArrowRight,
+    Lock
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -61,6 +62,7 @@ const TrafficSetupPage = () => {
     const [proxyInfo, setProxyInfo] = useState<ProxyInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [residentialBalance, setResidentialBalance] = useState<number | null>(null);
+    const [residentialProxyKey, setResidentialProxyKey] = useState<string | null>(null);
     const [isBalanceLoading, setIsBalanceLoading] = useState(false);
     const [regions, setRegions] = useState<Region[]>([]);
     const [selectedCountry, setSelectedCountry] = useState<Region | null>(null);
@@ -94,6 +96,7 @@ const TrafficSetupPage = () => {
     // New Generator State
     const [selectedProtocol, setSelectedProtocol] = useState('HTTP');
     const [selectedFormat, setSelectedFormat] = useState('hostname:port:username:password');
+    const [isFormatDropdownOpen, setIsFormatDropdownOpen] = useState(false);
     const [selectedType, setSelectedType] = useState('Sticky Session');
     const [sessionType, setSessionType] = useState('Normal Session');
     const [amount, setAmount] = useState(1);
@@ -116,6 +119,7 @@ const TrafficSetupPage = () => {
     const subRegionDropdownRef = useRef<HTMLDivElement>(null);
     const cityDropdownRef = useRef<HTMLDivElement>(null);
     const ispDropdownRef = useRef<HTMLDivElement>(null);
+    const formatDropdownRef = useRef<HTMLDivElement>(null);
     const hostnameDropdownRef = useRef<HTMLDivElement>(null);
     const sessionTypeDropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
@@ -203,16 +207,16 @@ const TrafficSetupPage = () => {
 
                         const citiesRaw = data.residential.cities?.data || (Array.isArray(data.residential.cities) ? data.residential.cities : []);
                         const cityToCountryMap = new Map<string, string>();
-                        
+
                         if (citiesRaw && citiesRaw.length > 0) {
                             const normalizedCities = citiesRaw.map((c: any) => {
                                 const cc = (c.country_code || c.countryCode || c.country_id || c.country || '').toString().trim();
                                 const cid = (c.id || c.name || '').toString().toLowerCase();
-                                
+
                                 if (cc && cc.toUpperCase() !== 'N/A' && cid) {
                                     cityToCountryMap.set(cid, cc.toUpperCase());
                                 }
-                                
+
                                 return {
                                     id: c.id || c.name,
                                     name: c.name,
@@ -232,20 +236,20 @@ const TrafficSetupPage = () => {
                                 normalizedRegions = regionsRaw.map((r: any) => {
                                     const id = (r.id || r.name || '').toString().toLowerCase();
                                     let cc = (r.country_code || r.countryCode || r.country_id || r.country || '').toString().toUpperCase();
-                                    
+
                                     // Fallback 1: US States
                                     if (!cc || cc === 'N/A') {
                                         if (usStates.has(id)) cc = 'US';
                                         else if (id.includes('california') || id.includes('texas') || id.includes('florida') || id.includes('new.york')) cc = 'US';
                                     }
-                                    
+
                                     // Fallback 2: Match with current city mapping
                                     if (!cc || cc === 'N/A') {
                                         if (cityToCountryMap.has(id)) {
                                             cc = cityToCountryMap.get(id)!;
                                         }
                                     }
-                                    
+
                                     // Fallback 3: Prefix split logic
                                     if (!cc || cc === 'N/A') {
                                         const prefix = id.split(/[-._]/)[0];
@@ -264,7 +268,7 @@ const TrafficSetupPage = () => {
                                 normalizedRegions = Object.entries(regionsRaw).map(([id, name]) => {
                                     const rid = id.toLowerCase();
                                     let rcc = rid.split(/[-._]/)[0].toUpperCase();
-                                    
+
                                     if (usStates.has(rid)) rcc = 'US';
                                     else if (cityToCountryMap.has(rid)) rcc = cityToCountryMap.get(rid)!;
 
@@ -342,6 +346,7 @@ const TrafficSetupPage = () => {
             const newKey = res.data?.data?.products?.residential?.proxy_key;
             if (newKey && proxyInfo) {
                 setProxyInfo({ ...proxyInfo, proxyPassword: newKey });
+                setResidentialProxyKey(newKey);
                 toast.success('Proxy key reset successfully!');
             } else {
                 toast.error('Reset succeeded but could not read new key.');
@@ -362,8 +367,11 @@ const TrafficSetupPage = () => {
         setIsBalanceLoading(true);
         try {
             const res = await axios.get(`https://api.realproxy.net/api/Proxy/sub_user?username=${user}`);
-            const balance = res.data?.data?.products?.residential?.balance ?? null;
-            setResidentialBalance(balance);
+            const residential = res.data?.data?.products?.residential;
+            setResidentialBalance(residential?.balance ?? null);
+            if (residential?.proxy_key) {
+                setResidentialProxyKey(residential.proxy_key);
+            }
         } catch (error) {
             console.error('Error fetching residential balance:', error);
             toast.error('Failed to refresh balance.');
@@ -436,13 +444,13 @@ const TrafficSetupPage = () => {
                     region => {
                         const regionCC = region.country_code ? region.country_code.toLowerCase() : '';
                         const regionId = region.id ? region.id.toLowerCase() : '';
-                        
+
                         // 1. Direct country code match
                         if (regionCC === countryCode) return true;
-                        
+
                         // 2. ID prefix match (e.g. "us-alabama")
-                        if (regionId.startsWith(`${countryCode}-`) || 
-                            regionId.startsWith(`${countryCode}.`) || 
+                        if (regionId.startsWith(`${countryCode}-`) ||
+                            regionId.startsWith(`${countryCode}.`) ||
                             regionId.startsWith(`${countryCode}_`)) return true;
 
                         // 3. Fallback: If region ID is exactly the country code
@@ -453,7 +461,7 @@ const TrafficSetupPage = () => {
                 );
 
                 console.log(`Filtered ${filteredRegions.length} regions for ${countryCode}`);
-                
+
                 const sortedRegions = [...filteredRegions].sort((a, b) => a.name.localeCompare(b.name));
                 setSubRegions(sortedRegions);
                 setSelectedSubRegion(null);
@@ -520,6 +528,9 @@ const TrafficSetupPage = () => {
             if (sessionTypeDropdownRef.current && !sessionTypeDropdownRef.current.contains(event.target as Node)) {
                 setIsSessionTypeDropdownOpen(false);
             }
+            if (formatDropdownRef.current && !formatDropdownRef.current.contains(event.target as Node)) {
+                setIsFormatDropdownOpen(false);
+            }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
@@ -581,22 +592,35 @@ const TrafficSetupPage = () => {
     const cityPart = selectedCity ? `_city-${selectedCity.name.toLowerCase().replace(/\s+/g, '.')}` : '';
     const regionPart = selectedSubRegion ? `_region-${selectedSubRegion.name.toLowerCase().replace(/\s+/g, '.')}` : '';
 
-    const generatedList = isMounted ? Array.from({ length: Math.min(Math.max(1, amount), 50) }, (_, i) => {
+    const generatedPasswords = useMemo(() => {
+        if (!isMounted) return [];
+        return Array.from({ length: Math.min(Math.max(1, amount), 50) }, () => {
+            const basePass = residentialProxyKey || proxyInfo?.proxyPassword || 'pass';
+            let finalPass = basePass + countryPart + regionPart + cityPart;
+            if (selectedType !== 'Rotating') {
+                const randomId = Math.random().toString(36).substring(2, 11).toUpperCase();
+                finalPass += `_hardsession-${randomId}_lifetime-${lifetime}`;
+            }
+            return finalPass;
+        });
+    }, [isMounted, amount, residentialProxyKey, proxyInfo?.proxyPassword, countryPart, regionPart, cityPart, selectedType, lifetime]);
+
+    const generatedList = generatedPasswords.map((finalPass) => {
         const protocol = selectedProtocol.toLowerCase();
-        const prefix = protocol === 'socks5' ? 'socks5: ' : 'http://';
+        const prefix = protocol === 'socks5' ? '' : '';
         const port = protocol === 'socks5' ? '1002' : '1000';
         const user = proxyInfo?.proxyAccount || 'user';
-        const basePass = proxyInfo?.proxyPassword || 'pass';
 
-        let passOptions = `${countryPart}${regionPart}${cityPart}`;
-
-        if (selectedType === 'Rotating') {
-            return `${prefix}${selectedHostname}:${port}:${user}:${basePass}${passOptions}`;
+        if (selectedFormat === 'username:password@hostname:port') {
+            return `${prefix}${user}:${finalPass}@${selectedHostname}:${port}`;
+        } else if (selectedFormat === 'username:password:hostname:port') {
+            return `${prefix}${user}:${finalPass}:${selectedHostname}:${port}`;
         } else {
-            const randomId = Math.random().toString(36).substring(2, 11).toUpperCase();
-            return `${prefix}${selectedHostname}:${port}:${user}:${basePass}${passOptions}_session-${randomId}_lifetime-${lifetime}`;
+            return `${prefix}${selectedHostname}:${port}:${user}:${finalPass}`;
         }
-    }) : [];
+    });
+
+    const topBarPassword = generatedPasswords.length > 0 ? generatedPasswords[0] : (residentialProxyKey || proxyInfo?.proxyPassword ? `${residentialProxyKey || proxyInfo?.proxyPassword}${countryPart}${regionPart}${cityPart}` : '...');
 
     const downloadProxies = () => {
         const blob = new Blob([generatedList.join('\n')], { type: 'text/plain' });
@@ -677,11 +701,12 @@ const TrafficSetupPage = () => {
                                         </div>
                                         <div className="info-item">
                                             <span className="info-label">Password:</span>
-                                            <span className="info-value">{proxyInfo ? `${proxyInfo.proxyPassword}${countryPart}${regionPart}${cityPart}` : '...'}</span>
+                                            <span className="info-value">{topBarPassword}</span>
                                             <button className="info-copy-btn" onClick={() => {
-                                                const textToCopy = proxyInfo ? `${proxyInfo.proxyPassword}${countryPart}${regionPart}${cityPart}` : '';
-                                                navigator.clipboard.writeText(textToCopy);
-                                                toast.success('Copied!');
+                                                if (topBarPassword !== '...') {
+                                                    navigator.clipboard.writeText(topBarPassword);
+                                                    toast.success('Copied!');
+                                                }
                                             }}>
                                                 <Copy size={13} strokeWidth={2.5} />
                                             </button>
@@ -714,21 +739,58 @@ const TrafficSetupPage = () => {
 
                                     <div className="settings-panel">
                                         <div className="panel-header">
-                                            <h3 className="panel-title">Protocol Settings</h3>
+                                            <h3 className="panel-title">Format Settings</h3>
+                                            <p className="panel-desc">Select the format you want to receive your proxies in.</p>
                                         </div>
 
                                         <div className="setting-fieldset">
-                                            <label className="field-label">Protocol</label>
+                                            <label className="field-label">
+                                                Protocol
+                                                <Info size={14} className="info-icon" />
+                                            </label>
                                             <div className="protocol-tabs">
                                                 {['HTTP', 'SOCKS5'].map(t => (
                                                     <button
                                                         key={t}
                                                         className={`tab-item ${selectedProtocol.toUpperCase() === t ? 'active' : ''}`}
                                                         onClick={() => setSelectedProtocol(t)}
+                                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                                                     >
+                                                        {t === 'HTTP' && <Globe size={14} />}
+                                                        {t === 'SOCKS5' && <Lock size={14} />}
                                                         {t}
                                                     </button>
                                                 ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="setting-fieldset" style={{ marginTop: '20px' }}>
+                                            <label className="field-label">Format</label>
+                                            <div className="dark-dropdown" onClick={() => setIsFormatDropdownOpen(!isFormatDropdownOpen)} ref={formatDropdownRef}>
+                                                <div className="dropdown-val">
+                                                    <span>{selectedFormat}</span>
+                                                </div>
+                                                <ChevronDown size={16} color="#94A3B8" style={{ transform: isFormatDropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
+
+                                                {isFormatDropdownOpen && (
+                                                    <div className="dropdown-flyout custom-scrollbar">
+                                                        {[
+                                                            'hostname:port:username:password',
+                                                            'username:password@hostname:port',
+                                                            'username:password:hostname:port'
+                                                        ].map(fmt => (
+                                                            <div
+                                                                key={fmt}
+                                                                className={`dropdown-option ${selectedFormat === fmt ? 'active' : ''}`}
+                                                                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                                                onClick={(e) => { e.stopPropagation(); setSelectedFormat(fmt); setIsFormatDropdownOpen(false); }}
+                                                            >
+                                                                <span>{fmt}</span>
+                                                                {selectedFormat === fmt && <Check size={14} color="#3B82F6" />}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -878,7 +940,7 @@ const TrafficSetupPage = () => {
                                         {selectedType === 'Sticky Session' && (
                                             <div className="split-fields">
                                                 <div className="setting-fieldset">
-                                                    <label className="field-label">Amount</label>
+                                                    <label className="field-label">Proxy Count</label>
                                                     <input
                                                         type="number"
                                                         className="dark-input"
@@ -887,7 +949,7 @@ const TrafficSetupPage = () => {
                                                     />
                                                 </div>
                                                 <div className="setting-fieldset">
-                                                    <label className="field-label">Lifetime (min)</label>
+                                                    <label className="field-label">Proxy Sticky Lifetime Set</label>
                                                     <input
                                                         type="number"
                                                         className="dark-input"
@@ -913,7 +975,7 @@ const TrafficSetupPage = () => {
                                                     <Download size={13} /> Download
                                                 </button>
                                                 <button className="action-btn" onClick={() => setShowResetConfirm(true)} style={{ color: '#cf1322' }}>
-                                                    <RefreshCw size={13} /> Reset Proxy Key
+                                                    <RefreshCw size={13} /> Reset Proxy Password
                                                 </button>
                                             </div>
                                         </div>
@@ -947,7 +1009,7 @@ const TrafficSetupPage = () => {
                         <div style={{ width: '56px', height: '56px', background: '#fff1f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                             <RefreshCw size={26} color="#cf1322" strokeWidth={2.5} />
                         </div>
-                        <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1D2129', marginBottom: '12px' }}>Reset Proxy Key?</h3>
+                        <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1D2129', marginBottom: '12px' }}>RESET PROXY PASSWORD?</h3>
                         <p style={{ fontSize: '14px', color: '#64748B', lineHeight: '1.6', marginBottom: '28px' }}>
                             If you reset your proxy key, your current password will <strong>stop working immediately</strong>. All existing proxy connections using this key will be disconnected. Are you sure you want to continue?
                         </p>
