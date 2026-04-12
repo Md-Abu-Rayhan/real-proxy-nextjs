@@ -42,7 +42,7 @@ export default function Home() {
                   window.location.href = '/dashboard/traffic-setup';
                 }
               } else {
-                window.location.href = '/register';
+                window.location.href = '/signup';
               }
             }}
             className="cta-btn"

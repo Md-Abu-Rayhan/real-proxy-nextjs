@@ -38,7 +38,7 @@ const LoginPage = () => {
 
         setIsLoading(true);
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
             const response = await axios.post(`${apiUrl}/api/Auth/login`, {
                 email: formData.email,
                 password: formData.password
@@ -220,7 +220,7 @@ const LoginPage = () => {
                                         {t.login.forgotPassword}
                                     </Link>
                                     <div style={{ fontSize: '14px', color: '#666' }}>
-                                        {t.login.noAccount} <Link href="/register" style={{ color: '#0086FF', fontWeight: '500' }}>{t.nav.signup}</Link>
+                                        {t.login.noAccount} <Link href="/signup" style={{ color: '#0086FF', fontWeight: '500' }}>{t.nav.signup}</Link>
                                     </div>
                                 </div>
                             </form>

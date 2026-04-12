@@ -6,12 +6,16 @@ import { Eye, EyeOff, Globe, CheckCircle2, Loader2 } from 'lucide-react';
 import LoginHeader from '@/components/layout/LoginHeader';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
+import { useEffect } from 'react';
 
-const RegisterPage = () => {
+import { Suspense } from 'react';
+
+const RegisterPageContent = () => {
     const { t } = useLanguage();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -22,6 +26,23 @@ const RegisterPage = () => {
         invitationCode: '',
         agree: false
     });
+
+    // Redirect if already logged in and capture ref from URL
+    useEffect(() => {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            router.push('/dashboard/traffic-setup');
+            return;
+        }
+
+        const refCode = searchParams.get('ref');
+        if (refCode) {
+            setFormData(prev => ({
+                ...prev,
+                invitationCode: refCode
+            }));
+        }
+    }, [searchParams, router]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
@@ -52,7 +73,7 @@ const RegisterPage = () => {
 
         setIsLoading(true);
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
             const response = await axios.post(`${apiUrl}/api/Auth/register`, {
                 email: formData.email,
                 password: formData.password,
@@ -87,7 +108,7 @@ const RegisterPage = () => {
                         <div>
                             <h1 style={{ fontSize: '42px', color: '#163561', marginBottom: '12px', lineHeight: '1.2' }}>
                                 {t.register.startJourney} <br />
-                                <span style={{ color: '#0086FF' }}>Real 5Proxy</span>
+                                <span style={{ color: '#0086FF' }}>Real Proxy</span>
                             </h1>
                             <p style={{ fontSize: '18px', color: '#666', lineHeight: '1.6' }}>
                                 {t.register.joinUsers}
@@ -230,6 +251,7 @@ const RegisterPage = () => {
                                 <input
                                     type="text"
                                     name="invitationCode"
+                                    value={formData.invitationCode}
                                     placeholder={t.register.invitationCodePlaceholder}
                                     style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', fontSize: '15px' }}
                                     onChange={handleChange}
@@ -313,6 +335,14 @@ const RegisterPage = () => {
                 }
             `}</style>
         </main>
+    );
+};
+
+const RegisterPage = () => {
+    return (
+        <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader2 className="animate-spin" size={48} color="#0086FF" /></div>}>
+            <RegisterPageContent />
+        </Suspense>
     );
 };
 

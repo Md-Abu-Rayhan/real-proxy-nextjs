@@ -29,7 +29,7 @@ const CheckoutSection = () => {
 
         setIsLoading(true);
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
 
             // Send only necessary data to the backend
             const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {

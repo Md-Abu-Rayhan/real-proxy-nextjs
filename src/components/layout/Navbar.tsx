@@ -52,7 +52,7 @@ const Navbar = () => {
                 {/* Logo */}
                 <Link href="/" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', textDecoration: 'none' }}>
                     <img src="/logo.png" alt="Logo" style={{ height: isScrolled ? '70px' : '95px', width: 'auto', transition: 'all 0.3s ease' }} />
-                </Link>     
+                </Link>
 
                 {/* Desktop Menu Items */}
                 <div className="desktop-menu">
@@ -74,7 +74,7 @@ const Navbar = () => {
                     ) : (
                         <>
                             <Link href="/login" className="nav-link-login" style={{ color: '#163561', fontWeight: '600', fontSize: '15px', padding: '0 10px' }}>{t.nav.login}</Link>
-                            <Link href="/register" className="btn-primary" style={{ padding: '8px 24px', fontSize: '14px', borderRadius: '8px' }}>
+                            <Link href="/signup" className="btn-primary" style={{ padding: '8px 24px', fontSize: '14px', borderRadius: '8px' }}>
                                 {t.nav.signup}
                             </Link>
                         </>
@@ -134,7 +134,7 @@ const Navbar = () => {
                                     <Link href="/login" className="btn-outline" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
                                         {t.nav.login}
                                     </Link>
-                                    <Link href="/register" className="btn-primary" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Link href="/signup" className="btn-primary" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
                                         {t.nav.signup}
                                     </Link>
                                 </div>

@@ -24,7 +24,7 @@ const ResidentialPricing = () => {
 
         setIsLoading(index);
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
 
             // Map plan string to package ID
             let packageId = "res_10gb";

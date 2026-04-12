@@ -51,7 +51,7 @@ const Pricing = () => {
         setIsValidatingPromo(true);
         try {
             const token = localStorage.getItem('auth_token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
             const currentBDT = (bandwidth * 1.00 * 125);
 
             const response = await axios.get(`${apiUrl}/api/Payment/validate-promo`, {
@@ -83,7 +83,7 @@ const Pricing = () => {
         if (appliedDiscount && promoCode) {
             const reValidate = async () => {
                 const token = localStorage.getItem('auth_token');
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
                 const currentBDT = (bandwidth * 1.00 * 125);
 
                 try {
@@ -138,7 +138,7 @@ const Pricing = () => {
         try {
             const orderId = `CR${Date.now()}`.substring(0, 16);
             const amount = parseFloat(current.total);
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
             const response = await axios.post(`${apiUrl}/api/CryptoPayment/initialize`, {
                 orderId: orderId,
                 amount: amount,
@@ -180,7 +180,7 @@ const Pricing = () => {
             else if (bandwidth === 50) packageId = "res_50gb";
             else if (bandwidth === 100) packageId = "res_100gb";
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
             const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {
                 packageId: packageId,
                 amount: Number(current.totalBDT),

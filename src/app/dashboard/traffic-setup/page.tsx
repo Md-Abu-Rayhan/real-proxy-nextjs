@@ -24,6 +24,8 @@ import {
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import LoadingDashboard from "@/components/common/LoadingDashboard";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ProxyInfo {
     proxyAccount: string;
@@ -134,7 +136,7 @@ const TrafficSetupPage = () => {
         // Fetch proxy info from API
         const fetchProxyInfo = async () => {
             try {
-                const response = await axios.get('https://api.realproxy.net/api/Auth/get-proxy-info', {
+                const response = await axios.get('http://localhost:5157/api/Auth/get-proxy-info', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'accept': '*/*'
@@ -163,7 +165,7 @@ const TrafficSetupPage = () => {
         const fetchResidentialBalance = async (username: string) => {
             setIsBalanceLoading(true);
             try {
-                const res = await axios.get(`https://api.realproxy.net/api/Proxy/sub_user?username=${username}`);
+                const res = await axios.get(`http://localhost:5157/api/Proxy/sub_user?username=${username}`);
                 const balance = res.data?.data?.products?.residential?.balance ?? null;
                 setResidentialBalance(balance);
             } catch (error) {
@@ -308,7 +310,7 @@ const TrafficSetupPage = () => {
                     }
                 }
 
-                const response = await axios.get('https://api.realproxy.net/api/Proxy/settings', {
+                const response = await axios.get('http://localhost:5157/api/Proxy/settings', {
                     headers: {
                         'accept': '*/*'
                     }
@@ -339,7 +341,7 @@ const TrafficSetupPage = () => {
         setIsResettingKey(true);
         try {
             const res = await axios.post(
-                'https://api.realproxy.net/api/Proxy/reset_auth_key',
+                'http://localhost:5157/api/Proxy/reset_auth_key',
                 { username: proxyInfo.proxyAccount },
                 { headers: { 'Content-Type': 'application/json' } }
             );
@@ -366,7 +368,7 @@ const TrafficSetupPage = () => {
         if (!user) return;
         setIsBalanceLoading(true);
         try {
-            const res = await axios.get(`https://api.realproxy.net/api/Proxy/sub_user?username=${user}`);
+            const res = await axios.get(`http://localhost:5157/api/Proxy/sub_user?username=${user}`);
             const residential = res.data?.data?.products?.residential;
             setResidentialBalance(residential?.balance ?? null);
             if (residential?.proxy_key) {
@@ -633,6 +635,10 @@ const TrafficSetupPage = () => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     };
+
+    if (isLoading) {
+        return <LoadingDashboard />;
+    }
 
     return (
         <div className="main-responsive-container">

@@ -24,7 +24,7 @@ const PaymentSuccessContent = () => {
 
             try {
                 const token = localStorage.getItem('auth_token');
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.realproxy.net';
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
 
                 let response;
                 if (orderId) {

@@ -25,12 +25,13 @@ import {
     Menu,
     X
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { triggerContactModal } from '@/components/ui/ContactModal';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     const [expandedGroups, setExpandedGroups] = useState<string[]>(['SOCKSS PROXIES', 'TRAFFIC PLANS', 'REFERRAL', 'TOOL', 'Promotion Plan']);
     const router = useRouter();
+    const pathname = usePathname();
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -85,13 +86,13 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         {
             group: 'TRAFFIC PLANS',
             items: [
-                { name: 'Residential Proxies', icon: <RefreshCw size={18} />, path: '/dashboard/traffic-setup', active: true }
+                { name: 'Residential Proxies', icon: <RefreshCw size={18} />, path: '/dashboard/traffic-setup' }
             ]
         },
         {
             group: 'REFERRAL',
             items: [
-                { name: 'Affiliate Program', icon: <Users size={18} />, path: '#' }
+                { name: 'Affiliate Program', icon: <Users size={18} />, path: '/dashboard/affiliate' }
             ]
         },
     ];
@@ -135,30 +136,34 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                                         {item.group as string}
                                         {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                                     </div>
-                                    {isExpanded && (item as any).items.map((subItem: any, sIdx: number) => (
-                                        <Link
-                                            key={sIdx}
-                                            href={subItem.path}
-                                            className={`nav-item ${subItem.active ? 'active' : ''}`}
-                                            onClick={() => { if (windowWidth < 1024) setIsSidebarOpen(false); }}
-                                        >
-                                            <span className="nav-icon">{subItem.icon}</span>
-                                            <span className="nav-text">{subItem.name}</span>
-                                            {subItem.badge && (
-                                                <span className="nav-badge" style={{ backgroundColor: subItem.badgeColor }}>
-                                                    {subItem.badge}
-                                                </span>
-                                            )}
-                                        </Link>
-                                    ))}
+                                    {isExpanded && (item as any).items.map((subItem: any, sIdx: number) => {
+                                        const isActive = pathname === subItem.path || pathname?.startsWith(subItem.path + '/');
+                                        return (
+                                            <Link
+                                                key={sIdx}
+                                                href={subItem.path}
+                                                className={`nav-item ${isActive ? 'active' : ''}`}
+                                                onClick={() => { if (windowWidth < 1024) setIsSidebarOpen(false); }}
+                                            >
+                                                <span className="nav-icon">{subItem.icon}</span>
+                                                <span className="nav-text">{subItem.name}</span>
+                                                {subItem.badge && (
+                                                    <span className="nav-badge" style={{ backgroundColor: subItem.badgeColor }}>
+                                                        {subItem.badge}
+                                                    </span>
+                                                )}
+                                            </Link>
+                                        );
+                                    })}
                                 </div>
                             );
                         } else {
+                            const isActive = pathname === item.path || pathname?.startsWith(item.path + '/');
                             return (
                                 <Link
                                     key={idx}
                                     href={item.path}
-                                    className="nav-item"
+                                    className={`nav-item ${isActive ? 'active' : ''}`}
                                     onClick={() => { if (windowWidth < 1024) setIsSidebarOpen(false); }}
                                 >
                                     <span className="nav-icon">{item.icon}</span>
@@ -196,7 +201,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
                     <div className="header-right">
                         <div className="header-actions">
-                            <RefreshCw size={20} className="header-icon" />
                             <HelpCircle size={20} className="header-icon" onClick={triggerContactModal} style={{ cursor: 'pointer' }} />
                             <Bell size={20} className="header-icon" />
                         </div>
