@@ -636,9 +636,8 @@ const TrafficSetupPage = () => {
         URL.revokeObjectURL(url);
     };
 
-    if (isLoading) {
-        return <LoadingDashboard />;
-    }
+    // Do not block the entire page render while loading — render lightweight
+    // skeletons in places so the page paints quickly and then hydrate data.
 
     return (
         <div className="main-responsive-container">
@@ -700,16 +699,16 @@ const TrafficSetupPage = () => {
                                     <div className="info-bar">
                                         <div className="info-item">
                                             <span className="info-label">Username:</span>
-                                            <span className="info-value">{proxyInfo?.proxyAccount || '...'}</span>
+                                            <span className="info-value">{isLoading ? <span className="skeleton skeleton-small" /> : (proxyInfo?.proxyAccount || '—')}</span>
                                             <button className="info-copy-btn" onClick={() => { navigator.clipboard.writeText(proxyInfo?.proxyAccount || ''); toast.success('Copied!'); }}>
                                                 <Copy size={13} strokeWidth={2.5} />
                                             </button>
                                         </div>
                                         <div className="info-item">
                                             <span className="info-label">Password:</span>
-                                            <span className="info-value">{topBarPassword}</span>
+                                            <span className="info-value">{isLoading ? <span className="skeleton skeleton-small" /> : topBarPassword}</span>
                                             <button className="info-copy-btn" onClick={() => {
-                                                if (topBarPassword !== '...') {
+                                                if (!isLoading && topBarPassword !== '...') {
                                                     navigator.clipboard.writeText(topBarPassword);
                                                     toast.success('Copied!');
                                                 }
@@ -980,19 +979,23 @@ const TrafficSetupPage = () => {
                                                 <button className="action-btn" onClick={downloadProxies}>
                                                     <Download size={13} /> Download
                                                 </button>
-                                                <button className="action-btn" onClick={() => setShowResetConfirm(true)} style={{ color: '#cf1322' }}>
+                                                <button className="action-btn" onClick={() => setShowResetConfirm(true)} style={{ color: '#cf1322' }} disabled={isLoading || isResettingKey}>
                                                     <RefreshCw size={13} /> Reset Proxy Password
                                                 </button>
                                             </div>
                                         </div>
 
                                         <div className="generated-viewer custom-scrollbar">
-                                            {generatedList.map((str, idx) => (
-                                                <div key={idx} className="proxy-line">
-                                                    <span className="line-num">{idx + 1}.</span>
-                                                    <span className="line-content">{str}</span>
-                                                </div>
-                                            ))}
+                                            {isLoading ? (
+                                                <div className="generated-loading"><div className="small-spinner" /> <p>Loading proxies...</p></div>
+                                            ) : (
+                                                generatedList.map((str, idx) => (
+                                                    <div key={idx} className="proxy-line">
+                                                        <span className="line-num">{idx + 1}.</span>
+                                                        <span className="line-content">{str}</span>
+                                                    </div>
+                                                ))
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -1431,6 +1434,41 @@ const TrafficSetupPage = () => {
                 @keyframes spin {
                     from { transform: rotate(0deg); }
                     to { transform: rotate(360deg); }
+                }
+
+                /* Lightweight skeletons for faster first paint */
+                .skeleton {
+                    display: inline-block;
+                    background: linear-gradient(90deg, #e6eefc 25%, #f8fbff 37%, #e6eefc 63%);
+                    background-size: 400% 100%;
+                    animation: shimmer 1.4s ease infinite;
+                    border-radius: 6px;
+                }
+
+                .skeleton-small { width: 140px; height: 16px; display: inline-block; }
+                .skeleton-medium { width: 220px; height: 20px; display: inline-block; }
+
+                @keyframes shimmer {
+                    0% { background-position: 100% 0; }
+                    100% { background-position: -100% 0; }
+                }
+
+                .generated-loading {
+                    padding: 24px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    justify-content: center;
+                    color: #64748B;
+                }
+
+                .small-spinner {
+                    width: 26px;
+                    height: 26px;
+                    border-radius: 50%;
+                    border: 3px solid rgba(0,0,0,0.08);
+                    border-top-color: #1677ff;
+                    animation: spin 1s linear infinite;
                 }
 
                 .main-responsive-container {

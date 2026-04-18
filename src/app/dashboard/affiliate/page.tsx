@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Copy, Gift, DollarSign, Users, Award, TrendingUp, AlertCircle, RefreshCw, ArrowRight, Loader2 } from "lucide-react";
+import { Copy, Gift, DollarSign, Users, Award, TrendingUp, AlertCircle, ArrowRight } from "lucide-react";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 import LoadingDashboard from "@/components/common/LoadingDashboard";
 
 export default function AffiliateDashboard() {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [convertLoading, setConvertLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<any>({
     ReferralCode: "",
@@ -39,7 +41,16 @@ export default function AffiliateDashboard() {
     fetchData();
   }, []);
 
+  const affiliateBalance = Number(data?.affiliateBalance ?? data?.AffiliateBalance ?? 0);
   const referralLink = `https://realproxy.net/signup?ref=${data?.referralCode || data?.ReferralCode || ""}`;
+
+  const handleConvertToWallet = () => {
+    if (affiliateBalance <= 0) return;
+    // Store wallet balance for the Pricing component to pick up
+    localStorage.setItem("wallet_balance", affiliateBalance.toFixed(2));
+    // Navigate to pricing section
+    router.push("/#pricing-section");
+  };
 
   const copyToClipboard = async () => {
     try {
@@ -63,9 +74,8 @@ export default function AffiliateDashboard() {
     }
   };
 
-  if (loading) {
-    return <LoadingDashboard />;
-  }
+  // Do not block the entire page render while loading — render skeletons
+  // so the first paint is fast and then hydrate data when available.
 
   if (error) {
     return (
@@ -95,7 +105,7 @@ export default function AffiliateDashboard() {
         <div className="referral-box">
           <div className="referral-info">
             <p className="referral-label">Your Referral Link</p>
-            <p className="referral-link">{referralLink}</p>
+            <p className="referral-link">{loading ? <span className="skeleton skeleton-link" /> : referralLink}</p>
           </div>
           <button
             type="button"
@@ -122,7 +132,7 @@ export default function AffiliateDashboard() {
             </div>
             <div className="stat-info">
               <p className="stat-title">{stat.title}</p>
-              <p className="stat-value">{stat.value}</p>
+              <p className="stat-value">{loading ? <span className="skeleton skeleton-stat" /> : stat.value}</p>
             </div>
           </div>
         ))}
@@ -139,14 +149,15 @@ export default function AffiliateDashboard() {
             </div>
             <div className="balance-display">
               <span className="currency">$</span>
-              {Number(data?.affiliateBalance ?? data?.AffiliateBalance ?? 0).toFixed(2)}
+              {loading ? <span className="skeleton skeleton-balance" /> : affiliateBalance.toFixed(2)}
             </div>
             <p className="action-desc">Convert your approved affiliate balance directly to your main wallet to purchase bandwidth instantly.</p>
             <button
               className="btn-primary custom-action-btn"
-              disabled={Number(data?.affiliateBalance ?? data?.AffiliateBalance ?? 0) <= 0}
+              disabled={loading || affiliateBalance <= 0 || convertLoading}
+              onClick={handleConvertToWallet}
             >
-              Convert Balance <ArrowRight size={16} />
+              {convertLoading ? "Redirecting..." : "Convert Balance"} <ArrowRight size={16} />
             </button>
           </div>
         </div>
@@ -157,7 +168,12 @@ export default function AffiliateDashboard() {
             <div className="history-header">
               <h2 className="action-title">Referral History</h2>
             </div>
-            {!data?.history && !data?.History || (data?.history || data?.History).length === 0 ? (
+            {loading ? (
+              <div className="history-loading">
+                <div className="small-spinner" />
+                <p>Loading history...</p>
+              </div>
+            ) : (!data?.history && !data?.History) || (data?.history || data?.History).length === 0 ? (
               <div className="history-empty">
                 <div className="empty-icon-wrap">
                   <TrendingUp size={32} color="#94A3B8" />
@@ -221,6 +237,42 @@ export default function AffiliateDashboard() {
           min-height: 400px;
           flex-direction: column;
           gap: 16px;
+        }
+
+        /* Lightweight skeletons for faster first paint */
+        .skeleton {
+          display: inline-block;
+          background: linear-gradient(90deg, #e6eefc 25%, #f8fbff 37%, #e6eefc 63%);
+          background-size: 400% 100%;
+          animation: shimmer 1.4s ease infinite;
+          border-radius: 6px;
+        }
+
+        .skeleton-link { width: 220px; height: 18px; }
+        .skeleton-stat { width: 90px; height: 20px; }
+        .skeleton-balance { width: 120px; height: 30px; display: inline-block; }
+
+        @keyframes shimmer {
+          0% { background-position: 100% 0; }
+          100% { background-position: -100% 0; }
+        }
+
+        .history-loading {
+          padding: 48px 24px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          justify-content: center;
+          color: #64748B;
+        }
+
+        .small-spinner {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          border: 3px solid rgba(0,0,0,0.08);
+          border-top-color: #0086ff;
+          animation: rotate 1s linear infinite;
         }
 
         .spinner {

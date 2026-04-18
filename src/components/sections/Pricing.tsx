@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Minus, Plus, ShoppingCart, Zap, Box, Tag, DollarSign, TrendingDown, Check } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Zap, Box, Tag, DollarSign, TrendingDown, Check, Wallet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
@@ -18,6 +18,7 @@ const Pricing = () => {
     const [promoCode, setPromoCode] = useState("");
     const [isValidatingPromo, setIsValidatingPromo] = useState(false);
     const [appliedDiscount, setAppliedDiscount] = useState<number | null>(null);
+    const [walletBalance, setWalletBalance] = useState<number>(0);
 
     const getPricing = (gb: number) => {
         let pricePerGb = 1.00; // Fixed at $1.00 per GB
@@ -40,6 +41,15 @@ const Pricing = () => {
             }
         }
     }, [isRecharge]);
+
+    // Read wallet balance from localStorage (set by affiliate dashboard Convert Balance)
+    React.useEffect(() => {
+        const stored = localStorage.getItem('wallet_balance');
+        if (stored) {
+            const parsed = parseFloat(stored);
+            if (!isNaN(parsed) && parsed > 0) setWalletBalance(parsed);
+        }
+    }, []);
 
     // Handle Promo Code Application
     const handleApplyPromo = async () => {
@@ -165,8 +175,7 @@ const Pricing = () => {
         }
     };
 
-    const handleFiatPayment = async () => {
-        const token = localStorage.getItem('auth_token');
+    const handleFiatPayment = async () => {        const token = localStorage.getItem('auth_token');
         if (!token) {
             toast.error("Please login to proceed with payment.");
             router.push('/login');
@@ -212,6 +221,43 @@ const Pricing = () => {
         } catch (error: any) {
             console.error("Payment error detail:", error.response?.data);
             toast.error("Payment initialization failed.");
+            setIsLoading(false);
+        }
+    };
+
+    const handleWalletPayment = async () => {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            toast.error("Please login to proceed with payment.");
+            router.push('/login');
+            return;
+        }
+
+        const totalUsd = parseFloat(current.total);
+        if (walletBalance < totalUsd) {
+            toast.error(`Insufficient wallet balance. Available: $${walletBalance.toFixed(2)}, Required: $${totalUsd.toFixed(2)}`);
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const apiUrl = 'http://localhost:5157';
+            const response = await axios.post(`${apiUrl}/api/affiliate/wallet-purchase`, {
+                bandwidthGb: bandwidth
+            }, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+            });
+
+            if (response.data) {
+                const newBalance = Math.max(0, walletBalance - totalUsd);
+                localStorage.setItem('wallet_balance', newBalance.toFixed(2));
+                setWalletBalance(newBalance);
+                toast.success(`🎉 Successfully purchased ${bandwidth} GB of proxy bandwidth!`);
+                setShowPaymentModal(false);
+                router.push('/dashboard/traffic-setup');
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Wallet purchase failed.");
             setIsLoading(false);
         }
     };
@@ -1021,7 +1067,7 @@ const Pricing = () => {
                                     <Check size={20} color="#0086FF" style={{ marginLeft: 'auto', opacity: 0.5 }} />
                                 </button>
 
-                                <button className="pm-btn pm-card" style={{ padding: '24px', borderRadius: '24px', border: '1.5px solid #f2f4f7' }} onClick={handleFiatPayment} disabled={isLoading}>
+                                <button className="pm-btn pm-card" style={{ padding: '24px', borderRadius: '24px', border: '1.5px solid #f2f4f7', marginBottom: '16px' }} onClick={handleFiatPayment} disabled={isLoading}>
                                     <div className="option-icon"><ShoppingCart size={24} /></div>
                                     <div className="option-info">
                                         <h4>Bkash, Nagad, Bank Payment</h4>
@@ -1029,6 +1075,28 @@ const Pricing = () => {
                                     </div>
                                     <Check size={20} color="#0086FF" style={{ marginLeft: 'auto', opacity: 0.5 }} />
                                 </button>
+
+                                {walletBalance >= parseFloat(current.total) && (
+                                    <button
+                                        className="pm-btn pm-card"
+                                        style={{
+                                            padding: '24px', borderRadius: '24px',
+                                            border: '1.5px solid #00b67a',
+                                            background: 'rgba(0,182,122,0.03)'
+                                        }}
+                                        onClick={handleWalletPayment}
+                                        disabled={isLoading}
+                                    >
+                                        <div className="option-icon" style={{ background: 'rgba(0,182,122,0.1)', color: '#00b67a' }}>
+                                            <Wallet size={24} />
+                                        </div>
+                                        <div className="option-info">
+                                            <h4 style={{ color: '#00b67a' }}>Purchase with Wallet Balance</h4>
+                                            <p>Available: <strong style={{ color: '#00b67a' }}>${walletBalance.toFixed(2)}</strong> — instant, no redirect needed.</p>
+                                        </div>
+                                        <Check size={20} color="#00b67a" style={{ marginLeft: 'auto', opacity: 0.7 }} />
+                                    </button>
+                                )}
                             </div>
 
                             <div className="order-summary" style={{ marginTop: '32px' }}>
@@ -1036,12 +1104,20 @@ const Pricing = () => {
                                     <span style={{ fontSize: '14px', color: '#98a2b3', fontWeight: '1000' }}>Package</span>
                                     <span style={{ fontSize: '14px', color: '#041026', fontWeight: '700' }}>{bandwidth} GB Residential</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: walletBalance > 0 ? '8px' : '0' }}>
                                     <span style={{ fontSize: '14px', color: '#98a2b3', fontWeight: '1000' }}>Total Price</span>
                                     <span style={{ fontSize: '18px', color: '#0086FF', fontWeight: '800' }}>
                                         ৳ {appliedDiscount ? (parseFloat(current.totalBDT) * (1 - appliedDiscount / 100)).toFixed(2) : current.totalBDT}
                                     </span>
                                 </div>
+                                {walletBalance > 0 && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ fontSize: '14px', color: '#98a2b3', fontWeight: '1000' }}>Wallet Balance</span>
+                                        <span style={{ fontSize: '14px', color: walletBalance >= parseFloat(current.total) ? '#00b67a' : '#ef4444', fontWeight: '700' }}>
+                                            ${walletBalance.toFixed(2)} {walletBalance >= parseFloat(current.total) ? '✓ Sufficient' : '✗ Insufficient'}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     </div>
