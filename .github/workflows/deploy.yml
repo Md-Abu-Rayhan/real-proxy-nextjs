@@ -10,22 +10,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 
+        uses: actions/checkout@v4
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.0 
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            mkdir -p /var/www/realproxynextjs
             cd /var/www/realproxynextjs
+
             if [ ! -d ".git" ]; then
-              git clone https://github.com/Md-Abu-Rayhan/real-proxy-nextjs.git .
-            else
-              git pull origin main
+              git init
+              git remote add origin https://github.com/Md-Abu-Rayhan/real-proxy-nextjs.git
             fi
+
+            git fetch --all
+            git reset --hard origin/main
+
+            if [ ! -d "app" ] && [ ! -d "pages" ]; then
+              echo "Error: app or pages directory not found in /var/www/realproxynextjs"
+              ls -la
+              exit 1
+            fi
+
             npm install
             npm run build
+
             pm2 restart realproxynextjs || pm2 start ecosystem.config.js
             pm2 save
