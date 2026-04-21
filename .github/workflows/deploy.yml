@@ -27,11 +27,12 @@ jobs:
               git remote add origin https://github.com/Md-Abu-Rayhan/real-proxy-nextjs.git
             fi
 
+            # ৩. গিট থেকে লেটেস্ট কোড পুল করা (Reset forcing)
             git fetch --all
             git reset --hard origin/main
 
-            if [ ! -d "app" ] && [ ! -d "pages" ]; then
-              echo "Error: app or pages directory not found in /var/www/realproxynextjs"
+            if [ ! -d "app" ] && [ ! -d "pages" ] && [ ! -d "src/app" ] && [ ! -d "src/pages" ]; then
+              echo "Error: app or pages directory not found (checked root and src/)"
               ls -la
               exit 1
             fi
