@@ -1,0 +1,27 @@
+name: Deploy Next.js
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /var/www/realproxynextjs
+            git pull origin main || git clone https://github.com/Md-Abu-Rayhan/real-proxy-nextjs.git .
+            npm install
+            npm run build
+            pm2 restart realproxynextjs || pm2 start ecosystem.config.js
+            pm2 save
