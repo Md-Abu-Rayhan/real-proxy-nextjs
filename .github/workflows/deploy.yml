@@ -10,17 +10,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.2.0 
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /var/www/realproxynextjs
-            git pull origin main || git clone https://github.com/Md-Abu-Rayhan/real-proxy-nextjs.git .
+            if [ ! -d ".git" ]; then
+              git clone https://github.com/Md-Abu-Rayhan/real-proxy-nextjs.git .
+            else
+              git pull origin main
+            fi
             npm install
             npm run build
             pm2 restart realproxynextjs || pm2 start ecosystem.config.js
