@@ -35,7 +35,6 @@ const LoginPage = () => {
             toast.error("Please enter email and password.");
             return;
         }
-
         setIsLoading(true);
         try {
             const apiUrl = 'https://api.realproxy.net';
