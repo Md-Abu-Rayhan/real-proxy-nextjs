@@ -66,7 +66,7 @@ export default function MaintenancePage() {
   const fetchStatus = async () => {
     try {
       setError(null);
-      const res = await fetch(`http://localhost:5157/api/maintenance/status`);
+      const res = await fetch(`https://api.realproxy.net/api/maintenance/status`);
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const json: ApiResponse = await res.json();
       const { on, rem, end, msg, upd } = parseApi(json);

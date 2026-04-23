@@ -28,7 +28,7 @@ const ForgotPasswordPage = () => {
 
         setIsLoading(true);
         try {
-            const response = await axios.post('http://localhost:5157/api/Auth/forget-password/send-otp', {
+            const response = await axios.post('https://api.realproxy.net/api/Auth/forget-password/send-otp', {
                 email: email
             });
 
@@ -59,7 +59,7 @@ const ForgotPasswordPage = () => {
 
         setIsLoading(true);
         try {
-            const response = await axios.post('http://localhost:5157/api/Auth/forget-password/reset-password', {
+            const response = await axios.post('https://api.realproxy.net/api/Auth/forget-password/reset-password', {
                 email: email,
                 otp: otp,
                 newPassword: newPassword

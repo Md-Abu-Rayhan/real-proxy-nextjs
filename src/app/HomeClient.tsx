@@ -22,7 +22,7 @@ export default function HomeClient() {
     let mounted = true;
     (async () => {
       try {
-        const res = await fetch("http://localhost:5157/api/maintenance/status", { cache: "no-store" });
+        const res = await fetch("https://api.realproxy.net/api/maintenance/status", { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
           const isOn = json?.isOn ?? json?.IsOn ?? false;
