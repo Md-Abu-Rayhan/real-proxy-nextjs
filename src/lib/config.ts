@@ -1,5 +1,1 @@
-// =============================================
-// API URL - শুধু এই একটা জায়গায় পরিবর্তন করলেই
-// পুরো project এ apply হয়ে যাবে
-// =============================================
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://0.0.0.0:5001';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5001';

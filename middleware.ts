@@ -7,7 +7,6 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   console.log("[middleware] incoming", { pathname, method: req.method });
 
-  // Only check maintenance when the user visits the root page
   if (pathname !== "/") {
     return NextResponse.next();
   }
