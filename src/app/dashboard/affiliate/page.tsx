@@ -26,7 +26,7 @@ export default function AffiliateDashboard() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("auth_token");
-        const apiUrl = "http://localhost:5157";
+        const apiUrl = "http://localhost:8080";
         const response = await axios.get(`${apiUrl}/api/affiliate/dashboard`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -42,7 +42,7 @@ export default function AffiliateDashboard() {
   }, []);
 
   const affiliateBalance = Number(data?.affiliateBalance ?? data?.AffiliateBalance ?? 0);
-  const referralLink = `https://realproxy.net/signup?ref=${data?.referralCode || data?.ReferralCode || ""}`;
+  const referralLink = `http://localhost:8080/signup?ref=${data?.referralCode || data?.ReferralCode || ""}`;
 
   const handleConvertToWallet = () => {
     if (affiliateBalance <= 0) return;
