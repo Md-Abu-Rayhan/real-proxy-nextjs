@@ -7,6 +7,7 @@ import { CreditCard, Bitcoin, Wallet, ArrowRight, ShieldCheck, Check } from 'luc
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/lib/config';
 
 const CheckoutSection = () => {
     const router = useRouter();
@@ -29,7 +30,7 @@ const CheckoutSection = () => {
 
         setIsLoading(true);
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
+            const apiUrl = API_URL;
 
             // Send only necessary data to the backend
             const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {

@@ -7,6 +7,8 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { API_URL } from '@/lib/config';
+
 const Pricing = () => {
     const router = useRouter();
     const [proxyType, setProxyType] = useState('Rotating Res.');
@@ -61,7 +63,7 @@ const Pricing = () => {
         setIsValidatingPromo(true);
         try {
             const token = localStorage.getItem('auth_token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
+            const apiUrl = API_URL;
             const currentBDT = (bandwidth * 1.00 * 125);
 
             const response = await axios.get(`${apiUrl}/api/Payment/validate-promo`, {
@@ -93,7 +95,7 @@ const Pricing = () => {
         if (appliedDiscount && promoCode) {
             const reValidate = async () => {
                 const token = localStorage.getItem('auth_token');
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
+                const apiUrl = API_URL;
                 const currentBDT = (bandwidth * 1.00 * 125);
 
                 try {
@@ -148,7 +150,7 @@ const Pricing = () => {
         try {
             const orderId = `CR${Date.now()}`.substring(0, 16);
             const amount = parseFloat(current.total);
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
+            const apiUrl = API_URL;
             const response = await axios.post(`${apiUrl}/api/CryptoPayment/initialize`, {
                 orderId: orderId,
                 amount: amount,
@@ -189,7 +191,7 @@ const Pricing = () => {
             else if (bandwidth === 50) packageId = "res_50gb";
             else if (bandwidth === 100) packageId = "res_100gb";
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
+            const apiUrl = API_URL;
             const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {
                 packageId: packageId,
                 amount: Number(current.totalBDT),
@@ -241,7 +243,7 @@ const Pricing = () => {
 
         setIsLoading(true);
         try {
-            const apiUrl = 'http://localhost:5157';
+            const apiUrl = API_URL;
             const response = await axios.post(`${apiUrl}/api/affiliate/wallet-purchase`, {
                 bandwidthGb: bandwidth
             }, {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { API_URL } from "./src/lib/config";
 
 // Middleware runs on every request; we'll only act for the root path ('/')
 export async function middleware(req: NextRequest) {
@@ -13,7 +14,7 @@ export async function middleware(req: NextRequest) {
 
   try {
     // Always fetch fresh status from the API
-    const res = await fetch("https://api.realproxy.net/api/maintenance/status", { cache: "no-store" });
+    const res = await fetch(`${API_URL}/api/maintenance/status`, { cache: "no-store" });
     if (res.ok) {
       const json = await res.json();
       console.log("[middleware] maintenance api returned", json);

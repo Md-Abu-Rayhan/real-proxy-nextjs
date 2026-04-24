@@ -5,6 +5,7 @@ import { Copy, Gift, DollarSign, Users, Award, TrendingUp, AlertCircle, ArrowRig
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import LoadingDashboard from "@/components/common/LoadingDashboard";
+import { API_URL } from "@/lib/config";
 
 export default function AffiliateDashboard() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function AffiliateDashboard() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("auth_token");
-        const apiUrl = "http://localhost:5157";
+        const apiUrl = API_URL;
         const response = await axios.get(`${apiUrl}/api/affiliate/dashboard`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -42,7 +43,7 @@ export default function AffiliateDashboard() {
   }, []);
 
   const affiliateBalance = Number(data?.affiliateBalance ?? data?.AffiliateBalance ?? 0);
-  const referralLink = `http://localhost:5157/signup?ref=${data?.referralCode || data?.ReferralCode || ""}`;
+  const referralLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/signup?ref=${data?.referralCode || data?.ReferralCode || ""}`;
 
   const handleConvertToWallet = () => {
     if (affiliateBalance <= 0) return;

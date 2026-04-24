@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle2, Home, ArrowRight, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { Suspense } from 'react';
+import { API_URL } from '@/lib/config';
 
 const PaymentSuccessContent = () => {
     const router = useRouter();
@@ -24,7 +25,7 @@ const PaymentSuccessContent = () => {
 
             try {
                 const token = localStorage.getItem('auth_token');
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
+                const apiUrl = API_URL;
 
                 let response;
                 if (orderId) {

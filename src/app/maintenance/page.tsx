@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/lib/config";
 
 type ApiResponse = {
   isOn?: boolean;
@@ -66,7 +67,7 @@ export default function MaintenancePage() {
   const fetchStatus = async () => {
     try {
       setError(null);
-      const res = await fetch(`https://api.realproxy.net/api/maintenance/status`);
+      const res = await fetch(`${API_URL}/api/maintenance/status`);
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const json: ApiResponse = await res.json();
       const { on, rem, end, msg, upd } = parseApi(json);

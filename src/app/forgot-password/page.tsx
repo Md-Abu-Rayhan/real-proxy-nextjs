@@ -8,6 +8,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
+import { API_URL } from '@/lib/config';
 
 const ForgotPasswordPage = () => {
     const { t } = useLanguage();
@@ -28,7 +29,7 @@ const ForgotPasswordPage = () => {
 
         setIsLoading(true);
         try {
-            const response = await axios.post('https://api.realproxy.net/api/Auth/forget-password/send-otp', {
+            const response = await axios.post(`${API_URL}/api/Auth/forget-password/send-otp`, {
                 email: email
             });
 
@@ -59,7 +60,7 @@ const ForgotPasswordPage = () => {
 
         setIsLoading(true);
         try {
-            const response = await axios.post('https://api.realproxy.net/api/Auth/forget-password/reset-password', {
+            const response = await axios.post(`${API_URL}/api/Auth/forget-password/reset-password`, {
                 email: email,
                 otp: otp,
                 newPassword: newPassword

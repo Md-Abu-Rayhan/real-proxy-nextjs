@@ -8,6 +8,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
+import { API_URL } from '@/lib/config';
 import { useEffect } from 'react';
 
 import { Suspense } from 'react';
@@ -73,7 +74,7 @@ const RegisterPageContent = () => {
 
         setIsLoading(true);
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
+            const apiUrl = API_URL;
             const response = await axios.post(`${apiUrl}/api/Auth/register`, {
                 email: formData.email,
                 password: formData.password,

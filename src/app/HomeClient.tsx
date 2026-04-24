@@ -13,6 +13,7 @@ import Tutorials from "@/components/sections/Tutorials";
 import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 import CTAButton from "@/components/CTAButton";
+import { API_URL } from "@/lib/config";
 
 export default function HomeClient() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function HomeClient() {
     let mounted = true;
     (async () => {
       try {
-        const res = await fetch("https://api.realproxy.net/api/maintenance/status", { cache: "no-store" });
+        const res = await fetch(`${API_URL}/api/maintenance/status`, { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
           const isOn = json?.isOn ?? json?.IsOn ?? false;

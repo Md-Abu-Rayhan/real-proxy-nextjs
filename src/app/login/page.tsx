@@ -8,6 +8,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
+import { API_URL } from '@/lib/config';
 
 const LoginPage = () => {
     const { t } = useLanguage();
@@ -37,7 +38,7 @@ const LoginPage = () => {
         }
         setIsLoading(true);
         try {
-            const apiUrl = 'https://api.realproxy.net';
+            const apiUrl = API_URL;
             const response = await axios.post(`${apiUrl}/api/Auth/login`, {
                 email: formData.email,
                 password: formData.password

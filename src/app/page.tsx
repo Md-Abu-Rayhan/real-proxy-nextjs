@@ -11,11 +11,12 @@ import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 import HomeClient from "./HomeClient";
 import { redirect } from "next/navigation";
+import { API_URL } from "@/lib/config";
 
 export default async function Home() {
   // Server-side maintenance check: redirect immediately if maintenance is enabled.
   try {
-    const res = await fetch("https://api.realproxy.net/api/maintenance/status", { cache: "no-store" });
+    const res = await fetch(`${API_URL}/api/maintenance/status`, { cache: "no-store" });
     if (res.ok) {
       const json = await res.json();
       console.log('[page] maintenance api response', json);

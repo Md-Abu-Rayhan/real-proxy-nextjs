@@ -6,6 +6,7 @@ import { Check } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { API_URL } from '@/lib/config';
 
 const ResidentialPricing = () => {
     const router = useRouter();
@@ -24,7 +25,7 @@ const ResidentialPricing = () => {
 
         setIsLoading(index);
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5157';
+            const apiUrl = API_URL;
 
             // Map plan string to package ID
             let packageId = "res_10gb";
