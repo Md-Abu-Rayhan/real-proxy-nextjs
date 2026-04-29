@@ -11,24 +11,20 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  try {
-    // Always fetch fresh status from the API
-    const res = await fetch(`${API_URL}/api/maintenance/status`, { cache: "no-store" });
-    if (res.ok) {
-      const json = await res.json();
-      console.log("[middleware] maintenance api returned", json);
-      const isOn = json?.isOn ?? json?.IsOn ?? false;
-      if (isOn) {
-        const maintenanceUrl = req.nextUrl.clone();
-        maintenanceUrl.pathname = "/maintenance";
-        maintenanceUrl.search = "";
-        return NextResponse.redirect(maintenanceUrl);
-      }
-    }
-  } catch (err) {
-    // If the check fails, let the request continue so site remains available.
-    // Do not block users when the maintenance API is unreachable.
-  }
+  // Maintenance check disabled
+  // try {
+  //   const res = await fetch(`${API_URL}/api/maintenance/status`, { cache: "no-store" });
+  //   if (res.ok) {
+  //     const json = await res.json();
+  //     const isOn = json?.isOn ?? json?.IsOn ?? false;
+  //     if (isOn) {
+  //       const maintenanceUrl = req.nextUrl.clone();
+  //       maintenanceUrl.pathname = "/maintenance";
+  //       maintenanceUrl.search = "";
+  //       return NextResponse.redirect(maintenanceUrl);
+  //     }
+  //   }
+  // } catch (err) {}
 
   return NextResponse.next();
 }

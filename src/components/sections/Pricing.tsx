@@ -21,6 +21,7 @@ const Pricing = () => {
     const [isValidatingPromo, setIsValidatingPromo] = useState(false);
     const [appliedDiscount, setAppliedDiscount] = useState<number | null>(null);
     const [walletBalance, setWalletBalance] = useState<number>(0);
+    const [isWalletLoading, setIsWalletLoading] = useState<boolean>(false);
 
     const getPricing = (gb: number) => {
         let pricePerGb = 1.00; // Fixed at $1.00 per GB
@@ -43,15 +44,6 @@ const Pricing = () => {
             }
         }
     }, [isRecharge]);
-
-    // Read wallet balance from localStorage (set by affiliate dashboard Convert Balance)
-    React.useEffect(() => {
-        const stored = localStorage.getItem('wallet_balance');
-        if (stored) {
-            const parsed = parseFloat(stored);
-            if (!isNaN(parsed) && parsed > 0) setWalletBalance(parsed);
-        }
-    }, []);
 
     // Handle Promo Code Application
     const handleApplyPromo = async () => {
@@ -135,7 +127,21 @@ const Pricing = () => {
             router.push('/login');
             return;
         }
+        // Open modal immediately for instant UX
+        setWalletBalance(0);
+        setIsWalletLoading(true);
         setShowPaymentModal(true);
+        // Fetch wallet balance in background
+        axios.get(`${API_URL}/api/affiliate/dashboard`, {
+            headers: { Authorization: `Bearer ${token}` }
+        }).then(res => {
+            const balance = Number(res.data?.affiliateBalance ?? res.data?.AffiliateBalance ?? 0);
+            setWalletBalance(balance);
+        }).catch(() => {
+            setWalletBalance(0);
+        }).finally(() => {
+            setIsWalletLoading(false);
+        });
     };
 
     const handleCryptoPayment = async () => {
@@ -237,7 +243,7 @@ const Pricing = () => {
 
         const totalUsd = parseFloat(current.total);
         if (walletBalance < totalUsd) {
-            toast.error(`Insufficient wallet balance. Available: $${walletBalance.toFixed(2)}, Required: $${totalUsd.toFixed(2)}`);
+            toast.error(`Insufficient wallet balance. Available: ৳${(walletBalance * 125).toFixed(2)}, Required: ৳${(totalUsd * 125).toFixed(2)}`);
             return;
         }
 
@@ -252,7 +258,6 @@ const Pricing = () => {
 
             if (response.data) {
                 const newBalance = Math.max(0, walletBalance - totalUsd);
-                localStorage.setItem('wallet_balance', newBalance.toFixed(2));
                 setWalletBalance(newBalance);
                 toast.success(`🎉 Successfully purchased ${bandwidth} GB of proxy bandwidth!`);
                 setShowPaymentModal(false);
@@ -743,6 +748,7 @@ const Pricing = () => {
                 }
                 @keyframes spin-anim { to { transform: rotate(360deg); } }
                 @keyframes spin-anim-reverse { to { transform: rotate(-360deg); } }
+                @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
                 /* Modern Promo Code Styles */
                 .promo-wrapper {
@@ -1078,7 +1084,28 @@ const Pricing = () => {
                                     <Check size={20} color="#0086FF" style={{ marginLeft: 'auto', opacity: 0.5 }} />
                                 </button>
 
-                                {walletBalance >= parseFloat(current.total) && (
+                                {isWalletLoading ? (
+                                    <button
+                                        className="pm-btn pm-card"
+                                        style={{
+                                            padding: '24px', borderRadius: '24px',
+                                            border: '1.5px solid #e4e7ec',
+                                            background: '#fafafa',
+                                            cursor: 'not-allowed',
+                                            opacity: 0.7
+                                        }}
+                                        disabled
+                                    >
+                                        <div className="option-icon" style={{ background: '#f2f4f7', color: '#98a2b3' }}>
+                                            <Wallet size={24} />
+                                        </div>
+                                        <div className="option-info">
+                                            <h4 style={{ color: '#98a2b3' }}>Purchase with Wallet Balance</h4>
+                                            <p style={{ color: '#c0c8d4' }}>Checking balance…</p>
+                                        </div>
+                                        <div style={{ marginLeft: 'auto', width: 18, height: 18, border: '2.5px solid #d0d5dd', borderTopColor: '#0086FF', borderRadius: '50%', animation: 'spin-anim 0.8s linear infinite' }} />
+                                    </button>
+                                ) : walletBalance >= parseFloat(current.total) ? (
                                     <button
                                         className="pm-btn pm-card"
                                         style={{
@@ -1094,11 +1121,11 @@ const Pricing = () => {
                                         </div>
                                         <div className="option-info">
                                             <h4 style={{ color: '#00b67a' }}>Purchase with Wallet Balance</h4>
-                                            <p>Available: <strong style={{ color: '#00b67a' }}>${walletBalance.toFixed(2)}</strong> — instant, no redirect needed.</p>
+                                            <p>Available: <strong style={{ color: '#00b67a' }}>৳{(walletBalance * 125).toFixed(2)}</strong> — instant, no redirect needed.</p>
                                         </div>
                                         <Check size={20} color="#00b67a" style={{ marginLeft: 'auto', opacity: 0.7 }} />
                                     </button>
-                                )}
+                                ) : null}
                             </div>
 
                             <div className="order-summary" style={{ marginTop: '32px' }}>
@@ -1112,12 +1139,16 @@ const Pricing = () => {
                                         ৳ {appliedDiscount ? (parseFloat(current.totalBDT) * (1 - appliedDiscount / 100)).toFixed(2) : current.totalBDT}
                                     </span>
                                 </div>
-                                {walletBalance > 0 && (
+                                {(walletBalance > 0 || isWalletLoading) && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ fontSize: '14px', color: '#98a2b3', fontWeight: '1000' }}>Wallet Balance</span>
-                                        <span style={{ fontSize: '14px', color: walletBalance >= parseFloat(current.total) ? '#00b67a' : '#ef4444', fontWeight: '700' }}>
-                                            ${walletBalance.toFixed(2)} {walletBalance >= parseFloat(current.total) ? '✓ Sufficient' : '✗ Insufficient'}
-                                        </span>
+                                        {isWalletLoading ? (
+                                            <span style={{ width: 80, height: 16, background: '#e4e7ec', borderRadius: 6, display: 'inline-block', animation: 'pulse 1.2s ease-in-out infinite' }} />
+                                        ) : (
+                                            <span style={{ fontSize: '14px', color: walletBalance >= parseFloat(current.total) ? '#00b67a' : '#ef4444', fontWeight: '700' }}>
+                                                ৳{(walletBalance * 125).toFixed(2)} {walletBalance >= parseFloat(current.total) ? '✓ Sufficient' : '✗ Insufficient'}
+                                            </span>
+                                        )}
                                     </div>
                                 )}
                             </div>

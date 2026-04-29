@@ -20,26 +20,9 @@ export default function HomeClient() {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/maintenance/status`, { cache: "no-store" });
-        if (res.ok) {
-          const json = await res.json();
-          const isOn = json?.isOn ?? json?.IsOn ?? false;
-          if (isOn && mounted) {
-            router.replace("/maintenance");
-            return;
-          }
-        }
-      } catch (e) {
-        // ignore
-      } finally {
-        if (mounted) setChecked(true);
-      }
-    })();
-    return () => { mounted = false; };
-  }, [router]);
+    // Maintenance check disabled
+    setChecked(true);
+  }, []);
 
   // While we haven't finished the maintenance check, render a minimal placeholder
   if (!checked) {

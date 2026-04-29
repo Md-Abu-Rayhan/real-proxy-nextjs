@@ -14,20 +14,15 @@ import { redirect } from "next/navigation";
 import { API_URL } from "@/lib/config";
 
 export default async function Home() {
-  // Server-side maintenance check: redirect immediately if maintenance is enabled.
-  try {
-    const res = await fetch(`${API_URL}/api/maintenance/status`, { cache: "no-store" });
-    if (res.ok) {
-      const json = await res.json();
-      console.log('[page] maintenance api response', json);
-      const isOn = json?.isOn ?? json?.IsOn ?? false;
-      if (isOn) {
-        redirect("/maintenance");
-      }
-    }
-  } catch (e) {
-    // If the API check fails, fall back to rendering the home page.
-  }
+  // Maintenance check disabled
+  // try {
+  //   const res = await fetch(`${API_URL}/api/maintenance/status`, { cache: "no-store" });
+  //   if (res.ok) {
+  //     const json = await res.json();
+  //     const isOn = json?.isOn ?? json?.IsOn ?? false;
+  //     if (isOn) redirect("/maintenance");
+  //   }
+  // } catch (e) {}
 
   return <HomeClient />;
 }

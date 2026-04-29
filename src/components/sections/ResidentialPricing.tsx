@@ -29,14 +29,50 @@ const ResidentialPricing = () => {
 
             // Map plan string to package ID
             let packageId = "res_10gb";
-            if (planGb.includes('100GB')) packageId = "res_100gb";
-            else if (planGb.includes('50GB') || planGb.includes('40GB')) packageId = "res_50gb";
-            else if (planGb.includes('10GB')) packageId = "res_10gb";
-            else if (parseInt(planGb) >= 500) packageId = "res_500gb";
-            else if (parseInt(planGb) >= 100) packageId = "res_100gb";
+            let amount = 0;
+            const planValue = parseFloat(planGb);
+            
+            if (planGb.includes('100GB')) {
+                packageId = "res_100gb";
+                amount = 120 * 125; // 120 USD * 125 BDT
+            }
+            else if (planGb.includes('50GB') || planGb.includes('40GB')) {
+                packageId = "res_50gb";
+                amount = (planGb.includes('40GB') ? 56 : 65) * 125;
+            }
+            else if (planGb.includes('10GB')) {
+                packageId = "res_10gb";
+                amount = 18 * 125;
+            }
+            else if (planGb.includes('5GB')) {
+                packageId = "res_5gb";
+                amount = 10 * 125;
+            }
+            else if (planGb.includes('300GB')) {
+                packageId = "res_300gb";
+                amount = 270 * 125;
+            }
+            else if (planGb.includes('600GB')) {
+                packageId = "res_600gb";
+                amount = 480 * 125;
+            }
+            else if (planValue >= 5000) {
+                packageId = "res_5000gb";
+                amount = 3000 * 125;
+            }
+            else if (planValue >= 3000) {
+                packageId = "res_3000gb";
+                amount = 1950 * 125;
+            }
+            else if (planValue >= 1000) {
+                packageId = "res_1000gb";
+                amount = 700 * 125;
+            }
 
             const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {
                 packageId: packageId,
+                amount: amount,
+                currency: "BDT",
                 customerOrderId: `ORD${Date.now()}`.substring(0, 16),
                 customerName: "John Doe",
                 customerEmail: localStorage.getItem('user_email') || "customer@example.com",

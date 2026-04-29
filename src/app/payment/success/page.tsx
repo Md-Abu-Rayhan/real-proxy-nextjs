@@ -15,50 +15,77 @@ const PaymentSuccessContent = () => {
 
     const merchantTransactionId = searchParams.get('merchantTransactionId');
     const orderId = searchParams.get('orderId');
+    const urlStatus = searchParams.get('status'); // 'Pending' when EPS retry exhausted
 
     useEffect(() => {
+        let cancelled = false;
+
         const verifyPayment = async () => {
             if (!merchantTransactionId && !orderId) {
                 setIsVerifying(false);
                 return;
             }
 
-            try {
-                const token = localStorage.getItem('auth_token');
-                const apiUrl = API_URL;
+            const token = localStorage.getItem('auth_token');
+            const apiUrl = API_URL;
 
-                let response;
-                if (orderId) {
-                    // Crypto Payment Verification
-                    response = await axios.get(`${apiUrl}/api/CryptoPayment/verify/${orderId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
+            // Poll up to 6 times (covers ~60s of blockchain / EPS propagation delay)
+            const maxAttempts = 6;
+            const delays = [0, 5000, 10000, 15000, 20000, 30000];
 
-                    if (response.data && response.data.success) {
-                        setPaymentDetails({
-                            totalAmount: response.data.payment.amount,
-                            status: response.data.status,
-                            transactionId: response.data.payment.orderId
-                        });
-                    }
-                } else {
-                    // EPS Payment Verification
-                    response = await axios.get(`${apiUrl}/api/Payment/verify/${merchantTransactionId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                if (cancelled) return;
 
-                    if (response.data) {
-                        setPaymentDetails(response.data);
-                    }
+                if (attempt > 0) {
+                    await new Promise(res => setTimeout(res, delays[attempt]));
                 }
-            } catch (error) {
-                console.error("Verification error:", error);
-            } finally {
-                setIsVerifying(false);
+
+                try {
+                    let response;
+                    if (orderId) {
+                        // Crypto Payment Verification
+                        response = await axios.get(`${apiUrl}/api/CryptoPayment/verify/${orderId}`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+
+                        if (response.data && response.data.success) {
+                            if (!cancelled) {
+                                setPaymentDetails({
+                                    totalAmount: response.data.payment.amount,
+                                    status: response.data.status,
+                                    transactionId: response.data.payment.orderId
+                                });
+                                setIsVerifying(false);
+                            }
+                            return;
+                        }
+                        // Not yet confirmed — continue polling
+                    } else {
+                        // EPS Payment Verification
+                        response = await axios.get(`${apiUrl}/api/Payment/verify/${merchantTransactionId}`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+
+                        if (response.data && response.data.status === 'Success') {
+                            if (!cancelled) {
+                                setPaymentDetails(response.data);
+                                setIsVerifying(false);
+                            }
+                            return;
+                        }
+                        // Not yet confirmed — continue polling
+                    }
+                } catch (error) {
+                    console.error(`Verification attempt ${attempt + 1} error:`, error);
+                }
             }
+
+            // All attempts exhausted — stop spinner, show page without details
+            if (!cancelled) setIsVerifying(false);
         };
 
         verifyPayment();
+        return () => { cancelled = true; };
     }, [merchantTransactionId, orderId]);
 
     if (isVerifying) {

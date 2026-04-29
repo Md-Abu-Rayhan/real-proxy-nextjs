@@ -47,9 +47,7 @@ export default function AffiliateDashboard() {
 
   const handleConvertToWallet = () => {
     if (affiliateBalance <= 0) return;
-    // Store wallet balance for the Pricing component to pick up
-    localStorage.setItem("wallet_balance", affiliateBalance.toFixed(2));
-    // Navigate to pricing section
+    // Navigate to pricing section — Pricing.tsx will fetch balance live from API
     router.push("/#pricing-section");
   };
 

@@ -36,7 +36,6 @@ export default function RootLayout({
               s.async=1;
               d.getElementsByTagName("head")[0].appendChild(s);
             })();
-            window.$crisp.push(["set", "chat:icon", ["chat"]]);
           `}
         </Script>
       </body>
