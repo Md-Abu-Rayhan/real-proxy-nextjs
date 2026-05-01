@@ -23,6 +23,7 @@ export default function AffiliateDashboard() {
     History: []
   });
 
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
