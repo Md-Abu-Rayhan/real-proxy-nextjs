@@ -179,15 +179,7 @@ const TrafficSetupPage = () => {
         // Fetch regions from API
         const fetchRegions = async () => {
             try {
-                // Check cache first
-                const CACHE_KEY = 'proxy_location_settings_v6';
-                const CACHE_TIME_KEY = 'proxy_location_settings_time';
-                const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
-
-                const cachedData = localStorage.getItem(CACHE_KEY);
-                const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
-                const now = Date.now();
-
+                // No localStorage cache — backend has memory cache (30 min), always fast
                 const processData = (data: any) => {
                     if (data && data.residential && data.residential.countries) {
                         const countriesData = data.residential.countries;
@@ -282,7 +274,17 @@ const TrafficSetupPage = () => {
                                     };
                                 });
                             }
-                            setAllSubRegionsData(normalizedRegions);
+                            // GB override: the raw API regions lack country_code, so heuristics
+                            // incorrectly match UK cities (Canterbury, Manchester) as GB regions.
+                            // Replace all heuristic-matched GB regions with the 4 correct ones.
+                            const gbRegionsOverride: SubRegion[] = [
+                                { id: "england", name: "England", country_code: "GB" },
+                                { id: "scotland", name: "Scotland", country_code: "GB" },
+                                { id: "wales", name: "Wales", country_code: "GB" },
+                                { id: "northern_ireland", name: "Northern Ireland", country_code: "GB" },
+                            ];
+                            const nonGBRegions = normalizedRegions.filter(r => (r.country_code || '').toUpperCase() !== "GB");
+                            setAllSubRegionsData([...nonGBRegions, ...gbRegionsOverride]);
                         }
 
                         if (data.residential.isp) {
@@ -300,17 +302,6 @@ const TrafficSetupPage = () => {
                     }
                 };
 
-                if (cachedData && cachedTime && (now - parseInt(cachedTime) < CACHE_EXPIRY)) {
-                    try {
-                        const parsed = JSON.parse(cachedData);
-                        processData(parsed);
-                        setIsRegionsLoading(false);
-                        return;
-                    } catch (e) {
-                        console.error('Error parsing cached location data');
-                    }
-                }
-
                 const response = await axios.get(`${API_URL}/api/Proxy/settings`, {
                     headers: {
                         'accept': '*/*'
@@ -319,10 +310,6 @@ const TrafficSetupPage = () => {
 
                 if (response.data && response.data.data) {
                     processData(response.data.data);
-
-                    // Save to cache
-                    localStorage.setItem(CACHE_KEY, JSON.stringify(response.data.data));
-                    localStorage.setItem(CACHE_TIME_KEY, now.toString());
                 }
             } catch (error: any) {
                 console.error('Error fetching regions:', error);
