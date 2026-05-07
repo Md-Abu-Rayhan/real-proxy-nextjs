@@ -146,7 +146,7 @@ const PaymentSuccessContent = () => {
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                             <span style={{ color: '#64748B', fontSize: '14px' }}>Amount Paid</span>
-                            <span style={{ color: '#163561', fontWeight: '600', fontSize: '14px' }}>${paymentDetails.totalAmount}</span>
+                            <span style={{ color: '#163561', fontWeight: '600', fontSize: '14px' }}>৳{paymentDetails.totalAmount}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <span style={{ color: '#64748B', fontSize: '14px' }}>Status</span>
