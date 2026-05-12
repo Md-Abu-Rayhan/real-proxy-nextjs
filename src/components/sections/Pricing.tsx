@@ -245,7 +245,7 @@ const Pricing = () => {
         if (promoCode && appliedDiscount) {
             setPromoCode("");
             setAppliedDiscount(null);
-            toast.info("Promo code cannot be used with wallet balance. Please use EPS or Crypto payment to avail discount.");
+            toast("Promo code cannot be used with wallet balance. Please use EPS or Crypto payment to avail discount.");
         }
 
         const totalUsd = parseFloat(current.total);
