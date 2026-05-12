@@ -241,6 +241,13 @@ const Pricing = () => {
             return;
         }
 
+        // Clear promo code when using wallet (wallet purchases don't support promo)
+        if (promoCode && appliedDiscount) {
+            setPromoCode("");
+            setAppliedDiscount(null);
+            toast.info("Promo code cannot be used with wallet balance. Please use EPS or Crypto payment to avail discount.");
+        }
+
         const totalUsd = parseFloat(current.total);
         if (walletBalance < totalUsd) {
             toast.error(`Insufficient wallet balance. Available: ৳${(walletBalance * 125).toFixed(2)}, Required: ৳${(totalUsd * 125).toFixed(2)}`);
@@ -1084,7 +1091,7 @@ const Pricing = () => {
                                     <Check size={20} color="#0086FF" style={{ marginLeft: 'auto', opacity: 0.5 }} />
                                 </button>
 
-                                {isWalletLoading ? (
+                                {!appliedDiscount && isWalletLoading ? (
                                     <button
                                         className="pm-btn pm-card"
                                         style={{
@@ -1105,7 +1112,7 @@ const Pricing = () => {
                                         </div>
                                         <div style={{ marginLeft: 'auto', width: 18, height: 18, border: '2.5px solid #d0d5dd', borderTopColor: '#0086FF', borderRadius: '50%', animation: 'spin-anim 0.8s linear infinite' }} />
                                     </button>
-                                ) : walletBalance >= parseFloat(current.total) ? (
+                                ) : !appliedDiscount && walletBalance >= parseFloat(current.total) ? (
                                     <button
                                         className="pm-btn pm-card"
                                         style={{
@@ -1139,7 +1146,7 @@ const Pricing = () => {
                                         ৳ {appliedDiscount ? (parseFloat(current.totalBDT) * (1 - appliedDiscount / 100)).toFixed(2) : current.totalBDT}
                                     </span>
                                 </div>
-                                {(walletBalance > 0 || isWalletLoading) && (
+                                {!appliedDiscount && (walletBalance > 0 || isWalletLoading) && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ fontSize: '14px', color: '#98a2b3', fontWeight: '1000' }}>Wallet Balance</span>
                                         {isWalletLoading ? (
