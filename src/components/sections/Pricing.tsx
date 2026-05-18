@@ -256,8 +256,7 @@ const Pricing = () => {
 
         setIsLoading(true);
         try {
-            // const apiUrl = API_URL;
-             const apiUrl = 'http://127.0.0.1:5001';
+            const apiUrl = API_URL;
             const response = await axios.post(`${apiUrl}/api/affiliate/wallet-purchase`, {
                 bandwidthGb: bandwidth
             }, {
