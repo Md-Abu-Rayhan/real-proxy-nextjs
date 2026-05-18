@@ -248,15 +248,16 @@ const Pricing = () => {
             toast("Promo code cannot be used with wallet balance. Please use EPS or Crypto payment to avail discount.");
         }
 
-        const totalTaka = parseFloat(current.totalBDT);
-        if (walletBalance < totalTaka) {
-            toast.error(`Insufficient wallet balance. Available: ৳${(walletBalance).toFixed(2)}, Required: ৳${(totalTaka).toFixed(2)}`);
+        const totalUsd = parseFloat(current.totalBDT) / 125;
+        if (walletBalance < totalUsd) {
+            toast.error(`Insufficient wallet balance. Available: $${(walletBalance).toFixed(4)}, Required: $${(totalUsd).toFixed(4)}`);
             return;
         }
 
         setIsLoading(true);
         try {
-            const apiUrl = API_URL;
+            // const apiUrl = API_URL;
+             const apiUrl = 'http://127.0.0.1:5001';
             const response = await axios.post(`${apiUrl}/api/affiliate/wallet-purchase`, {
                 bandwidthGb: bandwidth
             }, {
@@ -264,7 +265,7 @@ const Pricing = () => {
             });
 
             if (response.data) {
-                const newBalance = Math.max(0, walletBalance - totalTaka);
+                const newBalance = Math.max(0, walletBalance - totalUsd);
                 setWalletBalance(newBalance);
                 toast.success(`🎉 Successfully purchased ${bandwidth} GB of proxy bandwidth!`);
                 setShowPaymentModal(false);
@@ -1112,7 +1113,7 @@ const Pricing = () => {
                                         </div>
                                         <div style={{ marginLeft: 'auto', width: 18, height: 18, border: '2.5px solid #d0d5dd', borderTopColor: '#0086FF', borderRadius: '50%', animation: 'spin-anim 0.8s linear infinite' }} />
                                     </button>
-                                ) : !appliedDiscount && walletBalance >= parseFloat(current.totalBDT) ? (
+                                ) : !appliedDiscount && walletBalance >= (parseFloat(current.totalBDT) / 125) ? (
                                     <button
                                         className="pm-btn pm-card"
                                         style={{
@@ -1128,7 +1129,7 @@ const Pricing = () => {
                                         </div>
                                         <div className="option-info">
                                             <h4 style={{ color: '#00b67a' }}>Purchase with Wallet Balance</h4>
-                                            <p>Available: <strong style={{ color: '#00b67a' }}>৳{(walletBalance).toFixed(2)}</strong> — instant, no redirect needed.</p>
+                                            <p>Available: <strong style={{ color: '#00b67a' }}>${(walletBalance).toFixed(4)}</strong> — instant, no redirect needed.</p>
                                         </div>
                                         <Check size={20} color="#00b67a" style={{ marginLeft: 'auto', opacity: 0.7 }} />
                                     </button>
@@ -1143,7 +1144,7 @@ const Pricing = () => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: walletBalance > 0 ? '8px' : '0' }}>
                                     <span style={{ fontSize: '14px', color: '#98a2b3', fontWeight: '1000' }}>Total Price</span>
                                     <span style={{ fontSize: '18px', color: '#0086FF', fontWeight: '800' }}>
-                                        ৳ {appliedDiscount ? (parseFloat(current.totalBDT) * (1 - appliedDiscount / 100)).toFixed(2) : current.totalBDT}
+                                        $ {appliedDiscount ? ((parseFloat(current.totalBDT) * (1 - appliedDiscount / 100)) / 125).toFixed(4) : (parseFloat(current.totalBDT) / 125).toFixed(4)}
                                     </span>
                                 </div>
                                 {!appliedDiscount && (walletBalance > 0 || isWalletLoading) && (
@@ -1152,8 +1153,8 @@ const Pricing = () => {
                                         {isWalletLoading ? (
                                             <span style={{ width: 80, height: 16, background: '#e4e7ec', borderRadius: 6, display: 'inline-block', animation: 'pulse 1.2s ease-in-out infinite' }} />
                                         ) : (
-                                            <span style={{ fontSize: '14px', color: walletBalance >= parseFloat(current.totalBDT) ? '#00b67a' : '#ef4444', fontWeight: '700' }}>
-                                                ৳{(walletBalance).toFixed(2)} {walletBalance >= parseFloat(current.totalBDT) ? '✓ Sufficient' : '✗ Insufficient'}
+                                            <span style={{ fontSize: '14px', color: walletBalance >= (parseFloat(current.totalBDT) / 125) ? '#00b67a' : '#ef4444', fontWeight: '700' }}>
+                                                ${(walletBalance).toFixed(4)} {walletBalance >= (parseFloat(current.totalBDT) / 125) ? '✓ Sufficient' : '✗ Insufficient'}
                                             </span>
                                         )}
                                     </div>

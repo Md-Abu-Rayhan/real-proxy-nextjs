@@ -121,8 +121,8 @@ export default function AffiliateDashboard() {
       {/* Stats Grid */}
       <div className="stats-grid">
         {[
-          { title: "Total Earnings", value: `৳${Number(data?.totalEarnings ?? data?.TotalEarnings ?? 0).toFixed(2)}`, icon: () => <span style={{ fontSize: '20px', fontWeight: 'bold' }}>৳</span>, color: "#0086FF", bg: "rgba(0, 134, 255, 0.1)" },
-          { title: "Pending Commission", value: `৳${Number(data?.pendingCommission ?? data?.PendingCommission ?? 0).toFixed(2)}`, icon: TrendingUp, color: "#F59E0B", bg: "rgba(245, 158, 11, 0.1)" },
+      { title: "Total Earnings", value: `$${Number(data?.totalEarnings ?? data?.TotalEarnings ?? 0).toFixed(4)}`, icon: DollarSign, color: "#0086FF", bg: "rgba(0, 134, 255, 0.1)" },
+      { title: "Pending Commission", value: `$${Number(data?.pendingCommission ?? data?.PendingCommission ?? 0).toFixed(4)}`, icon: TrendingUp, color: "#F59E0B", bg: "rgba(245, 158, 11, 0.1)" },
           { title: "Total Referrals", value: data?.totalReferrals ?? data?.TotalReferrals ?? 0, icon: Users, color: "#8B5CF6", bg: "rgba(139, 92, 246, 0.1)" },
           { title: "Active Buyers", value: data?.activeBuyers ?? data?.ActiveBuyers ?? 0, icon: Award, color: "#10B981", bg: "rgba(16, 185, 129, 0.1)" },
         ].map((stat, i) => (
@@ -148,8 +148,8 @@ export default function AffiliateDashboard() {
               <div className="available-badge">Available Balance</div>
             </div>
             <div className="balance-display">
-              <span className="currency">৳</span>
-              {loading ? <span className="skeleton skeleton-balance" /> : affiliateBalance.toFixed(2)}
+              <span className="currency">$</span>
+              {loading ? <span className="skeleton skeleton-balance" /> : affiliateBalance.toFixed(4)}
             </div>
             <p className="action-desc">Convert your approved affiliate balance directly to your main wallet to purchase bandwidth instantly.</p>
             <button
@@ -198,9 +198,9 @@ export default function AffiliateDashboard() {
                         <td>
                           <span className="table-date">{new Date(item.createdAt || item.CreatedAt).toLocaleDateString()}</span>
                         </td>
-                        <td><span className="table-amount">৳{Number(item.purchaseAmount || item.PurchaseAmount || 0).toFixed(2)}</span></td>
+                        <td><span className="table-amount">${Number(item.purchaseAmount || item.PurchaseAmount || 0).toFixed(4)}</span></td>
                         <td>
-                          <span className="table-commission">+৳{Number(item.commissionAmount || item.CommissionAmount || 0).toFixed(2)}</span>
+                          <span className="table-commission">+${Number(item.commissionAmount || item.CommissionAmount || 0).toFixed(4)}</span>
                         </td>
                         <td>
                           <span className={`status-badge ${(item.status || item.Status)?.toLowerCase()}`}>
