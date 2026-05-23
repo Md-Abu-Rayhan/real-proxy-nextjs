@@ -103,7 +103,7 @@ const TrafficSetupPage = () => {
     const [selectedType, setSelectedType] = useState('Sticky Session');
     const [sessionType, setSessionType] = useState('Normal Session');
     const [amount, setAmount] = useState(1);
-    const [lifetime, setLifetime] = useState(300);
+    const [lifetime, setLifetime] = useState(30);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [isResettingKey, setIsResettingKey] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
@@ -584,7 +584,7 @@ const TrafficSetupPage = () => {
 
     const generatedPasswords = useMemo(() => {
         if (!isMounted) return [];
-        return Array.from({ length: Math.min(Math.max(1, amount), 50) }, () => {
+        return Array.from({ length: Math.min(Math.max(1, amount), 300) }, () => {
             const basePass = residentialProxyKey || proxyInfo?.proxyPassword || 'pass';
             let finalPass = basePass + countryPart + regionPart + cityPart;
             if (selectedType !== 'Rotating') {
