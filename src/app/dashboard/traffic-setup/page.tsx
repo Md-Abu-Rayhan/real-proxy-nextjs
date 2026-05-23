@@ -103,7 +103,7 @@ const TrafficSetupPage = () => {
     const [selectedType, setSelectedType] = useState('Sticky Session');
     const [sessionType, setSessionType] = useState('Normal Session');
     const [amount, setAmount] = useState(1);
-    const [lifetime, setLifetime] = useState(30);
+    const [lifetime, setLifetime] = useState(300);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [isResettingKey, setIsResettingKey] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
