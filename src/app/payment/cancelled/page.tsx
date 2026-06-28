@@ -58,7 +58,7 @@ const PaymentCancelledPage = () => {
                         <Home size={18} /> Home
                     </button>
                     <button
-                        onClick={() => router.push('/checkout')}
+                        onClick={() => router.push('/')}
                         style={{
                             padding: '16px',
                             borderRadius: '16px',
