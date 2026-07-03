@@ -1028,8 +1028,8 @@ const Pricing = () => {
                                         <div className="pay-logos">
                                             <div className="pay-logos-text">Securely Pay with</div>
                                             <div className="logos-row">
-                                                <img src="/binance-pay.png" alt="binance-pay" className="binance-logo" />
-                                                <img src="/Bitcoin-Logo.png" alt="bitcoin" />
+                                                {/* <img src="/binance-pay.png" alt="binance-pay" className="binance-logo" />
+                                                <img src="/Bitcoin-Logo.png" alt="bitcoin" /> */}
                                                 <img src="/bKash-Logo.png" alt="bkash" />
                                                 <img src="/Nagad-Logo.png" alt="nagad" />
                                                 <img src="/rocket.png" alt="rocket" />
