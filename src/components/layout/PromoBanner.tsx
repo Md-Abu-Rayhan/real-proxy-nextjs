@@ -31,7 +31,7 @@ const PromoBanner = () => {
                             if (pricingSection) {
                                 pricingSection.scrollIntoView({ behavior: 'smooth' });
                             } else {
-                                router.push('/dashboard/traffic-setup');
+                                router.push('/dashboard/residential-proxies');
                             }
                         } else {
                             router.push('/register');

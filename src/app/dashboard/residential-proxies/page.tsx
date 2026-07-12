@@ -57,7 +57,7 @@ interface ISP {
     country_code: string;
 }
 
-const TrafficSetupPage = () => {
+const ResidentialProxiesPage = () => {
     const [activeTab, setActiveTab] = useState('Proxy Setup');
 
     const [trafficReminder, setTrafficReminder] = useState(false);
@@ -107,8 +107,38 @@ const TrafficSetupPage = () => {
     const [showResetConfirm, setShowResetConfirm] = useState(false);
     const [isResettingKey, setIsResettingKey] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const [isDarkMode, setIsDarkMode] = useState(false);
 
-    const theme = {
+    useEffect(() => {
+        setIsMounted(true);
+        const checkDarkMode = () => {
+            setIsDarkMode(document.body.classList.contains('dark-mode'));
+        };
+        checkDarkMode();
+
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    checkDarkMode();
+                }
+            });
+        });
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+        return () => {
+            observer.disconnect();
+        };
+    }, []);
+
+    const theme = isDarkMode ? {
+        bg: '#0F172A',
+        card: '#1E293B',
+        input: '#334155',
+        active: '#3B82F6',
+        text: '#F8FAFC',
+        textMuted: '#94A3B8',
+        border: '#475569'
+    } : {
         bg: '#F8FAFC',
         card: '#FFFFFF',
         input: '#F1F5F9',
@@ -553,8 +583,8 @@ const TrafficSetupPage = () => {
     };
 
     const cardStyle: React.CSSProperties = {
-        backgroundColor: 'white',
-        border: '1px solid #f0f0f0',
+        backgroundColor: theme.card,
+        border: `1px solid ${theme.border}`,
         borderRadius: '12px',
         padding: '24px',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
@@ -562,7 +592,8 @@ const TrafficSetupPage = () => {
         flexDirection: 'column',
         gap: '12px',
         height: '100%',
-        minHeight: '220px'
+        minHeight: '220px',
+        color: theme.text
     };
 
     const inputContainerStyle: React.CSSProperties = {
@@ -992,29 +1023,29 @@ const TrafficSetupPage = () => {
                     </div>
                 </div>
             ) : (
-                <div style={{ padding: '120px 40px', textAlign: 'center', color: '#86909C', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #f0f0f0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                <div style={{ padding: '120px 40px', textAlign: 'center', color: theme.textMuted, backgroundColor: theme.card, borderRadius: '12px', border: `1px solid ${theme.border}`, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                     <RefreshCw size={48} style={{ opacity: 0.1, marginBottom: '24px' }} />
-                    <div style={{ fontSize: '18px', fontWeight: '600', color: '#1D2129', marginBottom: '8px' }}>No Data Available</div>
-                    <div style={{ fontSize: '14px', color: '#86909C' }}>Statistics dynamic data will be displayed once there is usage.</div>
+                    <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '8px' }}>No Data Available</div>
+                    <div style={{ fontSize: '14px', color: theme.textMuted }}>Statistics dynamic data will be displayed once there is usage.</div>
                 </div>
             )}
 
             {/* Reset Proxy Key Confirmation Modal */}
             {showResetConfirm && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(2px)' }}>
-                    <div style={{ background: 'white', borderRadius: '16px', padding: '36px 40px', maxWidth: '440px', width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)', textAlign: 'center' }}>
-                        <div style={{ width: '56px', height: '56px', background: '#fff1f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                    <div style={{ background: theme.card, color: theme.text, borderRadius: '16px', padding: '36px 40px', maxWidth: '440px', width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)', textAlign: 'center' }}>
+                        <div style={{ width: '56px', height: '56px', background: isDarkMode ? '#3f1a1d' : '#fff1f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                             <RefreshCw size={26} color="#cf1322" strokeWidth={2.5} />
                         </div>
-                        <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#1D2129', marginBottom: '12px' }}>RESET PROXY PASSWORD?</h3>
-                        <p style={{ fontSize: '14px', color: '#64748B', lineHeight: '1.6', marginBottom: '28px' }}>
+                        <h3 style={{ fontSize: '20px', fontWeight: '700', color: theme.text, marginBottom: '12px' }}>RESET PROXY PASSWORD?</h3>
+                        <p style={{ fontSize: '14px', color: theme.textMuted, lineHeight: '1.6', marginBottom: '28px' }}>
                             If you reset your proxy key, your current password will <strong>stop working immediately</strong>. All existing proxy connections using this key will be disconnected. Are you sure you want to continue?
                         </p>
                         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                             <button
                                 onClick={() => setShowResetConfirm(false)}
                                 disabled={isResettingKey}
-                                style={{ flex: 1, padding: '11px 20px', borderRadius: '8px', border: '1px solid #E2E8F0', background: 'white', color: '#4E5969', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
+                                style={{ flex: 1, padding: '11px 20px', borderRadius: '8px', border: `1px solid ${theme.border}`, background: theme.card, color: theme.text, fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }}
                             >
                                 No, Cancel
                             </button>
@@ -1472,7 +1503,7 @@ const TrafficSetupPage = () => {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    border-bottom: 1px solid #f0f0f0;
+                    border-bottom: 1px solid ${theme.border};
                     margin-bottom: 32px;
                     flex-wrap: wrap;
                     gap: 16px;
@@ -1720,4 +1751,4 @@ const TrafficSetupPage = () => {
     );
 };
 
-export default TrafficSetupPage;
+export default ResidentialProxiesPage;

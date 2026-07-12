@@ -684,6 +684,138 @@ export default function AffiliateDashboard() {
           .referral-info { overflow: hidden; }
           .referral-link { font-size: 12px; }
         }
+
+        /* Dark Mode Styling Overrides */
+        :global(body.dark-mode) .header-card {
+          background-color: #1E293B;
+          border-color: #334155;
+        }
+
+        :global(body.dark-mode) .header-title {
+          color: #F8FAFC;
+        }
+
+        :global(body.dark-mode) .header-desc {
+          color: #94A3B8;
+        }
+
+        :global(body.dark-mode) .referral-box {
+          background-color: #0F172A;
+          border-color: #334155;
+        }
+
+        :global(body.dark-mode) .referral-link {
+          color: #F8FAFC;
+        }
+
+        :global(body.dark-mode) .copy-btn {
+          background-color: #1E293B;
+          border-color: #334155;
+          color: #60A5FA;
+        }
+
+        :global(body.dark-mode) .copy-btn:hover {
+          background-color: #334155;
+          border-color: #475569;
+        }
+
+        :global(body.dark-mode) .stat-card {
+          background-color: #1E293B;
+          border-color: #334155;
+        }
+
+        :global(body.dark-mode) .stat-card:hover {
+          border-color: #475569;
+          box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        :global(body.dark-mode) .stat-title {
+          color: #94A3B8;
+        }
+
+        :global(body.dark-mode) .stat-value {
+          color: #F8FAFC;
+        }
+
+        :global(body.dark-mode) .action-card {
+          background-color: #1E293B;
+          border-color: #334155;
+        }
+
+        :global(body.dark-mode) .action-title {
+          color: #F8FAFC;
+        }
+
+        :global(body.dark-mode) .available-badge {
+          background-color: #334155;
+          color: #94A3B8;
+        }
+
+        :global(body.dark-mode) .balance-display .currency {
+          color: #94A3B8;
+        }
+
+        :global(body.dark-mode) .withdraw-info-box {
+          background-color: #0F172A;
+          border-color: #475569;
+        }
+
+        :global(body.dark-mode) .min-withdraw-amount {
+          color: #F8FAFC;
+        }
+
+        :global(body.dark-mode) .min-withdraw-label {
+          color: #94A3B8;
+        }
+
+        :global(body.dark-mode) .action-desc {
+          color: #94A3B8;
+        }
+
+        :global(body.dark-mode) .history-container {
+          background-color: #1E293B;
+          border-color: #334155;
+        }
+
+        :global(body.dark-mode) .history-header {
+          background-color: #1E293B;
+          border-bottom-color: #334155;
+          color: #F8FAFC;
+        }
+
+        :global(body.dark-mode) .history-empty h4 {
+          color: #F8FAFC;
+        }
+
+        :global(body.dark-mode) .history-empty p {
+          color: #94A3B8;
+        }
+
+        :global(body.dark-mode) .empty-icon-wrap {
+          background-color: #334155;
+        }
+
+        :global(body.dark-mode) .history-table th {
+          background-color: #0F172A;
+          color: #94A3B8;
+          border-bottom-color: #334155;
+        }
+
+        :global(body.dark-mode) .history-table td {
+          border-bottom-color: #334155;
+        }
+
+        :global(body.dark-mode) .history-table tr:hover {
+          background-color: #334155;
+        }
+
+        :global(body.dark-mode) .table-date {
+          color: #94A3B8;
+        }
+
+        :global(body.dark-mode) .table-amount {
+          color: #F8FAFC;
+        }
       `}</style>
     </div>
   );

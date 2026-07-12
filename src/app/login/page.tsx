@@ -52,7 +52,7 @@ const LoginPage = () => {
 
                 // Redirect to dashboard
                 setTimeout(() => {
-                    router.push('/dashboard/traffic-setup');
+                    router.push('/dashboard/residential-proxies');
                 }, 1000);
             }
         } catch (error: any) {

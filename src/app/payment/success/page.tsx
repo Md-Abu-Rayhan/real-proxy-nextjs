@@ -179,7 +179,7 @@ const PaymentSuccessContent = () => {
                         <Home size={18} /> Home
                     </button>
                     <button
-                        onClick={() => router.push('/dashboard/traffic-setup')}
+                        onClick={() => router.push('/dashboard/residential-proxies')}
                         style={{
                             padding: '16px',
                             borderRadius: '16px',

@@ -23,7 +23,10 @@ import {
     HelpCircle,
     LogOut,
     Menu,
-    X
+    X,
+    Crown,
+    Sun,
+    Moon
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { triggerContactModal } from '@/components/ui/ContactModal';
@@ -37,6 +40,31 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [windowWidth, setWindowWidth] = useState(1200);
     const [isMounted, setIsMounted] = useState(false);
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    const toggleDarkMode = () => {
+        const nextMode = !isDarkMode;
+        setIsDarkMode(nextMode);
+        if (nextMode) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('theme', 'light');
+        }
+    };
+
+    React.useEffect(() => {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            setIsDarkMode(true);
+            document.body.classList.add('dark-mode');
+        } else {
+            setIsDarkMode(false);
+            document.body.classList.remove('dark-mode');
+        }
+    }, []);
 
     React.useEffect(() => {
         setIsMounted(true);
@@ -86,7 +114,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         {
             group: 'TRAFFIC PLANS',
             items: [
-                { name: 'Residential Proxies', icon: <RefreshCw size={18} />, path: '/dashboard/traffic-setup' }
+                { name: 'Residential Proxies', icon: <RefreshCw size={18} />, path: '/dashboard/residential-proxies' },
+                { name: 'Premium Residential Proxies', icon: <Crown size={18} style={{ color: '#FFA800' }} />, path: '/dashboard/premium-residential-proxies' }
             ]
         },
         {
@@ -205,11 +234,33 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                             <Bell size={20} className="header-icon" />
                         </div>
 
-                        <div className="language-selector">
-                            <Globe size={16} />
-                            <span className="lang-text">EN-English</span>
-                            <ChevronDown size={14} />
-                        </div>
+                        {pathname?.includes('/dashboard/premium-residential-proxies') || pathname?.includes('/dashboard/residential-proxies') || pathname?.includes('/dashboard/affiliate') ? (
+                            <button
+                                onClick={toggleDarkMode}
+                                className="theme-toggle-btn"
+                                aria-label="Toggle Dark Mode"
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: isDarkMode ? '#F8FAFC' : '#4E5969',
+                                    padding: '8px',
+                                    borderRadius: '50%',
+                                    transition: 'background-color 0.2s',
+                                }}
+                            >
+                                {isDarkMode ? <Sun size={20} color="#FFA800" /> : <Moon size={20} />}
+                            </button>
+                        ) : (
+                            <div className="language-selector">
+                                <Globe size={16} />
+                                <span className="lang-text">EN-English</span>
+                                <ChevronDown size={14} />
+                            </div>
+                        )}
 
                         <div className="user-profile">
                             <div className="user-info">
@@ -610,6 +661,70 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                         padding-left: 0;
                         border-left: none;
                     }
+                }
+
+                /* Dark Mode Styling Overrides */
+                body.dark-mode .dashboard-wrapper {
+                    background-color: #0F172A;
+                    color: #F8FAFC;
+                }
+
+                body.dark-mode .dashboard-sidebar {
+                    background-color: #1E293B;
+                    border-right-color: #334155;
+                }
+
+                body.dark-mode .nav-group-header {
+                    color: #94A3B8;
+                }
+
+                body.dark-mode .nav-item {
+                    color: #94A3B8;
+                }
+
+                body.dark-mode .nav-item:hover {
+                    background-color: #334155;
+                    color: #3B82F6;
+                }
+
+                body.dark-mode .nav-item.active {
+                    color: #3B82F6;
+                    background-color: #1E3A8A;
+                }
+
+                body.dark-mode .nav-icon {
+                    color: #94A3B8;
+                }
+
+                body.dark-mode .nav-item.active .nav-icon {
+                    color: #3B82F6;
+                }
+
+                body.dark-mode .dashboard-header {
+                    background-color: #1E293B;
+                    border-bottom-color: #334155;
+                }
+
+                body.dark-mode .sidebar-toggle {
+                    background-color: #1E293B;
+                    border-color: #334155;
+                    color: #F8FAFC;
+                }
+
+                body.dark-mode .sidebar-toggle:hover {
+                    background-color: #334155;
+                }
+
+                body.dark-mode .user-name {
+                    color: #F8FAFC;
+                }
+
+                body.dark-mode .user-profile {
+                    border-left-color: #334155;
+                }
+
+                body.dark-mode .header-icon {
+                    color: #94A3B8;
                 }
             `}</style>
         </div>

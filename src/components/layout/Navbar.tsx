@@ -66,7 +66,7 @@ const Navbar = () => {
                 <div className="desktop-actions">
                     {isLoggedIn ? (
                         <>
-                            <Link href="/dashboard/traffic-setup" className="nav-link-login" style={{ color: '#163561', fontWeight: '600', fontSize: '15px' }}>Dashboard</Link>
+                            <Link href="/dashboard/residential-proxies" className="nav-link-login" style={{ color: '#163561', fontWeight: '600', fontSize: '15px' }}>Dashboard</Link>
                             <button onClick={handleLogout} className="btn-outline" style={{ padding: '8px 20px', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
                                 Logout
                             </button>
@@ -122,7 +122,7 @@ const Navbar = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '10px' }}>
                             {isLoggedIn ? (
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
-                                    <Link href="/dashboard/traffic-setup" className="btn-primary" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Link href="/dashboard/residential-proxies" className="btn-primary" style={{ padding: '12px', textAlign: 'center' }} onClick={() => setIsMobileMenuOpen(false)}>
                                         Dashboard
                                     </Link>
                                     <button onClick={handleLogout} className="btn-outline" style={{ padding: '12px', textAlign: 'center', cursor: 'pointer' }}>

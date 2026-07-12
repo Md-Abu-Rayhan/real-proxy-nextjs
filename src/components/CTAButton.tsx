@@ -11,7 +11,7 @@ export default function CTAButton() {
         if (pricingSection) {
           pricingSection.scrollIntoView({ behavior: "smooth" });
         } else {
-          window.location.href = "/dashboard/traffic-setup";
+          window.location.href = "/dashboard/residential-proxies";
         }
       } else {
         window.location.href = "/signup";

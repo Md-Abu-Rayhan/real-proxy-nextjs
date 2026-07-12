@@ -24,7 +24,7 @@ const Pricing = () => {
     const [isWalletLoading, setIsWalletLoading] = useState<boolean>(false);
 
     const getPricing = (gb: number) => {
-        let pricePerGb = 1.00; // Fixed at $1.00 per GB
+        let pricePerGb = proxyType === 'Static Res.' ? 1.50 : 1.00;
         const total = (gb * pricePerGb).toFixed(2);
         const originalTotal = (gb * 3.10).toFixed(2);
         const discount = Math.round(((3.10 - pricePerGb) / 3.10) * 100);
@@ -37,13 +37,20 @@ const Pricing = () => {
     const current = getPricing(bandwidth);
 
     React.useEffect(() => {
+        const typeParam = searchParams.get('type');
+        if (typeParam === 'static') {
+            setProxyType('Static Res.');
+        } else if (typeParam === 'rotating') {
+            setProxyType('Rotating Res.');
+        }
+
         if (isRecharge) {
             const pricingSection = document.getElementById('pricing-section');
             if (pricingSection) {
                 pricingSection.scrollIntoView({ behavior: 'smooth' });
             }
         }
-    }, [isRecharge]);
+    }, [isRecharge, searchParams]);
 
     // Handle Promo Code Application
     const handleApplyPromo = async () => {
@@ -56,12 +63,14 @@ const Pricing = () => {
         try {
             const token = localStorage.getItem('auth_token');
             const apiUrl = API_URL;
-            const currentBDT = (bandwidth * 1.00 * 125);
+            const currentBDT = (bandwidth * (proxyType === 'Static Res.' ? 1.50 : 1.00) * 125);
 
             const response = await axios.get(`${apiUrl}/api/Payment/validate-promo`, {
                 params: {
                     code: promoCode,
-                    packageId: bandwidth === 10 ? "res_10gb" : (bandwidth === 50 ? "res_50gb" : (bandwidth === 100 ? "res_100gb" : "custom")),
+                    packageId: proxyType === 'Static Res.' 
+                        ? (bandwidth === 10 ? "static_10gb" : (bandwidth === 50 ? "static_50gb" : (bandwidth === 100 ? "static_100gb" : "static_custom")))
+                        : (bandwidth === 10 ? "res_10gb" : (bandwidth === 50 ? "res_50gb" : (bandwidth === 100 ? "res_100gb" : "custom"))),
                     amount: currentBDT
                 },
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -88,13 +97,15 @@ const Pricing = () => {
             const reValidate = async () => {
                 const token = localStorage.getItem('auth_token');
                 const apiUrl = API_URL;
-                const currentBDT = (bandwidth * 1.00 * 125);
+                const currentBDT = (bandwidth * (proxyType === 'Static Res.' ? 1.50 : 1.00) * 125);
 
                 try {
                     const response = await axios.get(`${apiUrl}/api/Payment/validate-promo`, {
                         params: {
                             code: promoCode,
-                            packageId: bandwidth === 10 ? "res_10gb" : (bandwidth === 50 ? "res_50gb" : (bandwidth === 100 ? "res_100gb" : "custom")),
+                            packageId: proxyType === 'Static Res.' 
+                                ? (bandwidth === 10 ? "static_10gb" : (bandwidth === 50 ? "static_50gb" : (bandwidth === 100 ? "static_100gb" : "static_custom")))
+                                : (bandwidth === 10 ? "res_10gb" : (bandwidth === 50 ? "res_50gb" : (bandwidth === 100 ? "res_100gb" : "custom"))),
                             amount: currentBDT
                         },
                         headers: { 'Authorization': `Bearer ${token}` }
@@ -154,7 +165,7 @@ const Pricing = () => {
 
         setIsLoading(true);
         try {
-            const orderId = `CR${Date.now()}`.substring(0, 16);
+            const orderId = `${proxyType === 'Static Res.' ? 'ST' : 'CR'}${Date.now()}`.substring(0, 16);
             const amount = parseFloat(current.total);
             const apiUrl = API_URL;
             const response = await axios.post(`${apiUrl}/api/CryptoPayment/initialize`, {
@@ -183,7 +194,8 @@ const Pricing = () => {
         }
     };
 
-    const handleFiatPayment = async () => {        const token = localStorage.getItem('auth_token');
+    const handleFiatPayment = async () => {
+        const token = localStorage.getItem('auth_token');
         if (!token) {
             toast.error("Please login to proceed with payment.");
             router.push('/login');
@@ -193,9 +205,16 @@ const Pricing = () => {
         setIsLoading(true);
         try {
             let packageId = "custom";
-            if (bandwidth === 10) packageId = "res_10gb";
-            else if (bandwidth === 50) packageId = "res_50gb";
-            else if (bandwidth === 100) packageId = "res_100gb";
+            if (proxyType === 'Static Res.') {
+                if (bandwidth === 10) packageId = "static_10gb";
+                else if (bandwidth === 50) packageId = "static_50gb";
+                else if (bandwidth === 100) packageId = "static_100gb";
+                else packageId = "static_custom";
+            } else {
+                if (bandwidth === 10) packageId = "res_10gb";
+                else if (bandwidth === 50) packageId = "res_50gb";
+                else if (bandwidth === 100) packageId = "res_100gb";
+            }
 
             const apiUrl = API_URL;
             const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {
@@ -258,7 +277,8 @@ const Pricing = () => {
         try {
             const apiUrl = API_URL;
             const response = await axios.post(`${apiUrl}/api/affiliate/wallet-purchase`, {
-                bandwidthGb: bandwidth
+                bandwidthGb: bandwidth,
+                proxyType: proxyType === 'Static Res.' ? 'Static' : 'Rotating'
             }, {
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
@@ -268,7 +288,7 @@ const Pricing = () => {
                 setWalletBalance(newBalance);
                 toast.success(`🎉 Successfully purchased ${bandwidth} GB of proxy bandwidth!`);
                 setShowPaymentModal(false);
-                router.push('/dashboard/traffic-setup');
+                router.push(proxyType === 'Static Res.' ? '/dashboard/premium-residential-proxies' : '/dashboard/residential-proxies');
             }
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Wallet purchase failed.");
@@ -917,12 +937,12 @@ const Pricing = () => {
 
                 <div className="content-area">
                     <AnimatePresence mode="wait">
-                        {proxyType === 'Rotating Res.' ? (
-                            <motion.div key="rotating" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} transition={{ duration: 0.4 }}>
+                        {proxyType === 'Rotating Res.' || proxyType === 'Static Res.' ? (
+                            <motion.div key={proxyType} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} transition={{ duration: 0.4 }}>
                                 <div className="pricing-main-card" id="bandwidth-section">
                                     <div className="bandwidth-header">
                                         <ShoppingCart size={28} color="#0086FF" />
-                                        <h3>{isRecharge ? "Recharge Account" : "Pick Your Bandwidth"}</h3>
+                                         <h3>{isRecharge ? "Recharge Account" : (proxyType === 'Static Res.' ? "Pick Your Premium Bandwidth" : "Pick Your Bandwidth")}</h3>
                                     </div>
 
                                     <div className="slider-container">
