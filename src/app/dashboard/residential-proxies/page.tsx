@@ -90,7 +90,7 @@ const ResidentialProxiesPage = () => {
     const [allCitiesData, setAllCitiesData] = useState<City[]>([]);
     const [allSubRegionsData, setAllSubRegionsData] = useState<SubRegion[]>([]);
     const [allIspsData, setAllIspsData] = useState<ISP[]>([]);
-    const [selectedHostname, setSelectedHostname] = useState('premium.realproxy.net');
+    const [selectedHostname, setSelectedHostname] = useState('rp.realproxy.net');
     const [isHostnameDropdownOpen, setIsHostnameDropdownOpen] = useState(false);
     const [selectedSessionType, setSelectedSessionType] = useState('Sticky IP');
     const [isSessionTypeDropdownOpen, setIsSessionTypeDropdownOpen] = useState(false);
@@ -751,8 +751,8 @@ const ResidentialProxiesPage = () => {
                                         </div>
                                         <div className="info-item">
                                             <span className="info-label">Hostname:</span>
-                                            <span className="info-value">premium.realproxy.net</span>
-                                            <button className="info-copy-btn" onClick={() => { navigator.clipboard.writeText('premium.realproxy.net'); toast.success('Copied!'); }}>
+                                            <span className="info-value">rp.realproxy.net</span>
+                                            <button className="info-copy-btn" onClick={() => { navigator.clipboard.writeText('rp.realproxy.net'); toast.success('Copied!'); }}>
                                                 <Copy size={13} strokeWidth={2.5} />
                                             </button>
                                         </div>
