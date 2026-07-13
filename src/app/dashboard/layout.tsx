@@ -115,7 +115,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             group: 'TRAFFIC PLANS',
             items: [
                 { name: 'Residential Proxies', icon: <RefreshCw size={18} />, path: '/dashboard/residential-proxies' },
-                // { name: 'Premium Residential Proxies', icon: <Crown size={18} style={{ color: '#FFA800' }} />, path: '/dashboard/premium-residential-proxies' }
+                { name: 'Premium Residential Proxies', icon: <Crown size={18} style={{ color: '#FFA800' }} />, path: '/dashboard/premium-residential-proxies' }
             ]
         },
         {

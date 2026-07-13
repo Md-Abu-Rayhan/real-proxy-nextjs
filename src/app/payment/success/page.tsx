@@ -179,7 +179,31 @@ const PaymentSuccessContent = () => {
                         <Home size={18} /> Home
                     </button>
                     <button
-                        onClick={() => router.push('/dashboard/residential-proxies')}
+                        onClick={() => {
+                            // Determine dashboard path dynamically based on payment product name or order ID
+                            let dashboardPath = '/dashboard/residential-proxies';
+                            
+                            // 1. Check if MixPay Crypto order ID starts with 'st' (Premium Static)
+                            if (orderId && orderId.toLowerCase().startsWith('st')) {
+                                dashboardPath = '/dashboard/premium-residential-proxies';
+                            }
+                            
+                            // 2. Check if EPS BDT payment product name contains 'static' or 'premium'
+                            if (paymentDetails) {
+                                const productName = paymentDetails.productInfo?.name || paymentDetails.productName || '';
+                                if (productName.toLowerCase().includes('static') || productName.toLowerCase().includes('premium')) {
+                                    dashboardPath = '/dashboard/premium-residential-proxies';
+                                }
+                                
+                                // Check if transaction ID or customerOrderId starts with 'st'
+                                const txnId = paymentDetails.transactionId || '';
+                                if (txnId.toLowerCase().startsWith('st')) {
+                                    dashboardPath = '/dashboard/premium-residential-proxies';
+                                }
+                            }
+                            
+                            router.push(dashboardPath);
+                        }}
                         style={{
                             padding: '16px',
                             borderRadius: '16px',

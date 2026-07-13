@@ -90,7 +90,7 @@ const PremiumResidentialProxiesPage = () => {
     const [isAsnLoading, setIsAsnLoading] = useState(false);
     const [isAsnDropdownOpen, setIsAsnDropdownOpen] = useState(false);
     const [asnSearchQuery, setAsnSearchQuery] = useState('');
-    const [selectedHostname, setSelectedHostname] = useState('rp.realproxy.net');
+    const [selectedHostname, setSelectedHostname] = useState('premium.realproxy.net');
     const [isHostnameDropdownOpen, setIsHostnameDropdownOpen] = useState(false);
     const [selectedSessionType, setSelectedSessionType] = useState('Sticky IP');
     const [isSessionTypeDropdownOpen, setIsSessionTypeDropdownOpen] = useState(false);
@@ -166,7 +166,6 @@ const PremiumResidentialProxiesPage = () => {
             return;
         }
 
-        // Fetch proxy info from API
         const fetchProxyInfo = async () => {
             try {
                 const response = await axios.get(`${API_URL}/api/Auth/get-proxy-info`, {
@@ -182,7 +181,6 @@ const PremiumResidentialProxiesPage = () => {
             } catch (error: any) {
                 console.error('Error fetching proxy info:', error);
                 if (error.response?.status === 401) {
-                    // Token expired or invalid, redirect to login
                     localStorage.removeItem('auth_token');
                     localStorage.removeItem('user_email');
                     toast.error('Session expired. Please login again.');
@@ -208,7 +206,6 @@ const PremiumResidentialProxiesPage = () => {
             }
         };
 
-        // Fetch regions from API
         const fetchRegions = async () => {
             try {
                 const processData = (data: any[]) => {
@@ -288,26 +285,30 @@ const PremiumResidentialProxiesPage = () => {
         setIsMounted(true);
     }, [router]);
 
-    const handleResetProxyKey = async () => {
-        if (!proxyInfo?.proxyAccount) return;
+    const handleResetSubUserPassword = async () => {
+        const email = localStorage.getItem('user_email');
+        if (!email) {
+            toast.error('User email not found. Please log in again.');
+            return;
+        }
         setIsResettingKey(true);
         try {
             const res = await axios.post(
-                `${API_URL}/api/Proxy/reset_auth_key`,
-                { username: proxyInfo.proxyAccount },
-                { headers: { 'Content-Type': 'application/json' } }
+                `${API_URL}/api/Premium/reset-subuser-password?email=${email}`
             );
-            const newKey = res.data?.data?.products?.residential?.proxy_key;
-            if (newKey && proxyInfo) {
-                setProxyInfo({ ...proxyInfo, proxyPassword: newKey });
-                setResidentialProxyKey(newKey);
-                toast.success('Proxy key reset successfully!');
+            if (res.data && res.data.success) {
+                setSubUserInfo({
+                    username: res.data.username,
+                    password: res.data.password
+                });
+                toast.success('Proxy password reset successfully!');
             } else {
-                toast.error('Reset succeeded but could not read new key.');
+                toast.error('Failed to reset proxy password.');
             }
-        } catch (error) {
-            console.error('Error resetting proxy key:', error);
-            toast.error('Failed to reset proxy key. Please try again.');
+        } catch (error: any) {
+            console.error('Error resetting proxy password:', error);
+            const errorMsg = error.response?.data?.message || 'Failed to reset proxy password. Please try again.';
+            toast.error(errorMsg);
         } finally {
             setIsResettingKey(false);
             setShowResetConfirm(false);
@@ -320,12 +321,9 @@ const PremiumResidentialProxiesPage = () => {
         if (!user || user === '...' || user === 'demo_username') return;
         setIsBalanceLoading(true);
         try {
-            const res = await axios.get(`${API_URL}/api/Premium/proxy-usage?username=${user}`);
-            const bandwidthData = res.data?.data?.bandwidth?.data;
-            if (bandwidthData) {
-                const totalLimitMB = (bandwidthData.totalBandwidthInGB ?? 0) * 1024;
-                const usedMB = (bandwidthData.default ?? 0) / (1024 * 1024);
-                const remainingMB = Math.max(0, totalLimitMB - usedMB);
+            const res = await axios.get(`${API_URL}/api/Premium/subuser-live-usage?username=${user}`);
+            if (res.data && res.data.success) {
+                const remainingMB = res.data.trafficRemainingMB ?? 0;
                 setResidentialBalance(remainingMB);
             } else {
                 setResidentialBalance(0);
@@ -342,10 +340,15 @@ const PremiumResidentialProxiesPage = () => {
         const user = subUserInfo?.username;
         if (user) {
             refreshBalance(user);
+
+            const interval = setInterval(() => {
+                refreshBalance(user);
+            }, 40000); // Refresh every 40 seconds
+
+            return () => clearInterval(interval);
         }
     }, [subUserInfo?.username]);
 
-    // Load cities, states, and ASNs when country changes
     useEffect(() => {
         if (!selectedCountry || selectedCountry.country_name === 'Global') {
             setCities([]);
@@ -357,7 +360,6 @@ const PremiumResidentialProxiesPage = () => {
             return;
         }
 
-        // Load States/Regions
         const rawStates = (selectedCountry as any).states || (selectedCountry as any).regions;
         const stateOptions = Array.isArray(rawStates) ? rawStates : (rawStates?.options || []);
         const mappedStates = stateOptions.map((s: any) => ({
@@ -369,7 +371,6 @@ const PremiumResidentialProxiesPage = () => {
         setSubRegions(mappedStates);
         setSelectedSubRegion(null);
 
-        // Load ASNs
         const rawAsns = (selectedCountry as any).asns;
         const asnOptions = Array.isArray(rawAsns) ? rawAsns : (rawAsns?.options || []);
         const mappedAsns = asnOptions.map((a: any) => {
@@ -384,7 +385,6 @@ const PremiumResidentialProxiesPage = () => {
         setSelectedAsn(null);
     }, [selectedCountry]);
 
-    // Load and filter cities when country, state, or state list changes
     useEffect(() => {
         if (!selectedCountry || selectedCountry.country_name === 'Global') {
             setCities([]);
@@ -393,7 +393,6 @@ const PremiumResidentialProxiesPage = () => {
         }
 
         if (selectedSubRegion) {
-            // Load cities of the selected state
             const stateCities = (selectedSubRegion as any).cities || [];
             const mappedCities = stateCities.map((c: any) => ({
                 id: c.code || c.id || c.name,
@@ -403,7 +402,6 @@ const PremiumResidentialProxiesPage = () => {
             })).sort((a: any, b: any) => a.name.localeCompare(b.name));
             setCities(mappedCities);
         } else {
-            // Load all cities of the country (flattened)
             const allCities = subRegions.reduce((acc: any[], state: any) => {
                 const stateCities = state.cities || [];
                 const mappedStateCities = stateCities.map((city: any) => ({
@@ -418,7 +416,6 @@ const PremiumResidentialProxiesPage = () => {
         }
     }, [selectedCountry, selectedSubRegion, subRegions]);
 
-    // Clear selected city if it does not belong to the selected state/region
     useEffect(() => {
         if (selectedSubRegion && selectedCity && selectedCity.state_id !== selectedSubRegion.id) {
             setSelectedCity(null);
@@ -477,7 +474,7 @@ const PremiumResidentialProxiesPage = () => {
         setIsAsnDropdownOpen(false);
         setSelectedProtocol('HTTP/HTTPS');
         setIsProtocolDropdownOpen(false);
-        setSelectedHostname('rp.realproxy.net');
+        setSelectedHostname('premium.realproxy.net');
         setIsHostnameDropdownOpen(false);
         setSelectedSessionType('Sticky IP');
         setIsSessionTypeDropdownOpen(false);
@@ -486,7 +483,7 @@ const PremiumResidentialProxiesPage = () => {
 
     const getPort = () => {
         const protocol = selectedProtocol.toUpperCase();
-        const type = selectedType; // 'Sticky Session' or 'Rotating'
+        const type = selectedType;
 
         if (protocol === 'SOCKS5') {
             if (type === 'Sticky Session') {
@@ -533,7 +530,6 @@ const PremiumResidentialProxiesPage = () => {
 
     const countryPart = selectedCountry && selectedCountry.country_name !== 'Global' ? `-country-${selectedCountry.country_code.toLowerCase()}` : '';
 
-    // Dynamically check prefixes
     const rawCities = (selectedCountry as any)?.cities;
     const cityPrefix = !Array.isArray(rawCities) && rawCities?.prefix ? rawCities.prefix : '-city-';
 
@@ -619,9 +615,9 @@ const PremiumResidentialProxiesPage = () => {
                             <Loader2 size={16} className="animate-spin" style={{ color: '#1677ff' }} />
                         ) : residentialBalance !== null ? (
                             <span className="balance-value">
-                                {residentialBalance >= 1000
-                                    ? `${(residentialBalance / 1000).toFixed(2)} GB`
-                                    : `${Number(residentialBalance).toFixed(2)} MB`}
+                                {
+                                    `${(residentialBalance / 1000).toFixed(2)} GB`
+                                }
                             </span>
                         ) : (
                             <span style={{ color: '#aaa', fontSize: '14px' }}>—</span>
@@ -680,8 +676,8 @@ const PremiumResidentialProxiesPage = () => {
                                         </div>
                                         <div className="info-item">
                                             <span className="info-label">Hostname:</span>
-                                            <span className="info-value">rp.realproxy.net</span>
-                                            <button className="info-copy-btn" onClick={() => { navigator.clipboard.writeText('rp.realproxy.net'); toast.success('Copied!'); }}>
+                                            <span className="info-value">premium.realproxy.net</span>
+                                            <button className="info-copy-btn" onClick={() => { navigator.clipboard.writeText('premium.realproxy.net'); toast.success('Copied!'); }}>
                                                 <Copy size={13} strokeWidth={2.5} />
                                             </button>
                                         </div>
@@ -1020,7 +1016,7 @@ const PremiumResidentialProxiesPage = () => {
                 </div>
             )}
 
-            {/* Reset Proxy Key Confirmation Modal */}
+            {/* Reset Proxy Password Confirmation Modal */}
             {showResetConfirm && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(2px)' }}>
                     <div style={{ background: theme.card, color: theme.text, borderRadius: '16px', padding: '36px 40px', maxWidth: '440px', width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.18)', textAlign: 'center' }}>
@@ -1029,7 +1025,7 @@ const PremiumResidentialProxiesPage = () => {
                         </div>
                         <h3 style={{ fontSize: '20px', fontWeight: '700', color: theme.text, marginBottom: '12px' }}>RESET PROXY PASSWORD?</h3>
                         <p style={{ fontSize: '14px', color: theme.textMuted, lineHeight: '1.6', marginBottom: '28px' }}>
-                            If you reset your proxy key, your current password will <strong>stop working immediately</strong>. All existing proxy connections using this key will be disconnected. Are you sure you want to continue?
+                            If you reset your proxy password, your current password will <strong>stop working immediately</strong>. All existing proxy connections using this password will be disconnected. Are you sure you want to continue?
                         </p>
                         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                             <button
@@ -1040,11 +1036,11 @@ const PremiumResidentialProxiesPage = () => {
                                 No, Cancel
                             </button>
                             <button
-                                onClick={handleResetProxyKey}
+                                onClick={handleResetSubUserPassword}
                                 disabled={isResettingKey}
                                 style={{ flex: 1, padding: '11px 20px', borderRadius: '8px', border: 'none', background: isResettingKey ? '#ffa39e' : '#cf1322', color: 'white', fontSize: '14px', fontWeight: '600', cursor: isResettingKey ? 'not-allowed' : 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                             >
-                                {isResettingKey ? <><Loader2 size={14} className="animate-spin" /> Resetting...</> : 'Yes, Reset Key'}
+                                {isResettingKey ? <><Loader2 size={14} className="animate-spin" /> Resetting...</> : 'Yes, Reset Password'}
                             </button>
                         </div>
                     </div>
