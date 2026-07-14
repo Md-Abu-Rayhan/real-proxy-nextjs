@@ -20,7 +20,8 @@ import {
     Plus,
     Minus,
     ArrowRight,
-    Lock
+    Lock,
+    X
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -456,6 +457,30 @@ const PremiumResidentialProxiesPage = () => {
         };
     }, []);
 
+    useEffect(() => {
+        if (isCountryDropdownOpen) {
+            setCountrySearchQuery(selectedCountry && selectedCountry.country_name !== 'Global' ? selectedCountry.country_name : '');
+        }
+    }, [isCountryDropdownOpen, selectedCountry]);
+
+    useEffect(() => {
+        if (isSubRegionDropdownOpen) {
+            setSubRegionSearchQuery(selectedSubRegion ? selectedSubRegion.name : '');
+        }
+    }, [isSubRegionDropdownOpen, selectedSubRegion]);
+
+    useEffect(() => {
+        if (isCityDropdownOpen) {
+            setCitySearchQuery(selectedCity ? selectedCity.name : '');
+        }
+    }, [isCityDropdownOpen, selectedCity]);
+
+    useEffect(() => {
+        if (isAsnDropdownOpen) {
+            setAsnSearchQuery(selectedAsn ? selectedAsn.name : '');
+        }
+    }, [isAsnDropdownOpen, selectedAsn]);
+
     const resetSelection = () => {
         const global = regions.find(r => r.country_name === 'Global');
         if (global) {
@@ -711,27 +736,52 @@ const PremiumResidentialProxiesPage = () => {
                                             <div className="dark-dropdown" onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)} ref={countryDropdownRef}>
                                                 <div className="dropdown-val">
                                                     <Globe size={16} color={selectedCountry?.country_name !== 'Global' ? '#3B82F6' : '#94A3B8'} />
-                                                    <span>{selectedCountry?.country_name || 'Worldwide'}</span>
+                                                    {isCountryDropdownOpen ? (
+                                                        <input
+                                                            type="text"
+                                                            className="dropdown-trigger-input"
+                                                            value={countrySearchQuery}
+                                                            onChange={(e) => {
+                                                                setIsCountryDropdownOpen(true);
+                                                                setCountrySearchQuery(e.target.value);
+                                                            }}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setIsCountryDropdownOpen(true);
+                                                            }}
+                                                            placeholder={selectedCountry?.country_name || 'Search country...'}
+                                                            autoFocus
+                                                        />
+                                                    ) : (
+                                                        <span>{selectedCountry?.country_name || 'Worldwide'}</span>
+                                                    )}
                                                 </div>
-                                                <ChevronDown size={16} color="#94A3B8" style={{ transform: isCountryDropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
+                                                
+                                                {selectedCountry && selectedCountry.country_name !== 'Global' && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const global = regions.find(r => r.country_name === 'Global');
+                                                            if (global) setSelectedCountry(global);
+                                                            setCountrySearchQuery('');
+                                                            setIsCountryDropdownOpen(false);
+                                                        }}
+                                                        className="dropdown-clear-btn"
+                                                        title="Clear selection"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                )}
+                                                
+                                                <ChevronDown size={16} color="#94A3B8" style={{ transform: isCountryDropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s', flexShrink: 0 }} />
 
                                                 {isCountryDropdownOpen && (
                                                     <div className="dropdown-flyout custom-scrollbar">
-                                                        <div className="dropdown-search">
-                                                            <Search size={14} color="#94A3B8" />
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Search country..."
-                                                                value={countrySearchQuery}
-                                                                onChange={(e) => setCountrySearchQuery(e.target.value)}
-                                                                onClick={(e) => e.stopPropagation()}
-                                                            />
-                                                        </div>
                                                         {regions.filter(r => r.country_name.toLowerCase().includes(countrySearchQuery.toLowerCase())).map(r => (
                                                             <div
                                                                 key={r.country_code}
                                                                 className={`dropdown-option ${selectedCountry?.country_code === r.country_code ? 'active' : ''}`}
-                                                                onClick={(e) => { e.stopPropagation(); setSelectedCountry(r); setIsCountryDropdownOpen(false); }}
+                                                                onClick={(e) => { e.stopPropagation(); setSelectedCountry(r); setIsCountryDropdownOpen(false); setCountrySearchQuery(''); }}
                                                             >
                                                                 {r.country_name}
                                                             </div>
@@ -747,23 +797,47 @@ const PremiumResidentialProxiesPage = () => {
                                                 <div className="dark-dropdown" style={{ opacity: subRegions.length === 0 ? 0.6 : 1, cursor: subRegions.length === 0 ? 'not-allowed' : 'pointer' }} onClick={() => subRegions.length > 0 && setIsSubRegionDropdownOpen(!isSubRegionDropdownOpen)} ref={subRegionDropdownRef}>
                                                     <div className="dropdown-val">
                                                         <Monitor size={16} color={selectedSubRegion ? '#3B82F6' : '#94A3B8'} />
-                                                        <span>{selectedSubRegion?.name || 'Random'}</span>
+                                                        {isSubRegionDropdownOpen ? (
+                                                            <input
+                                                                type="text"
+                                                                className="dropdown-trigger-input"
+                                                                value={subRegionSearchQuery}
+                                                                onChange={(e) => {
+                                                                    setIsSubRegionDropdownOpen(true);
+                                                                    setSubRegionSearchQuery(e.target.value);
+                                                                }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setIsSubRegionDropdownOpen(true);
+                                                                }}
+                                                                placeholder={selectedSubRegion?.name || 'Search state...'}
+                                                                autoFocus
+                                                            />
+                                                        ) : (
+                                                            <span>{selectedSubRegion?.name || 'Random'}</span>
+                                                        )}
                                                     </div>
-                                                    <ChevronDown size={16} color="#94A3B8" />
+                                                    
+                                                    {selectedSubRegion && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedSubRegion(null);
+                                                                setSubRegionSearchQuery('');
+                                                                setIsSubRegionDropdownOpen(false);
+                                                            }}
+                                                            className="dropdown-clear-btn"
+                                                            title="Clear selection"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    )}
+                                                    
+                                                    <ChevronDown size={16} color="#94A3B8" style={{ transform: isSubRegionDropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s', flexShrink: 0 }} />
                                                     {isSubRegionDropdownOpen && (
                                                         <div className="dropdown-flyout custom-scrollbar">
-                                                            <div className="dropdown-search">
-                                                                <Search size={14} color="#94A3B8" />
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Search state..."
-                                                                    value={subRegionSearchQuery}
-                                                                    onChange={(e) => setSubRegionSearchQuery(e.target.value)}
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                />
-                                                            </div>
                                                             {subRegions.filter(s => s.name.toLowerCase().includes(subRegionSearchQuery.toLowerCase())).map(s => (
-                                                                <div key={s.id} className="dropdown-option" onClick={(e) => {
+                                                                <div key={s.id} className={`dropdown-option ${selectedSubRegion?.id === s.id ? 'active' : ''}`} onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     setSelectedSubRegion(s);
                                                                     setIsSubRegionDropdownOpen(false);
@@ -782,23 +856,47 @@ const PremiumResidentialProxiesPage = () => {
                                                 <div className="dark-dropdown" style={{ opacity: cities.length === 0 ? 0.6 : 1, cursor: cities.length === 0 ? 'not-allowed' : 'pointer' }} onClick={() => cities.length > 0 && setIsCityDropdownOpen(!isCityDropdownOpen)} ref={cityDropdownRef}>
                                                     <div className="dropdown-val">
                                                         <Monitor size={16} color={selectedCity ? '#3B82F6' : '#94A3B8'} />
-                                                        <span>{selectedCity?.name || 'Random'}</span>
+                                                        {isCityDropdownOpen ? (
+                                                            <input
+                                                                type="text"
+                                                                className="dropdown-trigger-input"
+                                                                value={citySearchQuery}
+                                                                onChange={(e) => {
+                                                                    setIsCityDropdownOpen(true);
+                                                                    setCitySearchQuery(e.target.value);
+                                                                }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setIsCityDropdownOpen(true);
+                                                                }}
+                                                                placeholder={selectedCity?.name || 'Search city...'}
+                                                                autoFocus
+                                                            />
+                                                        ) : (
+                                                            <span>{selectedCity?.name || 'Random'}</span>
+                                                        )}
                                                     </div>
-                                                    <ChevronDown size={16} color="#94A3B8" />
+                                                    
+                                                    {selectedCity && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedCity(null);
+                                                                setCitySearchQuery('');
+                                                                setIsCityDropdownOpen(false);
+                                                            }}
+                                                            className="dropdown-clear-btn"
+                                                            title="Clear selection"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    )}
+                                                    
+                                                    <ChevronDown size={16} color="#94A3B8" style={{ transform: isCityDropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s', flexShrink: 0 }} />
                                                     {isCityDropdownOpen && (
                                                         <div className="dropdown-flyout custom-scrollbar">
-                                                            <div className="dropdown-search">
-                                                                <Search size={14} color="#94A3B8" />
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Search city..."
-                                                                    value={citySearchQuery}
-                                                                    onChange={(e) => setCitySearchQuery(e.target.value)}
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                />
-                                                            </div>
                                                             {cities.filter(c => c.name.toLowerCase().includes(citySearchQuery.toLowerCase())).map(c => (
-                                                                <div key={c.id} className="dropdown-option" onClick={(e) => {
+                                                                <div key={c.id} className={`dropdown-option ${selectedCity?.id === c.id ? 'active' : ''}`} onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     setSelectedCity(c);
                                                                     if (c.state_id) {
@@ -826,28 +924,51 @@ const PremiumResidentialProxiesPage = () => {
                                                 <div className="dark-dropdown" style={{ opacity: asns.length === 0 ? 0.6 : 1, cursor: asns.length === 0 ? 'not-allowed' : 'pointer' }} onClick={() => asns.length > 0 && setIsAsnDropdownOpen(!isAsnDropdownOpen)} ref={asnDropdownRef}>
                                                     <div className="dropdown-val">
                                                         <Monitor size={16} color={selectedAsn ? '#3B82F6' : '#94A3B8'} />
-                                                        <span>{selectedAsn ? selectedAsn.name : 'Random'}</span>
+                                                        {isAsnDropdownOpen ? (
+                                                            <input
+                                                                type="text"
+                                                                className="dropdown-trigger-input"
+                                                                value={asnSearchQuery}
+                                                                onChange={(e) => {
+                                                                    setIsAsnDropdownOpen(true);
+                                                                    setAsnSearchQuery(e.target.value);
+                                                                }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setIsAsnDropdownOpen(true);
+                                                                }}
+                                                                placeholder={selectedAsn ? selectedAsn.name : 'Search ASN...'}
+                                                                autoFocus
+                                                            />
+                                                        ) : (
+                                                            <span>{selectedAsn ? selectedAsn.name : 'Random'}</span>
+                                                        )}
                                                     </div>
-                                                    <ChevronDown size={16} color="#94A3B8" />
+                                                    
+                                                    {selectedAsn && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedAsn(null);
+                                                                setAsnSearchQuery('');
+                                                                setIsAsnDropdownOpen(false);
+                                                            }}
+                                                            className="dropdown-clear-btn"
+                                                            title="Clear selection"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    )}
+                                                    
+                                                    <ChevronDown size={16} color="#94A3B8" style={{ transform: isAsnDropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s', flexShrink: 0 }} />
                                                     {isAsnDropdownOpen && (
                                                         <div className="dropdown-flyout custom-scrollbar">
-                                                            <div className="dropdown-search">
-                                                                <Search size={14} color="#94A3B8" />
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Search ASN..."
-                                                                    value={asnSearchQuery}
-                                                                    onChange={(e) => setAsnSearchQuery(e.target.value)}
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                />
-                                                            </div>
                                                             {asns.filter(a => a.name.toLowerCase().includes(asnSearchQuery.toLowerCase())).map(a => (
-                                                                <div key={a.code} className="dropdown-option" onClick={(e) => {
+                                                                <div key={a.code} className={`dropdown-option ${selectedAsn?.code === a.code ? 'active' : ''}`} onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     setSelectedAsn(a);
                                                                     setIsAsnDropdownOpen(false);
                                                                     setAsnSearchQuery('');
-                                                                    // Mutual Reset: Clear City
                                                                 }}>
                                                                     {a.name}
                                                                 </div>
@@ -1315,6 +1436,38 @@ const PremiumResidentialProxiesPage = () => {
                     background: rgba(59, 130, 246, 0.05);
                     color: ${theme.active};
                     font-weight: 600;
+                }
+
+                .dropdown-trigger-input {
+                    background: transparent;
+                    border: none;
+                    color: ${theme.text};
+                    outline: none;
+                    width: 100%;
+                    font-size: 14px;
+                    font-weight: 500;
+                    padding: 0;
+                    font-family: inherit;
+                }
+
+                .dropdown-clear-btn {
+                    background: transparent;
+                    border: none;
+                    color: ${theme.textMuted};
+                    padding: 4px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+                    transition: all 0.2s;
+                    margin-right: 4px;
+                    flex-shrink: 0;
+                }
+
+                .dropdown-clear-btn:hover {
+                    color: #ef4444;
+                    background: rgba(239, 68, 68, 0.1);
                 }
 
                 .split-fields {
