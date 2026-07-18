@@ -685,7 +685,9 @@ const ResidentialProxiesPage = () => {
                         />
                     ) : residentialBalance !== null ? (
                         <span className="balance-value">
-                            {(residentialBalance / 1000).toFixed(2)} GB
+                            {residentialBalance >= 1000
+                                ? `${(residentialBalance / 1000).toFixed(2)} GB`
+                                : `${Number(residentialBalance.toFixed(2))} MB`}
                         </span>
                     ) : (
                         <span style={{ color: '#aaa', fontSize: '14px' }}>—</span>
