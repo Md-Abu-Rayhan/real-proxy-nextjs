@@ -91,7 +91,7 @@ const Pricing = () => {
         }
     };
 
-    // Re-validate promo if bandwidth changes
+    // Re-validate promo if bandwidth or proxy type changes
     React.useEffect(() => {
         if (appliedDiscount && promoCode) {
             const reValidate = async () => {
@@ -115,14 +115,15 @@ const Pricing = () => {
                         setAppliedDiscount(null);
                         toast.error("Promo removed: Bandwidth requirement not met");
                     }
-                } catch (error) {
+                } catch (error: any) {
                     setAppliedDiscount(null);
-                    toast.error("Promo removed: Bandwidth requirement not met");
+                    toast.error(error.response?.data?.message || "Promo removed: requirement not met");
                 }
             };
             reValidate();
         }
-    }, [bandwidth]);
+    }, [bandwidth, proxyType]);
+
 
     // Auto-clear discount if code is removed
     React.useEffect(() => {
