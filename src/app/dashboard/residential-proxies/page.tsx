@@ -968,7 +968,6 @@ const ResidentialProxiesPage = () => {
                                                         className={`tab-item ${selectedType === t ? 'active' : ''}`}
                                                         onClick={() => {
                                                             setSelectedType(t);
-                                                            if (t === 'Rotating') setAmount(1);
                                                         }}
                                                     >
                                                         {t}
@@ -977,17 +976,17 @@ const ResidentialProxiesPage = () => {
                                             </div>
                                         </div>
 
-                                        {selectedType === 'Sticky Session' && (
-                                            <div className="split-fields">
-                                                <div className="setting-fieldset">
-                                                    <label className="field-label">Proxy Count</label>
-                                                    <input
-                                                        type="number"
-                                                        className="dark-input"
-                                                        value={amount}
-                                                        onChange={(e) => setAmount(Number(e.target.value))}
-                                                    />
-                                                </div>
+                                        <div className="split-fields">
+                                            <div className="setting-fieldset">
+                                                <label className="field-label">Proxy Count</label>
+                                                <input
+                                                    type="number"
+                                                    className="dark-input"
+                                                    value={amount}
+                                                    onChange={(e) => setAmount(Number(e.target.value))}
+                                                />
+                                            </div>
+                                            {selectedType === 'Sticky Session' && (
                                                 <div className="setting-fieldset">
                                                     <label className="field-label">Proxy Sticky Lifetime Set</label>
                                                     <input
@@ -997,8 +996,8 @@ const ResidentialProxiesPage = () => {
                                                         onChange={(e) => setLifetime(Number(e.target.value))}
                                                     />
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
