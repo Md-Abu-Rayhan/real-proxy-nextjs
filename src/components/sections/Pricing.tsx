@@ -993,7 +993,7 @@ const Pricing = () => {
                                                 ) : `$${current.total}`}
                                             </div>
                                             <div className="stat-sub-value" style={{ fontSize: '20px' }}>
-                                                ৳ {appliedDiscount ? (parseFloat(current.totalBDT) * (1 - appliedDiscount / 100)).toFixed(2) : current.totalBDT} BDT
+                                                ৳ {appliedDiscount ? Math.round(parseFloat(current.totalBDT) * (1 - appliedDiscount / 100)) : current.totalBDT} BDT
                                             </div>
                                         </div>
 
@@ -1164,7 +1164,7 @@ const Pricing = () => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: walletBalance > 0 ? '8px' : '0' }}>
                                     <span style={{ fontSize: '14px', color: '#98a2b3', fontWeight: '1000' }}>Total Price</span>
                                     <span style={{ fontSize: '18px', color: '#0086FF', fontWeight: '800' }}>
-                                        $ {appliedDiscount ? ((parseFloat(current.totalBDT) * (1 - appliedDiscount / 100)) / 125).toFixed(4) : (parseFloat(current.totalBDT) / 125).toFixed(4)}
+                                        $ {appliedDiscount ? (Math.round(parseFloat(current.totalBDT) * (1 - appliedDiscount / 100)) / 125).toFixed(2) : (parseFloat(current.totalBDT) / 125).toFixed(2)}
                                     </span>
                                 </div>
                                 {!appliedDiscount && (walletBalance > 0 || isWalletLoading) && (

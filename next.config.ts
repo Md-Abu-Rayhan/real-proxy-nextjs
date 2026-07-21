@@ -4,6 +4,7 @@ const INTERNAL_API = process.env.API_URL_INTERNAL ?? 'http://127.0.0.1:5001';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  turbopack: {},
   async rewrites() {
     return [
       {
@@ -12,6 +13,12 @@ const nextConfig: NextConfig = {
         destination: `${INTERNAL_API}/api/:path*`,
       },
     ];
+  },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.cache = false;
+    }
+    return config;
   },
 };
 
