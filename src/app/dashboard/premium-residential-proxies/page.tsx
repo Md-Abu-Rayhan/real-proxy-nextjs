@@ -326,6 +326,23 @@ const PremiumResidentialProxiesPage = () => {
             if (res.data && res.data.success) {
                 const remainingMB = res.data.trafficRemainingMB ?? 0;
                 setResidentialBalance(remainingMB);
+
+                // If auto-healing created a new sub-user username, auto-sync credentials on UI
+                if (res.data.username && res.data.username !== user) {
+                    const email = typeof window !== 'undefined' ? localStorage.getItem('user_email') : null;
+                    if (email) {
+                        axios.get(`${API_URL}/api/Premium/subuser-info?email=${email}`)
+                            .then(infoRes => {
+                                if (infoRes.data && infoRes.data.success) {
+                                    setSubUserInfo({
+                                        username: infoRes.data.username,
+                                        password: infoRes.data.password
+                                    });
+                                }
+                            })
+                            .catch(err => console.error('Error auto-syncing sub-user info:', err));
+                    }
+                }
             } else {
                 setResidentialBalance(0);
             }
