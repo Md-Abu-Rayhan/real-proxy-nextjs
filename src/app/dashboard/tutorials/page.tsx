@@ -16,7 +16,8 @@ import {
     HelpCircle,
     X,
     Layers,
-    Clock
+    Clock,
+    ShieldCheck
 } from 'lucide-react';
 import { triggerContactModal } from '@/components/ui/ContactModal';
 
@@ -79,12 +80,27 @@ const TUTORIALS_DATA: TutorialVideo[] = [
 ];
 
 const CATEGORIES = [
-    { name: 'All Guides', icon: Layers },
-    { name: 'Account & Setup', icon: BookOpen },
-    { name: 'Payment & Billing', icon: CreditCard },
-    { name: 'Proxy Configuration', icon: Monitor },
-    { name: 'Mobile Apps', icon: Smartphone }
+    { name: 'All Guides', icon: Layers, color: '#6366F1', bg: 'rgba(99, 102, 241, 0.15)' },
+    { name: 'Account & Setup', icon: BookOpen, color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.15)' },
+    { name: 'Payment & Billing', icon: CreditCard, color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)' },
+    { name: 'Proxy Configuration', icon: Monitor, color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)' },
+    { name: 'Mobile Apps', icon: Smartphone, color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)' }
 ];
+
+const getCategoryStyle = (catName: string) => {
+    switch (catName) {
+        case 'Account & Setup':
+            return { color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.12)' };
+        case 'Payment & Billing':
+            return { color: '#10B981', bg: 'rgba(16, 185, 129, 0.12)' };
+        case 'Proxy Configuration':
+            return { color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.12)' };
+        case 'Mobile Apps':
+            return { color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.12)' };
+        default:
+            return { color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.12)' };
+    }
+};
 
 export default function DashboardTutorialsPage() {
     const [selectedCategory, setSelectedCategory] = useState('All Guides');
@@ -151,83 +167,133 @@ export default function DashboardTutorialsPage() {
 
     return (
         <div className="tutorials-responsive-container">
-            {/* Top Hero Banner */}
+            {/* Clean Authentic Hero Banner */}
             <div className="tutorials-hero-banner" style={{
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: '20px',
+                padding: '32px 28px',
                 background: isDarkMode
-                    ? 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)'
+                    ? 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)'
                     : 'linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%)',
                 boxShadow: isDarkMode
-                    ? '0 10px 30px rgba(0, 0, 0, 0.35)'
-                    : '0 10px 30px rgba(37, 99, 235, 0.2)'
+                    ? '0 12px 36px rgba(0, 0, 0, 0.4)'
+                    : '0 12px 30px rgba(37, 99, 235, 0.2)',
+                border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(255, 255, 255, 0.15)'
             }}>
-                <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <div style={{ maxWidth: '640px' }}>
+                <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+                    <div style={{ maxWidth: '600px' }}>
                         <div style={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '8px',
+                            gap: '6px',
                             padding: '4px 12px',
-                            borderRadius: '20px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                            backdropFilter: 'blur(8px)',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            marginBottom: '10px',
+                            borderRadius: '16px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.14)',
+                            backdropFilter: 'blur(10px)',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            letterSpacing: '0.04em',
+                            marginBottom: '12px',
                             color: '#FFFFFF'
                         }}>
-                            <Sparkles size={14} color="#FDE047" />
-                            <span>Official RealProxy Video Guides</span>
+                            <ShieldCheck size={14} color="#60A5FA" />
+                            <span style={{ textTransform: 'uppercase' }}>Official Video Guides</span>
                         </div>
 
-                        <h1 className="hero-title">
-                            Learning Center & Video Tutorials
+                        <h1 className="hero-title" style={{ fontSize: '28px', fontWeight: 800, color: '#FFFFFF', margin: '0 0 8px 0', lineHeight: 1.25 }}>
+                            Video Tutorials & <span style={{
+                                background: 'linear-gradient(90deg, #60A5FA 0%, #818CF8 50%, #C084FC 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent'
+                            }}>Setup Guides</span>
                         </h1>
 
-                        <p className="hero-subtitle">
-                            Everything you need to set up proxies, manage payments, and configure your devices step-by-step.
+                        <p className="hero-subtitle" style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.88)', margin: 0, lineHeight: 1.5 }}>
+                            Watch step-by-step guides to configure proxies on PC and mobile devices, add funds, and manage your account.
                         </p>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                                padding: '5px 12px',
+                                borderRadius: '8px'
+                            }}>
+                                <Video size={13} color="#60A5FA" />
+                                <span>5 Video Tutorials</span>
+                            </div>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                                padding: '5px 12px',
+                                borderRadius: '8px'
+                            }}>
+                                <BookOpen size={13} color="#10B981" />
+                                <span>Step-by-Step Guides</span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Search Bar */}
-                    <div className="hero-search-wrapper" style={{
-                        backgroundColor: theme.inputBg,
-                        border: isDarkMode ? '1px solid #334155' : '1px solid #E2E8F0'
-                    }}>
-                        <Search size={16} style={{ color: isDarkMode ? '#94A3B8' : '#64748B', marginRight: '10px', flexShrink: 0 }} />
-                        <input
-                            type="text"
-                            placeholder="Search video guides (e.g. bKash, Windows, Tun2tap)..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{
-                                width: '100%',
-                                border: 'none',
-                                outline: 'none',
-                                background: 'transparent',
-                                color: isDarkMode ? '#F8FAFC' : '#0F172A',
-                                fontSize: '14px',
-                                padding: '8px 0'
-                            }}
-                        />
-                        {searchQuery && (
-                            <button
-                                onClick={() => setSearchQuery('')}
+                    {/* Integrated Search Card */}
+                    <div style={{ flex: 1, minWidth: '280px', maxWidth: '420px' }}>
+                        <div className="hero-search-wrapper" style={{
+                            backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+                            backdropFilter: 'blur(12px)',
+                            border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.4)',
+                            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+                            borderRadius: '14px',
+                            padding: '4px 14px',
+                            display: 'flex',
+                            alignItems: 'center'
+                        }}>
+                            <Search size={16} style={{ color: isDarkMode ? '#60A5FA' : '#2563EB', marginRight: '10px', flexShrink: 0 }} />
+                            <input
+                                type="text"
+                                placeholder="Search video guides (e.g. bKash, Windows, Tun2tap)..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                                 style={{
+                                    width: '100%',
                                     border: 'none',
+                                    outline: 'none',
                                     background: 'transparent',
-                                    cursor: 'pointer',
-                                    color: isDarkMode ? '#94A3B8' : '#64748B',
-                                    padding: '4px'
+                                    color: isDarkMode ? '#F8FAFC' : '#0F172A',
+                                    fontSize: '13.5px',
+                                    fontWeight: 500,
+                                    padding: '10px 0'
                                 }}
-                            >
-                                <X size={16} />
-                            </button>
-                        )}
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    style={{
+                                        border: 'none',
+                                        background: 'transparent',
+                                        cursor: 'pointer',
+                                        color: isDarkMode ? '#94A3B8' : '#64748B',
+                                        padding: '4px'
+                                    }}
+                                >
+                                    <X size={16} />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Category Filter Pills */}
+            {/* Custom Brand Category Filter Pills */}
             <div className="categories-scroll-container custom-scrollbar">
                 {CATEGORIES.map((cat) => {
                     const IconComp = cat.icon;
@@ -239,21 +305,36 @@ export default function DashboardTutorialsPage() {
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '8px',
-                                padding: '8px 16px',
-                                borderRadius: '10px',
-                                border: `1px solid ${isActive ? '#3B82F6' : theme.cardBorder}`,
-                                backgroundColor: isActive ? '#3B82F6' : theme.cardBg,
-                                color: isActive ? '#FFFFFF' : theme.text,
-                                fontWeight: isActive ? 600 : 500,
+                                gap: '10px',
+                                padding: '8px 16px 8px 10px',
+                                borderRadius: '12px',
+                                border: isActive
+                                    ? `1px solid ${cat.color}`
+                                    : `1px solid ${theme.cardBorder}`,
+                                backgroundColor: isActive
+                                    ? (isDarkMode ? 'rgba(30, 41, 59, 0.95)' : '#FFFFFF')
+                                    : theme.cardBg,
+                                color: isActive ? theme.text : theme.textMuted,
+                                fontWeight: isActive ? 700 : 500,
                                 fontSize: '13px',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s ease',
                                 whiteSpace: 'nowrap',
-                                boxShadow: isActive ? '0 4px 12px rgba(59, 130, 246, 0.25)' : 'none'
+                                boxShadow: isActive ? `0 4px 14px ${cat.bg}` : 'none'
                             }}
                         >
-                            <IconComp size={15} color={isActive ? '#FFFFFF' : (isDarkMode ? '#94A3B8' : '#64748B')} />
+                            <div style={{
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '8px',
+                                backgroundColor: cat.bg,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s ease'
+                            }}>
+                                <IconComp size={15} color={cat.color} />
+                            </div>
                             <span>{cat.name}</span>
                         </button>
                     );
@@ -276,227 +357,236 @@ export default function DashboardTutorialsPage() {
                 </div>
             ) : (
                 <div className="tutorials-cards-grid">
-                    {filteredTutorials.map((video, index) => (
-                        <motion.div
-                            key={video.id}
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.2, delay: index * 0.04 }}
-                            className="video-card-item"
-                            style={{
-                                backgroundColor: theme.cardBg,
-                                border: `1px solid ${theme.cardBorder}`,
-                                borderRadius: '18px',
-                                padding: '14px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                height: '100%',
-                                boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)',
-                                boxSizing: 'border-box'
-                            }}
-                        >
-                            {/* Inset Framed Thumbnail Box with Motion Hover */}
+                    {filteredTutorials.map((video, index) => {
+                        const catStyle = getCategoryStyle(video.category);
+                        return (
                             <motion.div
-                                onClick={() => setActiveVideo(video)}
-                                initial="rest"
-                                whileHover="hover"
-                                animate="rest"
+                                key={video.id}
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2, delay: index * 0.04 }}
+                                className="video-card-item"
                                 style={{
-                                    position: 'relative',
-                                    width: '100%',
-                                    aspectRatio: '16 / 9',
-                                    backgroundColor: '#0F172A',
-                                    borderRadius: '12px',
-                                    overflow: 'hidden',
-                                    cursor: 'pointer',
-                                    border: `1px solid ${theme.thumbBorder}`
+                                    backgroundColor: theme.cardBg,
+                                    border: `1px solid ${theme.cardBorder}`,
+                                    borderRadius: '18px',
+                                    padding: '14px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    height: '100%',
+                                    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)',
+                                    boxSizing: 'border-box'
                                 }}
                             >
-                                <img
-                                    src={`https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`}
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`;
-                                    }}
-                                    alt={video.title}
-                                    style={{
-                                        width: '100%',
-                                        height: '100%',
-                                        objectFit: 'cover',
-                                        display: 'block'
-                                    }}
-                                />
-
-                                {/* Framer Motion Hover Overlay (100% Reliable Centering) */}
+                                {/* Inset Framed Thumbnail Box with Motion Hover */}
                                 <motion.div
-                                    variants={{
-                                        rest: { opacity: 0 },
-                                        hover: { opacity: 1 }
-                                    }}
-                                    transition={{ duration: 0.2 }}
+                                    onClick={() => setActiveVideo(video)}
+                                    initial="rest"
+                                    whileHover="hover"
+                                    animate="rest"
                                     style={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
+                                        position: 'relative',
                                         width: '100%',
-                                        height: '100%',
-                                        backgroundColor: 'rgba(15, 23, 42, 0.45)',
-                                        backdropFilter: 'blur(2px)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        zIndex: 1
+                                        aspectRatio: '16 / 9',
+                                        backgroundColor: '#0F172A',
+                                        borderRadius: '12px',
+                                        overflow: 'hidden',
+                                        cursor: 'pointer',
+                                        border: `1px solid ${theme.thumbBorder}`
                                     }}
                                 >
+                                    <img
+                                        src={`https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`}
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`;
+                                        }}
+                                        alt={video.title}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover',
+                                            display: 'block'
+                                        }}
+                                    />
+
+                                    {/* Framer Motion Hover Overlay */}
                                     <motion.div
                                         variants={{
-                                            rest: { scale: 0.85 },
-                                            hover: { scale: 1 }
+                                            rest: { opacity: 0 },
+                                            hover: { opacity: 1 }
                                         }}
-                                        transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                                        transition={{ duration: 0.2 }}
                                         style={{
-                                            width: '54px',
-                                            height: '54px',
-                                            borderRadius: '50%',
-                                            backgroundColor: '#EF4444',
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            backgroundColor: 'rgba(15, 23, 42, 0.45)',
+                                            backdropFilter: 'blur(2px)',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            boxShadow: '0 8px 24px rgba(239, 68, 68, 0.6)'
+                                            zIndex: 1
                                         }}
                                     >
-                                        <Play size={24} fill="white" color="white" style={{ marginLeft: '3px' }} />
+                                        <motion.div
+                                            variants={{
+                                                rest: { scale: 0.85 },
+                                                hover: { scale: 1 }
+                                            }}
+                                            transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                                            style={{
+                                                width: '54px',
+                                                height: '54px',
+                                                borderRadius: '50%',
+                                                backgroundColor: '#EF4444',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                boxShadow: '0 8px 24px rgba(239, 68, 68, 0.6)'
+                                            }}
+                                        >
+                                            <Play size={24} fill="white" color="white" style={{ marginLeft: '3px' }} />
+                                        </motion.div>
                                     </motion.div>
-                                </motion.div>
 
-                                {/* Duration Badge */}
-                                <div style={{
-                                    position: 'absolute',
-                                    bottom: '8px',
-                                    right: '8px',
-                                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                                    color: '#FFFFFF',
-                                    fontSize: '11px',
-                                    fontWeight: 600,
-                                    padding: '3px 8px',
-                                    borderRadius: '4px',
-                                    backdropFilter: 'blur(4px)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    zIndex: 2
-                                }}>
-                                    <Clock size={11} />
-                                    <span>{video.duration}</span>
-                                </div>
-                            </motion.div>
-
-                            {/* Content Details */}
-                            <div style={{
-                                padding: '14px 4px 4px 4px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                flex: 1,
-                                justifyContent: 'space-between'
-                            }}>
-                                <div>
+                                    {/* Duration Badge */}
                                     <div style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '5px',
-                                        padding: '3px 8px',
-                                        borderRadius: '5px',
-                                        backgroundColor: theme.pillBg,
-                                        color: theme.pillText,
+                                        position: 'absolute',
+                                        bottom: '8px',
+                                        right: '8px',
+                                        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                                        color: '#FFFFFF',
                                         fontSize: '11px',
                                         fontWeight: 600,
-                                        marginBottom: '8px'
+                                        padding: '3px 8px',
+                                        borderRadius: '4px',
+                                        backdropFilter: 'blur(4px)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        zIndex: 2
                                     }}>
-                                        <Video size={12} />
-                                        <span>{video.category}</span>
+                                        <Clock size={11} />
+                                        <span>{video.duration}</span>
+                                    </div>
+                                </motion.div>
+
+                                {/* Content Details */}
+                                <div style={{
+                                    padding: '14px 4px 4px 4px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    flex: 1,
+                                    justifyContent: 'space-between'
+                                }}>
+                                    <div>
+                                        <div style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            padding: '4px 10px',
+                                            borderRadius: '6px',
+                                            backgroundColor: catStyle.bg,
+                                            color: catStyle.color,
+                                            fontSize: '11.5px',
+                                            fontWeight: 600,
+                                            marginBottom: '10px'
+                                        }}>
+                                            <span style={{
+                                                width: '6px',
+                                                height: '6px',
+                                                borderRadius: '50%',
+                                                backgroundColor: catStyle.color,
+                                                display: 'inline-block'
+                                            }} />
+                                            <span>{video.category}</span>
+                                        </div>
+
+                                        <h3 style={{
+                                            fontSize: '15px',
+                                            fontWeight: 700,
+                                            color: theme.text,
+                                            lineHeight: 1.4,
+                                            marginBottom: '6px'
+                                        }}>
+                                            {video.title}
+                                        </h3>
+
+                                        <p style={{
+                                            fontSize: '12.5px',
+                                            color: theme.textMuted,
+                                            lineHeight: 1.5,
+                                            margin: 0
+                                        }}>
+                                            {video.description}
+                                        </p>
                                     </div>
 
-                                    <h3 style={{
-                                        fontSize: '15px',
-                                        fontWeight: 700,
-                                        color: theme.text,
-                                        lineHeight: 1.4,
-                                        marginBottom: '6px'
+                                    {/* Bottom Action Buttons - Aligned at Baseline */}
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        gap: '10px',
+                                        borderTop: `1px solid ${theme.cardBorder}`,
+                                        paddingTop: '12px',
+                                        marginTop: '16px'
                                     }}>
-                                        {video.title}
-                                    </h3>
+                                        <button
+                                            onClick={() => setActiveVideo(video)}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '6px',
+                                                padding: '8px 14px',
+                                                borderRadius: '8px',
+                                                border: 'none',
+                                                backgroundColor: '#3B82F6',
+                                                color: '#FFFFFF',
+                                                fontSize: '12.5px',
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                                boxShadow: '0 3px 10px rgba(59, 130, 246, 0.28)',
+                                                transition: 'all 0.2s ease',
+                                                flex: 1
+                                            }}
+                                        >
+                                            <Play size={13} fill="currentColor" />
+                                            <span>Play Video</span>
+                                        </button>
 
-                                    <p style={{
-                                        fontSize: '12.5px',
-                                        color: theme.textMuted,
-                                        lineHeight: 1.5,
-                                        margin: 0
-                                    }}>
-                                        {video.description}
-                                    </p>
+                                        <a
+                                            href={video.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '5px',
+                                                padding: '8px 12px',
+                                                borderRadius: '8px',
+                                                border: `1px solid ${theme.cardBorder}`,
+                                                backgroundColor: theme.btnBg,
+                                                color: theme.btnText,
+                                                fontSize: '12.5px',
+                                                fontWeight: 600,
+                                                textDecoration: 'none',
+                                                transition: 'all 0.2s ease',
+                                                whiteSpace: 'nowrap'
+                                            }}
+                                        >
+                                            <span>YouTube</span>
+                                            <ExternalLink size={12} />
+                                        </a>
+                                    </div>
                                 </div>
-
-                                {/* Bottom Action Buttons - Aligned at Baseline */}
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    gap: '10px',
-                                    borderTop: `1px solid ${theme.cardBorder}`,
-                                    paddingTop: '12px',
-                                    marginTop: '16px'
-                                }}>
-                                    <button
-                                        onClick={() => setActiveVideo(video)}
-                                        style={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '6px',
-                                            padding: '8px 14px',
-                                            borderRadius: '8px',
-                                            border: 'none',
-                                            backgroundColor: '#3B82F6',
-                                            color: '#FFFFFF',
-                                            fontSize: '12.5px',
-                                            fontWeight: 600,
-                                            cursor: 'pointer',
-                                            boxShadow: '0 3px 10px rgba(59, 130, 246, 0.28)',
-                                            transition: 'all 0.2s ease',
-                                            flex: 1
-                                        }}
-                                    >
-                                        <Play size={13} fill="currentColor" />
-                                        <span>Play Video</span>
-                                    </button>
-
-                                    <a
-                                        href={video.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '5px',
-                                            padding: '8px 12px',
-                                            borderRadius: '8px',
-                                            border: `1px solid ${theme.cardBorder}`,
-                                            backgroundColor: theme.btnBg,
-                                            color: theme.btnText,
-                                            fontSize: '12.5px',
-                                            fontWeight: 600,
-                                            textDecoration: 'none',
-                                            transition: 'all 0.2s ease',
-                                            whiteSpace: 'nowrap'
-                                        }}
-                                    >
-                                        <span>YouTube</span>
-                                        <ExternalLink size={12} />
-                                    </a>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
+                            </motion.div>
+                        );
+                    })}
                 </div>
             )}
 
@@ -675,41 +765,10 @@ export default function DashboardTutorialsPage() {
                     box-sizing: border-box;
                 }
 
-                .tutorials-hero-banner {
-                    border-radius: 20px;
-                    padding: 28px;
-                }
-
-                .hero-title {
-                    font-size: 26px;
-                    font-weight: 800;
-                    letter-spacing: -0.5px;
-                    margin-bottom: 8px;
-                    line-height: 1.2;
-                    color: #ffffff;
-                }
-
-                .hero-subtitle {
-                    font-size: 14px;
-                    color: rgba(255, 255, 255, 0.9);
-                    line-height: 1.5;
-                    margin: 0;
-                }
-
-                .hero-search-wrapper {
-                    border-radius: 12px;
-                    padding: 4px 16px;
-                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-                    max-width: 500px;
-                    width: 100%;
-                    display: flex;
-                    align-items: center;
-                }
-
                 .categories-scroll-container {
                     display: flex;
                     align-items: center;
-                    gap: 8px;
+                    gap: 10px;
                     overflow-x: auto;
                     padding-bottom: 4px;
                     scrollbar-width: none;
@@ -752,15 +811,15 @@ export default function DashboardTutorialsPage() {
                     }
 
                     .tutorials-hero-banner {
-                        padding: 20px 16px;
+                        padding: 24px 18px !important;
                     }
 
                     .hero-title {
-                        font-size: 22px;
+                        font-size: 22px !important;
                     }
 
                     .hero-subtitle {
-                        font-size: 13px;
+                        font-size: 13px !important;
                     }
 
                     .tutorials-cards-grid {
