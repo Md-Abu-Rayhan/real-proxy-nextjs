@@ -439,7 +439,7 @@ export default function DashboardTutorialsPage() {
                                 <div style={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justify: 'space-between',
+                                    justifyContent: 'space-between',
                                     gap: '10px',
                                     borderTop: `1px solid ${theme.cardBorder}`,
                                     paddingTop: '12px',
@@ -450,7 +450,7 @@ export default function DashboardTutorialsPage() {
                                         style={{
                                             display: 'inline-flex',
                                             alignItems: 'center',
-                                            justify: 'center',
+                                            justifyContent: 'center',
                                             gap: '6px',
                                             padding: '8px 14px',
                                             borderRadius: '8px',
@@ -476,7 +476,7 @@ export default function DashboardTutorialsPage() {
                                         style={{
                                             display: 'inline-flex',
                                             alignItems: 'center',
-                                            justify: 'center',
+                                            justifyContent: 'center',
                                             gap: '5px',
                                             padding: '8px 12px',
                                             borderRadius: '8px',
@@ -519,7 +519,7 @@ export default function DashboardTutorialsPage() {
                             zIndex: 999999,
                             display: 'flex',
                             alignItems: 'center',
-                            justify: 'center',
+                            justifyContent: 'center',
                             padding: '24px',
                             boxSizing: 'border-box'
                         }}
@@ -574,7 +574,7 @@ export default function DashboardTutorialsPage() {
                                         height: '34px',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        justify: 'center',
+                                        justifyContent: 'center',
                                         cursor: 'pointer',
                                         color: isDarkMode ? '#F8FAFC' : '#0F172A'
                                     }}
@@ -629,7 +629,7 @@ export default function DashboardTutorialsPage() {
                         backgroundColor: 'rgba(59, 130, 246, 0.12)',
                         display: 'flex',
                         alignItems: 'center',
-                        justify: 'center',
+                        justifyContent: 'center',
                         flexShrink: 0
                     }}>
                         <HelpCircle size={22} color="#3B82F6" />
