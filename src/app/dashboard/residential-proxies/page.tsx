@@ -879,42 +879,6 @@ const ResidentialProxiesPage = () => {
 
                                         <div className="split-fields">
                                             <div className="setting-fieldset">
-                                                <label className="field-label">City</label>
-                                                <div className="dark-dropdown" onClick={() => cities.length > 0 && setIsCityDropdownOpen(!isCityDropdownOpen)} ref={cityDropdownRef}>
-                                                    <div className="dropdown-val">
-                                                        <Monitor size={16} color={selectedCity ? '#3B82F6' : '#94A3B8'} />
-                                                        <span>{selectedCity?.name || 'Random'}</span>
-                                                    </div>
-                                                    <ChevronDown size={16} color="#94A3B8" />
-                                                    {isCityDropdownOpen && (
-                                                        <div className="dropdown-flyout custom-scrollbar">
-                                                            <div className="dropdown-search">
-                                                                <Search size={14} color="#94A3B8" />
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Search city..."
-                                                                    value={citySearchQuery}
-                                                                    onChange={(e) => setCitySearchQuery(e.target.value)}
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                />
-                                                            </div>
-                                                            {cities.filter(c => c.name.toLowerCase().includes(citySearchQuery.toLowerCase())).map(c => (
-                                                                <div key={c.id} className="dropdown-option" onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setSelectedCity(c);
-                                                                    setSelectedSubRegion(null); // Mutual Reset: Clear Region
-                                                                    setIsCityDropdownOpen(false);
-                                                                    setCitySearchQuery('');
-                                                                    toast.success('City selected. Region reset.');
-                                                                }}>
-                                                                    {c.name}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="setting-fieldset">
                                                 <label className="field-label">Region</label>
                                                 <div className="dark-dropdown" onClick={() => subRegions.length > 0 && setIsSubRegionDropdownOpen(!isSubRegionDropdownOpen)} ref={subRegionDropdownRef}>
                                                     <div className="dropdown-val">
@@ -944,6 +908,42 @@ const ResidentialProxiesPage = () => {
                                                                     toast.success('Region selected. City reset.');
                                                                 }}>
                                                                     {s.name}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="setting-fieldset">
+                                                <label className="field-label">City</label>
+                                                <div className="dark-dropdown" onClick={() => cities.length > 0 && setIsCityDropdownOpen(!isCityDropdownOpen)} ref={cityDropdownRef}>
+                                                    <div className="dropdown-val">
+                                                        <Monitor size={16} color={selectedCity ? '#3B82F6' : '#94A3B8'} />
+                                                        <span>{selectedCity?.name || 'Random'}</span>
+                                                    </div>
+                                                    <ChevronDown size={16} color="#94A3B8" />
+                                                    {isCityDropdownOpen && (
+                                                        <div className="dropdown-flyout custom-scrollbar">
+                                                            <div className="dropdown-search">
+                                                                <Search size={14} color="#94A3B8" />
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Search city..."
+                                                                    value={citySearchQuery}
+                                                                    onChange={(e) => setCitySearchQuery(e.target.value)}
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                />
+                                                            </div>
+                                                            {cities.filter(c => c.name.toLowerCase().includes(citySearchQuery.toLowerCase())).map(c => (
+                                                                <div key={c.id} className="dropdown-option" onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setSelectedCity(c);
+                                                                    setSelectedSubRegion(null); // Mutual Reset: Clear Region
+                                                                    setIsCityDropdownOpen(false);
+                                                                    setCitySearchQuery('');
+                                                                    toast.success('City selected. Region reset.');
+                                                                }}>
+                                                                    {c.name}
                                                                 </div>
                                                             ))}
                                                         </div>

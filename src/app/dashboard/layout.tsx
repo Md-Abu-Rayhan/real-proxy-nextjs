@@ -26,7 +26,8 @@ import {
     X,
     Crown,
     Sun,
-    Moon
+    Moon,
+    Video
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { triggerContactModal } from '@/components/ui/ContactModal';
@@ -52,6 +53,12 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             document.body.classList.remove('dark-mode');
             localStorage.setItem('theme', 'light');
         }
+    };
+
+    const toggleGroup = (group: string) => {
+        setExpandedGroups(prev =>
+            prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group]
+        );
     };
 
     React.useEffect(() => {
@@ -87,12 +94,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         router.push('/login');
     };
 
-    const toggleGroup = (group: string) => {
-        setExpandedGroups(prev =>
-            prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group]
-        );
-    };
-
     interface SidebarLink {
         name: string;
         icon: React.ReactNode;
@@ -124,6 +125,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 { name: 'Affiliate Program', icon: <Users size={18} />, path: '/dashboard/affiliate' }
             ]
         },
+        { name: 'Tutorial', icon: <Video size={18} />, path: '/dashboard/tutorials' },
     ];
 
     return (
@@ -234,7 +236,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                             <Bell size={20} className="header-icon" />
                         </div>
 
-                        {pathname?.includes('/dashboard/premium-residential-proxies') || pathname?.includes('/dashboard/residential-proxies') || pathname?.includes('/dashboard/affiliate') ? (
+                        {pathname?.includes('/dashboard/premium-residential-proxies') || pathname?.includes('/dashboard/residential-proxies') || pathname?.includes('/dashboard/affiliate') || pathname?.includes('/dashboard/tutorials') ? (
                             <button
                                 onClick={toggleDarkMode}
                                 className="theme-toggle-btn"

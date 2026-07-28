@@ -1,12 +1,25 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Video, ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 const Tutorials = () => {
     const { t } = useLanguage();
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.location.hash === '#tutorial-section') {
+            const timer = setTimeout(() => {
+                const el = document.getElementById('tutorial-section');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
     const tutorials = [
         {
             title: "Realproxy.net Signup",

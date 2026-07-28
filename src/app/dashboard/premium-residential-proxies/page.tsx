@@ -871,8 +871,13 @@ const PremiumResidentialProxiesPage = () => {
                                                 </div>
                                             </div>
                                             <div className="setting-fieldset">
-                                                <label className="field-label">City</label>
-                                                <div className="dark-dropdown" style={{ opacity: cities.length === 0 ? 0.6 : 1, cursor: cities.length === 0 ? 'not-allowed' : 'pointer' }} onClick={() => cities.length > 0 && setIsCityDropdownOpen(!isCityDropdownOpen)} ref={cityDropdownRef}>
+                                                <label className="field-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span>City</span>
+                                                    {selectedAsn && (
+                                                        <span style={{ color: '#EF4444', fontSize: '11px', fontWeight: 500 }}>(Disabled when ASN is selected)</span>
+                                                    )}
+                                                </label>
+                                                <div className="dark-dropdown" style={{ opacity: (cities.length === 0 || selectedAsn !== null) ? 0.6 : 1, cursor: (cities.length === 0 || selectedAsn !== null) ? 'not-allowed' : 'pointer' }} onClick={() => cities.length > 0 && !selectedAsn && setIsCityDropdownOpen(!isCityDropdownOpen)} ref={cityDropdownRef}>
                                                     <div className="dropdown-val">
                                                         <Monitor size={16} color={selectedCity ? '#3B82F6' : '#94A3B8'} />
                                                         {isCityDropdownOpen ? (
@@ -918,6 +923,7 @@ const PremiumResidentialProxiesPage = () => {
                                                                 <div key={c.id} className={`dropdown-option ${selectedCity?.id === c.id ? 'active' : ''}`} onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     setSelectedCity(c);
+                                                                    setSelectedAsn(null);
                                                                     if (c.state_id) {
                                                                         const parentState = subRegions.find(s => s.id === c.state_id);
                                                                         if (parentState) {
@@ -939,8 +945,13 @@ const PremiumResidentialProxiesPage = () => {
 
                                         <div className="split-fields" style={{ marginTop: '20px' }}>
                                             <div className="setting-fieldset">
-                                                <label className="field-label">ASN</label>
-                                                <div className="dark-dropdown" style={{ opacity: asns.length === 0 ? 0.6 : 1, cursor: asns.length === 0 ? 'not-allowed' : 'pointer' }} onClick={() => asns.length > 0 && setIsAsnDropdownOpen(!isAsnDropdownOpen)} ref={asnDropdownRef}>
+                                                <label className="field-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <span>ASN</span>
+                                                    {selectedCity && (
+                                                        <span style={{ color: '#EF4444', fontSize: '11px', fontWeight: 500 }}>(Disabled when City is selected)</span>
+                                                    )}
+                                                </label>
+                                                <div className="dark-dropdown" style={{ opacity: (asns.length === 0 || selectedCity !== null) ? 0.6 : 1, cursor: (asns.length === 0 || selectedCity !== null) ? 'not-allowed' : 'pointer' }} onClick={() => asns.length > 0 && !selectedCity && setIsAsnDropdownOpen(!isAsnDropdownOpen)} ref={asnDropdownRef}>
                                                     <div className="dropdown-val">
                                                         <Monitor size={16} color={selectedAsn ? '#3B82F6' : '#94A3B8'} />
                                                         {isAsnDropdownOpen ? (
@@ -986,8 +997,10 @@ const PremiumResidentialProxiesPage = () => {
                                                                 <div key={a.code} className={`dropdown-option ${selectedAsn?.code === a.code ? 'active' : ''}`} onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     setSelectedAsn(a);
+                                                                    setSelectedCity(null);
                                                                     setIsAsnDropdownOpen(false);
                                                                     setAsnSearchQuery('');
+                                                                    toast.success('ASN selected.');
                                                                 }}>
                                                                     {a.name}
                                                                 </div>
