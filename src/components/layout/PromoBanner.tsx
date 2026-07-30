@@ -34,7 +34,7 @@ const PromoBanner = () => {
                                 router.push('/dashboard/residential-proxies');
                             }
                         } else {
-                            router.push('/register');
+                            router.push('/signup');
                         }
                     }}
                     className="promo-btn"

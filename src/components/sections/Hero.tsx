@@ -47,17 +47,7 @@ const Hero = () => {
                     <div className="hero-actions">
                         <button
                             onClick={() => {
-                                const token = localStorage.getItem('auth_token');
-                                if (token) {
-                                    const pricingSection = document.getElementById('pricing-section');
-                                    if (pricingSection) {
-                                        pricingSection.scrollIntoView({ behavior: 'smooth' });
-                                    } else {
-                                        router.push('/dashboard/residential-proxies');
-                                    }
-                                } else {
-                                    router.push('/register');
-                                }
+                                router.push('/signup');
                             }}
                             className="btn-primary hero-btn"
                             style={{ padding: '18px 44px', borderRadius: '12px' }}
