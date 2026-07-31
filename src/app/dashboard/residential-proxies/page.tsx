@@ -1203,7 +1203,11 @@ const ResidentialProxiesPage = () => {
                 }
 
                 .setting-fieldset {
-                    margin-bottom: 20px;
+                    margin-bottom: 12px;
+                }
+
+                .split-fields .setting-fieldset {
+                    margin-bottom: 0;
                 }
 
                 .field-label {
@@ -1213,7 +1217,7 @@ const ResidentialProxiesPage = () => {
                     font-size: 13px;
                     font-weight: 600;
                     color: ${theme.textMuted};
-                    margin-bottom: 10px;
+                    margin-bottom: 6px;
                 }
 
                 .info-icon {
@@ -1343,7 +1347,8 @@ const ResidentialProxiesPage = () => {
                 .split-fields {
                     display: grid;
                     grid-template-columns: 1fr 1fr;
-                    gap: 16px;
+                    gap: 12px;
+                    margin-bottom: 12px;
                 }
 
                 .dark-input {
@@ -1690,6 +1695,14 @@ const ResidentialProxiesPage = () => {
                     }
                     .split-fields {
                         grid-template-columns: 1fr;
+                        gap: 10px;
+                        margin-bottom: 10px;
+                    }
+                    .setting-fieldset {
+                        margin-bottom: 10px;
+                    }
+                    .field-label {
+                        margin-bottom: 4px;
                     }
                     .settings-panel, .result-panel {
                         padding: 16px 12px;

@@ -943,7 +943,7 @@ const PremiumResidentialProxiesPage = () => {
                                             </div>
                                         </div>
 
-                                        <div className="split-fields" style={{ marginTop: '20px' }}>
+                                        <div className="split-fields split-fields-margin">
                                             <div className="setting-fieldset">
                                                 <label className="field-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <span>ASN</span>
@@ -1332,7 +1332,11 @@ const PremiumResidentialProxiesPage = () => {
                 }
 
                 .setting-fieldset {
-                    margin-bottom: 20px;
+                    margin-bottom: 12px;
+                }
+
+                .split-fields .setting-fieldset {
+                    margin-bottom: 0;
                 }
 
                 .field-label {
@@ -1342,7 +1346,7 @@ const PremiumResidentialProxiesPage = () => {
                     font-size: 13px;
                     font-weight: 600;
                     color: ${theme.textMuted};
-                    margin-bottom: 10px;
+                    margin-bottom: 6px;
                 }
 
                 .info-icon {
@@ -1504,7 +1508,12 @@ const PremiumResidentialProxiesPage = () => {
                 .split-fields {
                     display: grid;
                     grid-template-columns: 1fr 1fr;
-                    gap: 16px;
+                    gap: 12px;
+                    margin-bottom: 12px;
+                }
+
+                .split-fields.split-fields-margin {
+                    margin-top: 12px;
                 }
 
                 .dark-input {
@@ -1851,6 +1860,17 @@ const PremiumResidentialProxiesPage = () => {
                     }
                     .split-fields {
                         grid-template-columns: 1fr;
+                        gap: 10px;
+                        margin-bottom: 10px;
+                    }
+                    .split-fields.split-fields-margin {
+                        margin-top: 10px;
+                    }
+                    .setting-fieldset {
+                        margin-bottom: 10px;
+                    }
+                    .field-label {
+                        margin-bottom: 4px;
                     }
                     .settings-panel, .result-panel {
                         padding: 16px 12px;
