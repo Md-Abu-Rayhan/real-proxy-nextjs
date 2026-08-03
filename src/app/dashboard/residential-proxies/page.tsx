@@ -109,6 +109,128 @@ const ResidentialProxiesPage = () => {
     const [isMounted, setIsMounted] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
 
+    // Statistics Tab State
+    const [statsPreset, setStatsPreset] = useState<'last_hour' | 'last_24h' | '7d' | '30d' | '90d' | 'custom'>('last_24h');
+    const [statsCustomFrom, setStatsCustomFrom] = useState('');
+    const [statsCustomTo, setStatsCustomTo] = useState('');
+    const [statsData, setStatsData] = useState<any>(null);
+    const [isStatsLoading, setIsStatsLoading] = useState(false);
+    const [tableSearch, setTableSearch] = useState('');
+
+    const fetchStatistics = async (preset = statsPreset, customFrom = statsCustomFrom, customTo = statsCustomTo) => {
+        setIsStatsLoading(true);
+        try {
+            let dateFrom = '';
+            let dateTo = '';
+            let granularity = 'hour';
+
+            const now = new Date();
+            dateTo = now.toISOString();
+
+            if (preset === 'last_hour') {
+                const from = new Date(now.getTime() - 60 * 60 * 1000);
+                dateFrom = from.toISOString();
+                granularity = 'minute';
+            } else if (preset === 'last_24h') {
+                const from = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                dateFrom = from.toISOString();
+                granularity = 'hour';
+            } else if (preset === '7d') {
+                const from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                dateFrom = from.toISOString();
+                granularity = 'hour';
+            } else if (preset === '30d') {
+                const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                dateFrom = from.toISOString();
+                granularity = 'day';
+            } else if (preset === '90d') {
+                const from = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                dateFrom = from.toISOString();
+                granularity = 'day';
+            } else if (preset === 'custom' && customFrom && customTo) {
+                dateFrom = new Date(customFrom).toISOString();
+                dateTo = new Date(customTo).toISOString();
+                granularity = 'hour';
+            }
+
+            const token = localStorage.getItem('auth_token');
+            const email = localStorage.getItem('user_email') || '';
+
+            const res = await axios.get(`${API_URL}/api/Premium/statistics`, {
+                params: {
+                    email,
+                    serviceType: 'RESIDENTIAL-PREMIUM',
+                    granularity,
+                    dateFrom,
+                    dateTo
+                },
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            });
+
+            if (res.data) {
+                setStatsData(res.data);
+            }
+        } catch (err) {
+            console.error("Error fetching statistics:", err);
+        } finally {
+            setIsStatsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'Statistics') {
+            fetchStatistics();
+        }
+    }, [activeTab, statsPreset]);
+
+    const handleExportCSV = () => {
+        const docs = statsData?.perSubuserHostCountry?.documents || [];
+        if (!docs.length) {
+            toast.error("No data to export");
+            return;
+        }
+
+        const headers = ["User", "Country", "Host", "Total Requests", "Successful Requests", "Failed Requests", "Success Rate (%)", "Bandwidth (Bytes)", "Avg Latency (ms)"];
+        const rows = docs.map((d: any) => [
+            d.email || d.subUserId || '',
+            d.country || '',
+            d.host || '',
+            d.totalRequests || 0,
+            d.successfulRequests || 0,
+            d.failedRequests || 0,
+            d.successRate || 0,
+            d.bandwidthBytes || 0,
+            d.avgLatency || 0
+        ]);
+
+        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r: any) => r.join(","))].join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `proxy_statistics_${statsPreset}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("CSV exported successfully!");
+    };
+
+    const formatBytes = (bytes: number): string => {
+        if (!bytes || bytes === 0) return '0 MB';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    const getCountryFlag = (countryCode: string): string => {
+        if (!countryCode || countryCode.length !== 2) return '🌐';
+        const codePoints = countryCode
+            .toUpperCase()
+            .split('')
+            .map(char => 127397 + char.charCodeAt(0));
+        return String.fromCodePoint(...codePoints);
+    };
+
     useEffect(() => {
         setIsMounted(true);
         const checkDarkMode = () => {
@@ -1038,10 +1160,236 @@ const ResidentialProxiesPage = () => {
                     </div>
                 </div>
             ) : (
-                <div style={{ padding: '120px 40px', textAlign: 'center', color: theme.textMuted, backgroundColor: theme.card, borderRadius: '12px', border: `1px solid ${theme.border}`, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                    <RefreshCw size={48} style={{ opacity: 0.1, marginBottom: '24px' }} />
-                    <div style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '8px' }}>No Data Available</div>
-                    <div style={{ fontSize: '14px', color: theme.textMuted }}>Statistics dynamic data will be displayed once there is usage.</div>
+                <div className="statistics-dashboard" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    {/* Top Control Bar */}
+                    <div style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '16px',
+                        backgroundColor: theme.card,
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: '12px',
+                        padding: '16px 24px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                    }}>
+                        {/* Time Preset Pills */}
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                            {[
+                                { id: 'last_hour', label: 'Last hour' },
+                                { id: 'last_24h', label: 'Last 24 h' },
+                                { id: '7d', label: '7 days' },
+                                { id: '30d', label: '30 days' },
+                                { id: '90d', label: '90 days' },
+                            ].map(pill => (
+                                <button
+                                    key={pill.id}
+                                    onClick={() => { setStatsPreset(pill.id as any); }}
+                                    style={{
+                                        padding: '8px 16px',
+                                        borderRadius: '8px',
+                                        fontSize: '13px',
+                                        fontWeight: '600',
+                                        border: statsPreset === pill.id ? '1px solid #3B82F6' : `1px solid ${theme.border}`,
+                                        backgroundColor: statsPreset === pill.id ? (isDarkMode ? '#1E3A8A' : '#EFF6FF') : theme.card,
+                                        color: statsPreset === pill.id ? '#3B82F6' : theme.text,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    {pill.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                            <button
+                                onClick={handleExportCSV}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '8px 16px',
+                                    borderRadius: '8px',
+                                    fontSize: '13px',
+                                    fontWeight: '600',
+                                    border: `1px solid ${theme.border}`,
+                                    backgroundColor: theme.card,
+                                    color: theme.text,
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <Download size={14} /> Export CSV
+                            </button>
+                            <button
+                                onClick={() => fetchStatistics()}
+                                disabled={isStatsLoading}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '8px 16px',
+                                    borderRadius: '8px',
+                                    fontSize: '13px',
+                                    fontWeight: '600',
+                                    border: 'none',
+                                    backgroundColor: '#3B82F6',
+                                    color: '#FFFFFF',
+                                    cursor: isStatsLoading ? 'not-allowed' : 'pointer'
+                                }}
+                            >
+                                <RefreshCw size={14} className={isStatsLoading ? 'animate-spin' : ''} /> {isStatsLoading ? 'Loading...' : 'Refresh'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Summary Metric Cards */}
+                    {(() => {
+                        const docs = statsData?.perSubuserHostCountry?.documents || [];
+                        const periodDocs = statsData?.perPeriod?.documents || [];
+                        
+                        let totalReq = 0;
+                        let successReq = 0;
+                        let failedReq = 0;
+                        let totalBytes = 0;
+
+                        if (docs.length > 0) {
+                            docs.forEach((d: any) => {
+                                totalReq += d.totalRequests || 0;
+                                successReq += d.successfulRequests || 0;
+                                failedReq += d.failedRequests || 0;
+                                totalBytes += d.bandwidthBytes || 0;
+                            });
+                        } else if (periodDocs.length > 0) {
+                            periodDocs.forEach((d: any) => {
+                                totalReq += d.totalRequests || 0;
+                                successReq += d.successfulRequests || 0;
+                                failedReq += d.failedRequests || 0;
+                                totalBytes += d.bandwidthBytes || 0;
+                            });
+                        }
+
+                        const overallSuccessRate = totalReq > 0 ? ((successReq / totalReq) * 100).toFixed(1) : '100';
+
+                        return (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                                <div style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}`, borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                                    <div style={{ fontSize: '13px', color: theme.textMuted, fontWeight: '500', marginBottom: '8px' }}>Total Bandwidth</div>
+                                    <div style={{ fontSize: '24px', fontWeight: '700', color: theme.text }}>{formatBytes(totalBytes)}</div>
+                                </div>
+                                <div style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}`, borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                                    <div style={{ fontSize: '13px', color: theme.textMuted, fontWeight: '500', marginBottom: '8px' }}>Total Requests</div>
+                                    <div style={{ fontSize: '24px', fontWeight: '700', color: theme.text }}>{totalReq.toLocaleString()}</div>
+                                </div>
+                                <div style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}`, borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                                    <div style={{ fontSize: '13px', color: theme.textMuted, fontWeight: '500', marginBottom: '8px' }}>Successful / Failed</div>
+                                    <div style={{ fontSize: '24px', fontWeight: '700', color: theme.text }}>
+                                        <span style={{ color: '#10B981' }}>{successReq.toLocaleString()}</span>
+                                        <span style={{ color: theme.textMuted, fontSize: '18px', margin: '0 6px' }}>/</span>
+                                        <span style={{ color: '#EF4444' }}>{failedReq.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                                <div style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}`, borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                                    <div style={{ fontSize: '13px', color: theme.textMuted, fontWeight: '500', marginBottom: '8px' }}>Success Rate</div>
+                                    <div style={{ fontSize: '24px', fontWeight: '700', color: '#3B82F6' }}>{overallSuccessRate}%</div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {/* Analytics Table */}
+                    <div style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}`, borderRadius: '12px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                            <div>
+                                <h3 style={{ fontSize: '18px', fontWeight: '700', color: theme.text }}>Requests Analytics</h3>
+                                <p style={{ fontSize: '13px', color: theme.textMuted, marginTop: '2px' }}>Detailed traffic breakdown by host and country</p>
+                            </div>
+                            <div style={{ position: 'relative', minWidth: '240px' }}>
+                                <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: theme.textMuted }} />
+                                <input
+                                    type="text"
+                                    placeholder="Search host or email..."
+                                    value={tableSearch}
+                                    onChange={(e) => setTableSearch(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '8px 12px 8px 36px',
+                                        borderRadius: '8px',
+                                        border: `1px solid ${theme.border}`,
+                                        backgroundColor: theme.input,
+                                        color: theme.text,
+                                        fontSize: '13px',
+                                        outline: 'none'
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        {isStatsLoading ? (
+                            <div style={{ padding: '60px', textAlign: 'center', color: theme.textMuted }}>
+                                <Loader2 size={28} className="animate-spin" style={{ margin: '0 auto 12px' }} />
+                                <div>Loading statistics data...</div>
+                            </div>
+                        ) : (() => {
+                            const rawDocs = statsData?.perSubuserHostCountry?.documents || [];
+                            const filteredDocs = rawDocs.filter((d: any) => {
+                                if (!tableSearch) return true;
+                                const query = tableSearch.toLowerCase();
+                                return (d.host && d.host.toLowerCase().includes(query)) ||
+                                       (d.email && d.email.toLowerCase().includes(query)) ||
+                                       (d.subUserId && d.subUserId.toLowerCase().includes(query)) ||
+                                       (d.country && d.country.toLowerCase().includes(query));
+                            });
+
+                            if (!filteredDocs.length) {
+                                return (
+                                    <div style={{ padding: '60px 20px', textAlign: 'center', color: theme.textMuted }}>
+                                        <RefreshCw size={40} style={{ opacity: 0.15, marginBottom: '16px' }} />
+                                        <div style={{ fontSize: '16px', fontWeight: '600', color: theme.text, marginBottom: '4px' }}>No Traffic Logged Yet</div>
+                                        <div style={{ fontSize: '13px', color: theme.textMuted }}>Statistics dynamic data will be displayed once there is proxy usage.</div>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: `1px solid ${theme.border}`, color: theme.textMuted, fontWeight: '600' }}>
+                                                <th style={{ padding: '12px 16px' }}>User</th>
+                                                <th style={{ padding: '12px 16px' }}>Country</th>
+                                                <th style={{ padding: '12px 16px' }}>Host</th>
+                                                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Total</th>
+                                                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Success Rate</th>
+                                                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Bandwidth</th>
+                                                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Avg Latency</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredDocs.map((row: any, idx: number) => (
+                                                <tr key={idx} style={{ borderBottom: `1px solid ${theme.border}`, transition: 'background 0.15s' }}>
+                                                    <td style={{ padding: '14px 16px', color: theme.text, fontWeight: '500' }}>{row.email || row.subUserId || '—'}</td>
+                                                    <td style={{ padding: '14px 16px', color: theme.text }}>
+                                                        <span style={{ marginRight: '6px' }}>{getCountryFlag(row.country)}</span>
+                                                        {row.country ? row.country.toUpperCase() : 'Global'}
+                                                    </td>
+                                                    <td style={{ padding: '14px 16px', color: theme.text, fontFamily: 'monospace', fontSize: '12px' }}>{row.host || '—'}</td>
+                                                    <td style={{ padding: '14px 16px', textAlign: 'right', color: theme.text, fontWeight: '600' }}>{(row.totalRequests || 0).toLocaleString()}</td>
+                                                    <td style={{ padding: '14px 16px', textAlign: 'right', color: row.successRate >= 90 ? '#10B981' : (row.successRate >= 75 ? '#F59E0B' : '#EF4444'), fontWeight: '600' }}>
+                                                        {row.successRate !== undefined ? `${row.successRate}%` : '—'}
+                                                    </td>
+                                                    <td style={{ padding: '14px 16px', textAlign: 'right', color: theme.text }}>{formatBytes(row.bandwidthBytes || 0)}</td>
+                                                    <td style={{ padding: '14px 16px', textAlign: 'right', color: theme.textMuted }}>{row.avgLatency ? `${(row.avgLatency / 1000).toFixed(2)} s` : '—'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            );
+                        })()}
+                    </div>
                 </div>
             )}
 

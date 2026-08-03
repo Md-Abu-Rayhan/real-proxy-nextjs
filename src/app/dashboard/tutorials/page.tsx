@@ -76,6 +76,33 @@ const TUTORIALS_DATA: TutorialVideo[] = [
         category: 'Mobile Apps',
         duration: '4:45',
         url: 'https://youtu.be/XkCeuLWm2u4'
+    },
+    {
+        id: '6',
+        youtubeId: 'e2VZGv58Gdk',
+        title: 'Realproxy APP Proxy Setup with Premium Package',
+        description: 'Step-by-step tutorial on setting up and configuring Realproxy APP with Premium Package proxies.',
+        category: 'Mobile Apps',
+        duration: '4:30',
+        url: 'https://youtu.be/e2VZGv58Gdk'
+    },
+    {
+        id: '7',
+        youtubeId: 'kBbU7k458nQ',
+        title: 'Tun2tap APP Proxy Setup with Premium Package',
+        description: 'Complete guide to setting up Tun2tap Android app with Real Proxy Premium Package.',
+        category: 'Mobile Apps',
+        duration: '5:00',
+        url: 'https://youtu.be/kBbU7k458nQ'
+    },
+    {
+        id: '8',
+        youtubeId: 'kBbU7k458nQ',
+        title: 'Super Proxy APP Proxy Setup with Premium Package',
+        description: 'Learn how to configure Super Proxy app using Premium Package proxies for seamless mobile tunneling.',
+        category: 'Mobile Apps',
+        duration: '4:15',
+        url: 'https://youtu.be/kBbU7k458nQ'
     }
 ];
 
@@ -226,7 +253,7 @@ export default function DashboardTutorialsPage() {
                                 borderRadius: '8px'
                             }}>
                                 <Video size={13} color="#60A5FA" />
-                                <span>5 Video Tutorials</span>
+                                <span>{TUTORIALS_DATA.length} Video Tutorials</span>
                             </div>
                             <div style={{
                                 display: 'flex',

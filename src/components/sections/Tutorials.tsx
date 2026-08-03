@@ -45,6 +45,21 @@ const Tutorials = () => {
             title: "IP setup In Super Proxy App Tun2tap",
             id: "XkCeuLWm2u4",
             url: "https://youtu.be/XkCeuLWm2u4"
+        },
+        {
+            title: "Realproxy APP proxy setup with Premium package",
+            id: "e2VZGv58Gdk",
+            url: "https://youtu.be/e2VZGv58Gdk"
+        },
+        {
+            title: "Tun2tap APP proxy setup with Premium package",
+            id: "kBbU7k458nQ",
+            url: "https://youtu.be/kBbU7k458nQ"
+        },
+        {
+            title: "Super proxy APP proxy setup with Premium package",
+            id: "kBbU7k458nQ",
+            url: "https://youtu.be/kBbU7k458nQ"
         }
     ];
 

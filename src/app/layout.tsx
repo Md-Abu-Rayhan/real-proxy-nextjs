@@ -5,6 +5,7 @@ import StyledJsxRegistry from "./registry";
 import { Toaster } from 'react-hot-toast';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { ContactModal } from '@/components/ui/ContactModal';
+import { PromoTelegramBadge } from '@/components/ui/PromoTelegramBadge';
 
 export const metadata: Metadata = {
   title: "Real Proxy - Best Residential IP Proxy Service Provider",
@@ -24,6 +25,7 @@ export default function RootLayout({
           <LanguageProvider>
             {children}
             <ContactModal />
+            <PromoTelegramBadge />
           </LanguageProvider>
         </StyledJsxRegistry>
         <Script id="crisp-config" strategy="afterInteractive">
