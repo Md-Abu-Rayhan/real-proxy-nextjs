@@ -191,7 +191,7 @@ const PaymentSuccessContent = () => {
                             // 2. Check if EPS BDT payment product name contains 'static' or 'premium'
                             if (paymentDetails) {
                                 const productName = paymentDetails.productInfo?.name || paymentDetails.productName || '';
-                                if (productName.toLowerCase().includes('static') || productName.toLowerCase().includes('premium')) {
+                                if (productName.toLowerCase().includes('static') || productName.toLowerCase().includes('premium') || productName.toLowerCase().includes('dedicated')) {
                                     dashboardPath = '/dashboard/premium-residential-proxies';
                                 }
                                 
