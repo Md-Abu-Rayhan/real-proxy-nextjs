@@ -15,7 +15,7 @@ const ResidentialHero = () => {
                     className="res-hero-content"
                 >
                     <div className="badge-wrapper">
-                        <span className="dot">●</span> 200M+ Global Residential IPs
+                        <span className="dot">●</span> 50M+ Global Residential IPs
                     </div>
                     <h1 className="res-title">
                         Unlimited Speed and <span style={{ color: '#0086FF' }}>Anonymity</span> <br />

@@ -9,7 +9,7 @@ import CheckoutSection from "@/components/sections/CheckoutSection";
 
 export const metadata = {
     title: "Residential Proxies - Real Proxy",
-    description: "Best residential ip proxy service provider. Get unlimited speed and anonymity with 200M+ real residential IPs.",
+    description: "Best residential ip proxy service provider. Get unlimited speed and anonymity with 50M+ real residential IPs.",
 };
 
 export default function ResidentialProxiesPage() {

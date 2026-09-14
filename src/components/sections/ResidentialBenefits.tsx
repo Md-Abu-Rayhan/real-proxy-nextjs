@@ -5,7 +5,7 @@ import { Globe, Zap, Shield, Users, MapPin, Gauge } from 'lucide-react';
 
 const ResidentialBenefits = () => {
     const benefits = [
-        { icon: <Globe />, title: '200M+ Worldwide IPs', desc: 'Access one of the largest residential proxy pools with over 200 million real residential IPs.' },
+        { icon: <Globe />, title: '50M+ Worldwide IPs', desc: 'Access one of the largest residential proxy pools with over 50 million real residential IPs.' },
         { icon: <MapPin />, title: 'City Level Targeting', desc: 'Target any country, state, or city worldwide with precision for your specific business needs.' },
         { icon: <Zap />, title: '99.9% Success Rate', desc: 'Our stable network ensures high performance and reliability for large-scale data collection.' },
         { icon: <Shield />, title: 'Total Anonymity', desc: 'Hide your real identity with high-purity residential IPs that look like real home users.' },
