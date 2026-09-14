@@ -27,13 +27,60 @@ import {
     Crown,
     Sun,
     Moon,
-    Video
+    Video,
+    Wallet
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { triggerContactModal } from '@/components/ui/ContactModal';
+import { WalletProvider, useWallet } from '@/context/WalletContext';
 
-const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
-    const [expandedGroups, setExpandedGroups] = useState<string[]>(['SOCKSS PROXIES', 'TRAFFIC PLANS', 'REFERRAL', 'TOOL', 'Promotion Plan']);
+const HeaderWalletBadge = () => {
+    const { balanceUsd, balanceBdt, isLoading } = useWallet();
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '6px' }}>
+            <Link
+                href="/dashboard/wallet"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '5px 10px',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 134, 255, 0.12)',
+                    border: '1px solid rgba(0, 134, 255, 0.3)',
+                    color: '#0086ff',
+                    textDecoration: 'none',
+                    fontWeight: 700,
+                    fontSize: '12px'
+                }}
+            >
+                <Wallet size={14} />
+                <span>${balanceUsd.toFixed(2)}</span>
+                <span style={{ fontSize: '11px', opacity: 0.8, fontWeight: 500 }}>
+                    (৳{balanceBdt.toFixed(0)})
+                </span>
+            </Link>
+            <Link
+                href="/dashboard/wallet"
+                style={{
+                    padding: '5px 9px',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #0086ff 0%, #0066cc 100%)',
+                    color: '#fff',
+                    textDecoration: 'none',
+                    fontWeight: 700,
+                    fontSize: '11px',
+                    boxShadow: '0 2px 6px rgba(0, 134, 255, 0.3)'
+                }}
+            >
+                + Top Up
+            </Link>
+        </div>
+    );
+};
+
+const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => {
+    const [expandedGroups, setExpandedGroups] = useState<string[]>(['SOCKSS PROXIES', 'TRAFFIC PLANS', 'FINANCE & BILLING', 'REFERRAL', 'TOOL', 'Promotion Plan']);
     const router = useRouter();
     const pathname = usePathname();
     const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -120,8 +167,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             ]
         },
         {
-            group: 'REFERRAL',
+            group: 'FINANCE & BILLING',
             items: [
+                { name: 'My Wallet', icon: <Wallet size={18} style={{ color: '#0086ff' }} />, path: '/dashboard/wallet' },
                 { name: 'Affiliate Program', icon: <Users size={18} />, path: '/dashboard/affiliate' }
             ]
         },
@@ -231,38 +279,32 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                     </div>
 
                     <div className="header-right">
+                        <HeaderWalletBadge />
                         <div className="header-actions">
                             <HelpCircle size={20} className="header-icon" onClick={triggerContactModal} style={{ cursor: 'pointer' }} />
                             <Bell size={20} className="header-icon" />
                         </div>
 
-                        {pathname?.includes('/dashboard/premium-residential-proxies') || pathname?.includes('/dashboard/residential-proxies') || pathname?.includes('/dashboard/affiliate') || pathname?.includes('/dashboard/tutorials') ? (
-                            <button
-                                onClick={toggleDarkMode}
-                                className="theme-toggle-btn"
-                                aria-label="Toggle Dark Mode"
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: isDarkMode ? '#F8FAFC' : '#4E5969',
-                                    padding: '8px',
-                                    borderRadius: '50%',
-                                    transition: 'background-color 0.2s',
-                                }}
-                            >
-                                {isDarkMode ? <Sun size={20} color="#FFA800" /> : <Moon size={20} />}
-                            </button>
-                        ) : (
-                            <div className="language-selector">
-                                <Globe size={16} />
-                                <span className="lang-text">EN-English</span>
-                                <ChevronDown size={14} />
-                            </div>
-                        )}
+                        <button
+                            onClick={toggleDarkMode}
+                            className="theme-toggle-btn"
+                            aria-label="Toggle Dark Mode"
+                            title="Toggle Dark Mode"
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: isDarkMode ? '#F8FAFC' : '#4E5969',
+                                padding: '8px',
+                                borderRadius: '50%',
+                                transition: 'background-color 0.2s',
+                            }}
+                        >
+                            {isDarkMode ? <Sun size={20} color="#FFA800" /> : <Moon size={20} />}
+                        </button>
 
                         <div className="user-profile">
                             <div className="user-info">
@@ -730,6 +772,14 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 }
             `}</style>
         </div>
+    );
+};
+
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+    return (
+        <WalletProvider>
+            <DashboardLayoutContent>{children}</DashboardLayoutContent>
+        </WalletProvider>
     );
 };
 

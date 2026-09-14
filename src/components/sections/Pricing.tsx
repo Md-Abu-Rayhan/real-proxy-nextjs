@@ -144,10 +144,10 @@ const Pricing = () => {
         setIsWalletLoading(true);
         setShowPaymentModal(true);
         // Fetch wallet balance in background
-        axios.get(`${API_URL}/api/affiliate/dashboard`, {
+        axios.get(`${API_URL}/api/Wallet/summary`, {
             headers: { Authorization: `Bearer ${token}` }
         }).then(res => {
-            const balance = Number(res.data?.affiliateBalance ?? res.data?.AffiliateBalance ?? 0);
+            const balance = Number(res.data?.balanceUsd ?? 0);
             setWalletBalance(balance);
         }).catch(() => {
             setWalletBalance(0);
@@ -218,24 +218,26 @@ const Pricing = () => {
             }
 
             const apiUrl = API_URL;
-            const response = await axios.post(`${apiUrl}/api/Payment/initialize-secure`, {
-                packageId: packageId,
-                amount: Number(current.totalBDT),
-                currency: "BDT",
-                customerOrderId: `ORD${Math.floor(Date.now() / 1000)}${Math.floor(Math.random() * 100000)}`.substring(0, 16),
-                customerName: "John Doe",
-                customerEmail: localStorage.getItem('user_email') || "customer@example.com",
+            const amount = parseFloat(current.totalBDT);
+            const customerOrderId = `${proxyType === 'Premium Residential' ? 'ST' : 'PR'}${Date.now()}`.substring(0, 16);
+            const merchantTransactionId = `${proxyType === 'Premium Residential' ? 'ST' : 'PR'}${Date.now()}`.substring(0, 16);
+
+            const userEmail = localStorage.getItem('user_email') || 'customer@realproxy.io';
+            const userName = userEmail.split('@')[0];
+
+            const response = await axios.post(`${apiUrl}/api/Payment/initialize`, {
+                customerOrderId: customerOrderId,
+                merchantTransactionId: merchantTransactionId,
+                totalAmount: amount,
+                customerName: userName,
+                customerEmail: userEmail,
                 customerPhone: "01700000000",
-                customerAddress: "Dhaka, Bangladesh",
-                customerCity: "Dhaka",
-                customerState: "Dhaka",
-                customerPostcode: "1212",
-                customerCountry: "BD",
+                productName: `${proxyType} Proxy (${bandwidth} GB)`,
                 promoCode: promoCode
             }, {
                 headers: {
+                    'accept': '*/*',
                     'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 }
             });
@@ -261,38 +263,38 @@ const Pricing = () => {
             return;
         }
 
-        // Clear promo code when using wallet (wallet purchases don't support promo)
-        if (promoCode && appliedDiscount) {
-            setPromoCode("");
-            setAppliedDiscount(null);
-            toast("Promo code cannot be used with wallet balance. Please use EPS or Crypto payment to avail discount.");
-        }
+        const pricePerGb = proxyType === 'Premium Residential' ? 1.50 : 1.00;
+        const baseCost = bandwidth * pricePerGb;
+        const discountAmt = appliedDiscount ? (baseCost * appliedDiscount) / 100 : 0;
+        const finalCost = Math.max(0.01, baseCost - discountAmt);
 
-        const totalUsd = parseFloat(current.totalBDT) / 125;
-        if (walletBalance < totalUsd) {
-            toast.error(`Insufficient wallet balance. Available: $${(walletBalance).toFixed(4)}, Required: $${(totalUsd).toFixed(4)}`);
+        if (walletBalance < finalCost) {
+            toast.error(`Insufficient wallet balance. Available: $${walletBalance.toFixed(2)}, Required: $${finalCost.toFixed(2)}. Please top up your wallet.`);
             return;
         }
 
         setIsLoading(true);
         try {
             const apiUrl = API_URL;
-            const response = await axios.post(`${apiUrl}/api/affiliate/wallet-purchase`, {
+            const response = await axios.post(`${apiUrl}/api/Wallet/buy-proxy`, {
+                proxyType: proxyType === 'Premium Residential' ? 'Premium Residential' : 'Residential',
                 bandwidthGb: bandwidth,
-                proxyType: proxyType === 'Premium Residential' ? 'Static' : 'Rotating'
+                promoCode: appliedDiscount && promoCode ? promoCode.trim() : null
             }, {
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
 
-            if (response.data) {
-                const newBalance = Math.max(0, walletBalance - totalUsd);
-                setWalletBalance(newBalance);
-                toast.success(`🎉 Successfully purchased ${bandwidth} GB of proxy bandwidth!`);
+            if (response.data && response.data.success) {
+                setWalletBalance(Number(response.data.remainingBalanceUsd ?? Math.max(0, walletBalance - finalCost)));
+                toast.success(`🎉 ${response.data.message || 'Successfully purchased proxy bandwidth!'}`);
                 setShowPaymentModal(false);
                 router.push(proxyType === 'Premium Residential' ? '/dashboard/premium-residential-proxies' : '/dashboard/residential-proxies');
+            } else {
+                toast.error(response.data?.message || "Wallet purchase failed.");
             }
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Wallet purchase failed.");
+        } finally {
             setIsLoading(false);
         }
     };
