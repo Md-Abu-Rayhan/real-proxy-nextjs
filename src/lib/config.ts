@@ -2,6 +2,6 @@
 // Client-side (browser): empty string = relative URL, proxied via Next.js rewrites
 export const API_URL =
   typeof window === 'undefined'
-    ? ('http://127.0.0.1:5001')
+    ? (process.env.API_URL_INTERNAL ?? 'http://127.0.0.1:5001')
     : '';
 
