@@ -1177,10 +1177,17 @@ export default function WalletPage() {
                 /* Main Content Grid */
                 .dashboard-main-grid {
                     display: grid;
-                    grid-template-columns: 500px minmax(0, 1fr);
+                    grid-template-columns: 1fr;
                     gap: 28px;
                     min-width: 0;
                     width: 100%;
+                }
+
+                /* Ultra-wide / Big Desktop Displays (>= 1536px) can use 2-column side-by-side ratio */
+                @media (min-width: 1536px) {
+                    .dashboard-main-grid {
+                        grid-template-columns: 480px minmax(0, 1fr);
+                    }
                 }
 
                 .actions-column,
@@ -1907,7 +1914,7 @@ export default function WalletPage() {
                 }
 
                 .history-table th {
-                    padding: 14px 22px;
+                    padding: 13px 16px;
                     background-color: #F8FAFC;
                     color: #64748B;
                     font-weight: 600;
@@ -1918,7 +1925,7 @@ export default function WalletPage() {
                 }
 
                 .history-table td {
-                    padding: 15px 22px;
+                    padding: 14px 16px;
                     border-bottom: 1px solid #F1F5F9;
                     color: #334155;
                     white-space: nowrap;
