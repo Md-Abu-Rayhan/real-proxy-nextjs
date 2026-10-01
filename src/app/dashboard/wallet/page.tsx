@@ -503,10 +503,7 @@ export default function WalletPage() {
                                         style={{ maxHeight: '22px', maxWidth: '36px', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block' }}
                                     />
                                 </div>
-                                <div className="tab-text-box">
-                                    <span className="tab-title">bKash</span>
-                                    <span className="tab-subtitle">PayStation</span>
-                                </div>
+                                <span className="tab-title">bKash</span>
                             </button>
 
                             <button
@@ -523,10 +520,7 @@ export default function WalletPage() {
                                     />
                                     <CreditCard size={13} className="mfs-card-icon" />
                                 </div>
-                                <div className="tab-text-box">
-                                    <span className="tab-title">Nagad / Cards</span>
-                                    <span className="tab-subtitle">EPS Gateway</span>
-                                </div>
+                                <span className="tab-title">Nagad / Cards</span>
                             </button>
 
                             <button
@@ -537,10 +531,7 @@ export default function WalletPage() {
                                 <div className="tab-icon-box crypto-icon-box">
                                     <QrCode size={18} />
                                 </div>
-                                <div className="tab-text-box">
-                                    <span className="tab-title">Crypto</span>
-                                    <span className="tab-subtitle">USDT • Coins</span>
-                                </div>
+                                <span className="tab-title">Crypto</span>
                             </button>
                         </div>
 
@@ -579,7 +570,7 @@ export default function WalletPage() {
                                                     key={amt}
                                                     type="button"
                                                     onClick={() => setCustomBdt(amt.toString())}
-                                                    className={`preset-btn ${isSelected ? 'selected' : ''}`}
+                                                    className={`preset-btn preset-bkash ${isSelected ? 'selected selected-bkash' : ''}`}
                                                 >
                                                     <span className="preset-bdt">৳{amt.toLocaleString()}</span>
                                                     <span className="preset-usd">≈ ${usd} USD</span>
@@ -608,12 +599,12 @@ export default function WalletPage() {
                                 </div>
 
                                 {/* Conversion Preview */}
-                                <div className="conversion-info-box">
+                                <div className="conversion-info-box conv-bkash-theme">
                                     <div className="conv-text-side">
                                         <div className="conv-title">Wallet Balance to Credit:</div>
                                         <div className="conv-sub">0% Deposit Gateway Fee • Instant bKash Auto-Credit</div>
                                     </div>
-                                    <div className="conv-amt">${calculatedUsdForBdt.toFixed(2)} USD</div>
+                                    <div className="conv-amt conv-amt-bkash">${calculatedUsdForBdt.toFixed(2)} USD</div>
                                 </div>
 
                                 <button
@@ -692,7 +683,7 @@ export default function WalletPage() {
                                                     key={amt}
                                                     type="button"
                                                     onClick={() => setCustomBdt(amt.toString())}
-                                                    className={`preset-btn ${isSelected ? 'selected' : ''}`}
+                                                    className={`preset-btn preset-eps ${isSelected ? 'selected selected-eps' : ''}`}
                                                 >
                                                     <span className="preset-bdt">৳{amt.toLocaleString()}</span>
                                                     <span className="preset-usd">≈ ${usd} USD</span>
@@ -721,12 +712,12 @@ export default function WalletPage() {
                                 </div>
 
                                 {/* Conversion Preview */}
-                                <div className="conversion-info-box">
+                                <div className="conversion-info-box conv-eps-theme">
                                     <div className="conv-text-side">
                                         <div className="conv-title">Wallet Balance to Credit:</div>
                                         <div className="conv-sub">0% Deposit Gateway Fee • Instant Auto-Credited</div>
                                     </div>
-                                    <div className="conv-amt">${calculatedUsdForBdt.toFixed(2)} USD</div>
+                                    <div className="conv-amt conv-amt-eps">${calculatedUsdForBdt.toFixed(2)} USD</div>
                                 </div>
 
                                 <button
@@ -742,7 +733,7 @@ export default function WalletPage() {
                                         </>
                                     ) : (
                                         <>
-                                            <CreditCard size={18} />
+                                            <img src="/Nagad-Logo.png" alt="Nagad" className="btn-mfs-logo" style={{ height: '18px', width: 'auto', objectFit: 'contain' }} />
                                             <span>Pay ৳{Number(customBdt || 0).toLocaleString()} BDT with Nagad / Cards</span>
                                             <ArrowRight size={17} />
                                         </>
@@ -1212,14 +1203,14 @@ export default function WalletPage() {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 7px;
-                    padding: 9px 8px;
+                    gap: 8px;
+                    padding: 10px 12px;
                     border-radius: 10px;
                     border: 1.5px solid transparent;
                     background: transparent;
                     cursor: pointer;
                     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                    text-align: left;
+                    text-align: center;
                 }
 
                 .method-tab-btn:hover:not(.active) {
@@ -1324,12 +1315,13 @@ export default function WalletPage() {
                 }
 
                 .btn-eps-theme {
-                    background: linear-gradient(135deg, #0086FF 0%, #0062BD 100%) !important;
+                    background: linear-gradient(135deg, #F7941D 0%, #E65100 100%) !important;
+                    box-shadow: 0 4px 14px rgba(247, 148, 29, 0.28) !important;
                 }
 
                 .btn-eps-theme:hover:not(:disabled) {
-                    background: linear-gradient(135deg, #0076E5 0%, #0056A3 100%) !important;
-                    box-shadow: 0 4px 14px rgba(0, 134, 255, 0.35) !important;
+                    background: linear-gradient(135deg, #FF9E2C 0%, #F55800 100%) !important;
+                    box-shadow: 0 6px 18px rgba(247, 148, 29, 0.4) !important;
                 }
 
                 .btn-mfs-logo {
@@ -1492,6 +1484,26 @@ export default function WalletPage() {
                     box-shadow: 0 2px 8px rgba(0, 134, 255, 0.25);
                 }
 
+                .preset-btn.selected-bkash {
+                    background: #E2136E !important;
+                    border-color: #E2136E !important;
+                    box-shadow: 0 4px 14px rgba(226, 19, 110, 0.28) !important;
+                }
+
+                .preset-btn.preset-bkash:hover:not(.selected) {
+                    border-color: #E2136E;
+                }
+
+                .preset-btn.selected-eps {
+                    background: linear-gradient(135deg, #F7941D 0%, #E65100 100%) !important;
+                    border-color: #F7941D !important;
+                    box-shadow: 0 4px 14px rgba(247, 148, 29, 0.28) !important;
+                }
+
+                .preset-btn.preset-eps:hover:not(.selected) {
+                    border-color: #F7941D;
+                }
+
                 .preset-bdt {
                     font-size: 13px;
                     font-weight: 700;
@@ -1583,6 +1595,24 @@ export default function WalletPage() {
                     font-weight: 800;
                     color: var(--primary, #0086FF);
                     white-space: nowrap;
+                }
+
+                .conv-bkash-theme {
+                    background-color: rgba(226, 19, 110, 0.05) !important;
+                    border: 1px solid rgba(226, 19, 110, 0.22) !important;
+                }
+
+                .conv-amt-bkash {
+                    color: #E2136E !important;
+                }
+
+                .conv-eps-theme {
+                    background-color: rgba(247, 148, 29, 0.06) !important;
+                    border: 1px solid rgba(247, 148, 29, 0.25) !important;
+                }
+
+                .conv-amt-eps {
+                    color: #E65100 !important;
                 }
 
                 .custom-action-btn {
@@ -2374,6 +2404,28 @@ export default function WalletPage() {
                     box-shadow: 0 4px 18px rgba(0, 134, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
                 }
 
+                :global(body.dark-mode) .preset-btn.selected-bkash {
+                    background: linear-gradient(135deg, #E2136E 0%, #C4165E 100%) !important;
+                    border-color: #FF4D94 !important;
+                    box-shadow: 0 4px 18px rgba(226, 19, 110, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+                }
+
+                :global(body.dark-mode) .preset-btn.preset-bkash:hover:not(.selected) {
+                    background: #1A1122 !important;
+                    border-color: rgba(226, 19, 110, 0.5) !important;
+                }
+
+                :global(body.dark-mode) .preset-btn.selected-eps {
+                    background: linear-gradient(135deg, #F7941D 0%, #D44700 100%) !important;
+                    border-color: #FBA94B !important;
+                    box-shadow: 0 4px 18px rgba(247, 148, 29, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+                }
+
+                :global(body.dark-mode) .preset-btn.preset-eps:hover:not(.selected) {
+                    background: #1C1510 !important;
+                    border-color: rgba(247, 148, 29, 0.5) !important;
+                }
+
                 :global(body.dark-mode) .preset-btn.selected .preset-bdt {
                     color: #FFFFFF !important;
                 }
@@ -2424,6 +2476,26 @@ export default function WalletPage() {
 
                 :global(body.dark-mode) .conv-amt {
                     color: #38BDF8 !important;
+                }
+
+                :global(body.dark-mode) .conv-bkash-theme {
+                    background: linear-gradient(135deg, rgba(226, 19, 110, 0.14) 0%, rgba(226, 19, 110, 0.03) 100%) !important;
+                    border: 1px solid rgba(226, 19, 110, 0.35) !important;
+                    box-shadow: inset 0 1px 0 rgba(226, 19, 110, 0.15) !important;
+                }
+
+                :global(body.dark-mode) .conv-amt-bkash {
+                    color: #FF4D94 !important;
+                }
+
+                :global(body.dark-mode) .conv-eps-theme {
+                    background: linear-gradient(135deg, rgba(247, 148, 29, 0.14) 0%, rgba(247, 148, 29, 0.03) 100%) !important;
+                    border: 1px solid rgba(247, 148, 29, 0.35) !important;
+                    box-shadow: inset 0 1px 0 rgba(247, 148, 29, 0.15) !important;
+                }
+
+                :global(body.dark-mode) .conv-amt-eps {
+                    color: #FBA94B !important;
                 }
 
                 :global(body.dark-mode) .crypto-option-btn {
