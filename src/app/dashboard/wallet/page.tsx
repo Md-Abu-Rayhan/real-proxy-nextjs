@@ -79,9 +79,10 @@ export default function WalletPage() {
     } = useWallet();
 
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<'paystation' | 'crypto'>('paystation');
+    const [activeTab, setActiveTab] = useState<'bkash' | 'eps' | 'crypto'>('bkash');
     const [customBdt, setCustomBdt] = useState<string>('1000');
     const [isPayStationLoading, setIsPayStationLoading] = useState<boolean>(false);
+    const [isEpsLoading, setIsEpsLoading] = useState<boolean>(false);
     const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
     // Crypto State
@@ -317,6 +318,42 @@ export default function WalletPage() {
         }
     };
 
+    const handleEpsTopUp = async () => {
+        const amount = Number(customBdt);
+        if (!amount || amount < 125) {
+            toast.error("Minimum deposit amount is ৳125 BDT ($1.00 USD).");
+            return;
+        }
+
+        setIsEpsLoading(true);
+        try {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                toast.error("Please login to proceed with top-up.");
+                router.push('/login');
+                return;
+            }
+
+            const res = await axios.post(`${API_URL}/api/Wallet/topup/eps/initialize`, {
+                amountBdt: amount
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (res.data && res.data.redirectUrl) {
+                toast.success("Redirecting to EPS Payment Gateway (Nagad / Cards)...");
+                window.location.href = res.data.redirectUrl;
+            } else {
+                toast.error(res.data?.message || "Failed to initialize EPS payment.");
+                setIsEpsLoading(false);
+            }
+        } catch (error: any) {
+            console.error("EPS top-up error:", error);
+            toast.error(error.response?.data?.message || "Failed to start EPS top-up.");
+            setIsEpsLoading(false);
+        }
+    };
+
     const handleConvertAffiliate = async () => {
         if (affiliateBalanceUsd <= 0) {
             toast.error("No affiliate earnings available to transfer.");
@@ -462,39 +499,178 @@ export default function WalletPage() {
                         <div className="tab-nav-row">
                             <button
                                 type="button"
-                                onClick={() => setActiveTab('paystation')}
-                                className={`method-tab-btn ${activeTab === 'paystation' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('bkash')}
+                                className={`method-tab-btn ${activeTab === 'bkash' ? 'active bkash-active' : ''}`}
                             >
-                                <Smartphone size={16} />
-                                <span>bKash / Nagad / Cards (PayStation)</span>
+                                <div className="tab-icon-box">
+                                    <img src="/bKash-Logo.png" alt="bKash" className="mfs-logo bkash-logo-img" />
+                                </div>
+                                <div className="tab-text-box">
+                                    <span className="tab-title">bKash</span>
+                                    <span className="tab-subtitle">PayStation</span>
+                                </div>
                             </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('eps')}
+                                className={`method-tab-btn ${activeTab === 'eps' ? 'active eps-active' : ''}`}
+                            >
+                                <div className="tab-icon-box eps-icons-combo">
+                                    <img src="/Nagad-Logo.png" alt="Nagad" className="mfs-logo nagad-logo-img" />
+                                    <CreditCard size={13} className="mfs-card-icon" />
+                                </div>
+                                <div className="tab-text-box">
+                                    <span className="tab-title">Nagad / Cards</span>
+                                    <span className="tab-subtitle">EPS Gateway</span>
+                                </div>
+                            </button>
+
                             <button
                                 type="button"
                                 onClick={() => setActiveTab('crypto')}
-                                className={`method-tab-btn ${activeTab === 'crypto' ? 'active' : ''}`}
+                                className={`method-tab-btn ${activeTab === 'crypto' ? 'active crypto-active' : ''}`}
                             >
-                                <QrCode size={16} />
-                                <span>Crypto Deposit</span>
+                                <div className="tab-icon-box crypto-icon-box">
+                                    <QrCode size={18} />
+                                </div>
+                                <div className="tab-text-box">
+                                    <span className="tab-title">Crypto</span>
+                                    <span className="tab-subtitle">USDT • Coins</span>
+                                </div>
                             </button>
                         </div>
 
-                        {activeTab === 'paystation' ? (
+                        {activeTab === 'bkash' ? (
                             <div className="method-content">
-                                {/* 3-Step Guide for Local MFS */}
+                                {/* 3-Step Guide for bKash via PayStation */}
                                 <div className="step-guide-strip">
                                     <div className="guide-step">
-                                        <span className="step-num">1</span>
+                                        <span className="step-num bkash-step-num">1</span>
                                         <span>Enter Amount</span>
                                     </div>
                                     <span className="guide-arrow">→</span>
                                     <div className="guide-step">
-                                        <span className="step-num">2</span>
-                                        <span>Pay bKash / Nagad</span>
+                                        <span className="step-num bkash-step-num">2</span>
+                                        <span>bKash Checkout</span>
                                     </div>
                                     <span className="guide-arrow">→</span>
                                     <div className="guide-step">
-                                        <span className="step-num">3</span>
+                                        <span className="step-num bkash-step-num">3</span>
                                         <span>Instant Credit</span>
+                                    </div>
+                                </div>
+
+                                {/* Presets */}
+                                <div className="field-group">
+                                    <div className="field-label-row">
+                                        <label className="field-label">Quick Select (BDT)</label>
+                                        <span className="field-hint">Minimum Deposit: ৳125 ($1.00 USD)</span>
+                                    </div>
+                                    <div className="presets-row">
+                                        {[500, 1000, 2500, 5000, 10000].map((amt) => {
+                                            const isSelected = customBdt === amt.toString();
+                                            const usd = (amt / rate).toFixed(0);
+                                            return (
+                                                <button
+                                                    key={amt}
+                                                    type="button"
+                                                    onClick={() => setCustomBdt(amt.toString())}
+                                                    className={`preset-btn ${isSelected ? 'selected' : ''}`}
+                                                >
+                                                    <span className="preset-bdt">৳{amt.toLocaleString()}</span>
+                                                    <span className="preset-usd">≈ ${usd} USD</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Custom Amount */}
+                                <div className="field-group">
+                                    <label className="field-label">Custom Amount in BDT</label>
+                                    <div className="input-wrap">
+                                        <span className="currency-prefix">৳</span>
+                                        <input
+                                            type="number"
+                                            min="125"
+                                            step="1"
+                                            value={customBdt}
+                                            onChange={(e) => setCustomBdt(e.target.value)}
+                                            placeholder="Enter amount (e.g. 1000)"
+                                            className="text-input"
+                                        />
+                                        <span className="currency-suffix">BDT</span>
+                                    </div>
+                                </div>
+
+                                {/* Conversion Preview */}
+                                <div className="conversion-info-box">
+                                    <div className="conv-text-side">
+                                        <div className="conv-title">Wallet Balance to Credit:</div>
+                                        <div className="conv-sub">0% Deposit Gateway Fee • Instant bKash Auto-Credit</div>
+                                    </div>
+                                    <div className="conv-amt">${calculatedUsdForBdt.toFixed(2)} USD</div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={handlePayStationTopUp}
+                                    disabled={isPayStationLoading || Number(customBdt) < 125}
+                                    className="btn-primary custom-action-btn btn-bkash-theme"
+                                >
+                                    {isPayStationLoading ? (
+                                        <>
+                                            <RefreshCw size={16} className="spinner" />
+                                            <span>Connecting to bKash Gateway (PayStation)...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <img src="/bKash-Logo.png" alt="bKash" className="btn-mfs-logo" />
+                                            <span>Pay ৳{Number(customBdt || 0).toLocaleString()} BDT with bKash</span>
+                                            <ArrowRight size={17} />
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        ) : activeTab === 'eps' ? (
+                            <div className="method-content">
+                                {/* 3-Step Guide for Nagad & Cards via EPS */}
+                                <div className="step-guide-strip">
+                                    <div className="guide-step">
+                                        <span className="step-num eps-step-num">1</span>
+                                        <span>Enter Amount</span>
+                                    </div>
+                                    <span className="guide-arrow">→</span>
+                                    <div className="guide-step">
+                                        <span className="step-num eps-step-num">2</span>
+                                        <span>Select Nagad / Card</span>
+                                    </div>
+                                    <span className="guide-arrow">→</span>
+                                    <div className="guide-step">
+                                        <span className="step-num eps-step-num">3</span>
+                                        <span>Instant Credit</span>
+                                    </div>
+                                </div>
+
+                                {/* Supported Channels Bar */}
+                                <div className="supported-channels-bar">
+                                    <span className="channels-label">Supported by EPS:</span>
+                                    <div className="channels-pill-list">
+                                        <span className="channel-badge nagad-badge">
+                                            <img src="/Nagad-Logo.png" alt="Nagad" className="channel-mini-img" />
+                                            <span>Nagad</span>
+                                        </span>
+                                        <span className="channel-badge card-badge">
+                                            <img src="/visa.png" alt="Visa" className="channel-mini-img" />
+                                        </span>
+                                        <span className="channel-badge card-badge">
+                                            <img src="/mastercard.png" alt="Mastercard" className="channel-mini-img" />
+                                        </span>
+                                        <span className="channel-badge rocket-badge">
+                                            <img src="/rocket.png" alt="Rocket" className="channel-mini-img" />
+                                            <span>Rocket</span>
+                                        </span>
                                     </div>
                                 </div>
 
@@ -552,18 +728,19 @@ export default function WalletPage() {
 
                                 <button
                                     type="button"
-                                    onClick={handlePayStationTopUp}
-                                    disabled={isPayStationLoading || Number(customBdt) < 125}
-                                    className="btn-primary custom-action-btn"
+                                    onClick={handleEpsTopUp}
+                                    disabled={isEpsLoading || Number(customBdt) < 125}
+                                    className="btn-primary custom-action-btn btn-eps-theme"
                                 >
-                                    {isPayStationLoading ? (
+                                    {isEpsLoading ? (
                                         <>
                                             <RefreshCw size={16} className="spinner" />
-                                            <span>Connecting to PayStation Gateway...</span>
+                                            <span>Connecting to EPS Payment Gateway...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span>Proceed to Pay ৳{Number(customBdt || 0).toLocaleString()} BDT</span>
+                                            <CreditCard size={18} />
+                                            <span>Pay ৳{Number(customBdt || 0).toLocaleString()} BDT with Nagad / Cards</span>
                                             <ArrowRight size={17} />
                                         </>
                                     )}
@@ -796,6 +973,8 @@ export default function WalletPage() {
                     gap: 28px;
                     font-family: var(--font-poppins, sans-serif);
                     box-sizing: border-box;
+                    min-width: 0;
+                    overflow-x: hidden;
                 }
 
                 /* Header Card */
@@ -998,8 +1177,17 @@ export default function WalletPage() {
                 /* Main Content Grid */
                 .dashboard-main-grid {
                     display: grid;
-                    grid-template-columns: 500px 1fr;
+                    grid-template-columns: 500px minmax(0, 1fr);
                     gap: 28px;
+                    min-width: 0;
+                    width: 100%;
+                }
+
+                .actions-column,
+                .history-column {
+                    min-width: 0;
+                    width: 100%;
+                    max-width: 100%;
                 }
 
                 /* Action Card */
@@ -1009,6 +1197,8 @@ export default function WalletPage() {
                     border: 1px solid #E2E8F0;
                     padding: 28px;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+                    box-sizing: border-box;
+                    width: 100%;
                 }
 
                 .action-header {
@@ -1023,37 +1213,190 @@ export default function WalletPage() {
                 }
 
                 .tab-nav-row {
-                    display: flex;
-                    gap: 8px;
-                    background: #F8FAFC;
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 6px;
+                    background: #F1F5F9;
                     padding: 5px;
-                    border-radius: 12px;
-                    margin-bottom: 24px;
+                    border-radius: 14px;
+                    margin-bottom: 22px;
                     border: 1px solid #E2E8F0;
                 }
 
                 .method-tab-btn {
-                    flex: 1;
-                    padding: 10px 14px;
-                    border-radius: 8px;
-                    border: none;
-                    background: transparent;
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #64748B;
-                    cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 8px;
-                    transition: all 0.2s;
-                    white-space: nowrap;
+                    gap: 7px;
+                    padding: 9px 8px;
+                    border-radius: 10px;
+                    border: 1.5px solid transparent;
+                    background: transparent;
+                    cursor: pointer;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    text-align: left;
+                }
+
+                .method-tab-btn:hover:not(.active) {
+                    background: rgba(255, 255, 255, 0.6);
                 }
 
                 .method-tab-btn.active {
                     background: #FFFFFF;
-                    color: var(--primary, #0086FF);
-                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+                    border-color: #CBD5E1;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+                }
+
+                .method-tab-btn.active.bkash-active {
+                    border-color: #E2136E;
+                    box-shadow: 0 2px 10px rgba(226, 19, 110, 0.16);
+                }
+
+                .method-tab-btn.active.eps-active {
+                    border-color: #F7941D;
+                    box-shadow: 0 2px 10px rgba(247, 148, 29, 0.16);
+                }
+
+                .method-tab-btn.active.crypto-active {
+                    border-color: #0086FF;
+                    box-shadow: 0 2px 10px rgba(0, 134, 255, 0.16);
+                }
+
+                .tab-icon-box {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+
+                .eps-icons-combo {
+                    display: flex;
+                    align-items: center;
+                    gap: 3px;
+                }
+
+                .mfs-logo {
+                    height: 20px;
+                    width: auto;
+                    max-width: 32px;
+                    object-fit: contain;
+                    display: block;
+                }
+
+                .bkash-logo-img {
+                    height: 22px;
+                }
+
+                .nagad-logo-img {
+                    height: 18px;
+                }
+
+                .mfs-card-icon {
+                    color: #64748B;
+                }
+
+                .crypto-icon-box {
+                    color: #0086FF;
+                }
+
+                .tab-text-box {
+                    display: flex;
+                    flex-direction: column;
+                    line-height: 1.15;
+                }
+
+                .tab-title {
+                    font-size: 13px;
+                    font-weight: 700;
+                    color: #0F172A;
+                    white-space: nowrap;
+                }
+
+                .tab-subtitle {
+                    font-size: 10px;
+                    font-weight: 500;
+                    color: #64748B;
+                    white-space: nowrap;
+                }
+
+                /* Button & Badge Themes */
+                .btn-bkash-theme {
+                    background: #E2136E !important;
+                }
+
+                .btn-bkash-theme:hover:not(:disabled) {
+                    background: #C4165E !important;
+                    box-shadow: 0 4px 14px rgba(226, 19, 110, 0.35) !important;
+                }
+
+                .btn-eps-theme {
+                    background: linear-gradient(135deg, #0086FF 0%, #0062BD 100%) !important;
+                }
+
+                .btn-eps-theme:hover:not(:disabled) {
+                    background: linear-gradient(135deg, #0076E5 0%, #0056A3 100%) !important;
+                    box-shadow: 0 4px 14px rgba(0, 134, 255, 0.35) !important;
+                }
+
+                .btn-mfs-logo {
+                    height: 18px;
+                    width: auto;
+                    object-fit: contain;
+                    background: #FFFFFF;
+                    border-radius: 4px;
+                    padding: 2px 4px;
+                }
+
+                .bkash-step-num {
+                    background: #E2136E !important;
+                }
+
+                .eps-step-num {
+                    background: #F7941D !important;
+                }
+
+                /* Supported Channels Bar */
+                .supported-channels-bar {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                    padding: 10px 14px;
+                    background: #F8FAFC;
+                    border: 1px solid #E2E8F0;
+                    border-radius: 10px;
+                }
+
+                .channels-label {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #64748B;
+                }
+
+                .channels-pill-list {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+                .channel-badge {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 3px 8px;
+                    background: #FFFFFF;
+                    border: 1px solid #E2E8F0;
+                    border-radius: 6px;
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #334155;
+                }
+
+                .channel-mini-img {
+                    height: 14px;
+                    width: auto;
+                    object-fit: contain;
                 }
 
                 .method-content {
@@ -1696,70 +2039,216 @@ export default function WalletPage() {
                     }
                     .dashboard-main-grid {
                         grid-template-columns: 1fr;
+                        gap: 22px;
                     }
                 }
 
                 @media (max-width: 768px) {
                     .main-responsive-container {
-                        padding: 18px 14px;
-                        gap: 20px;
+                        padding: 16px 12px;
+                        gap: 16px;
                     }
                     .header-card {
-                        padding: 18px 20px;
+                        padding: 16px 18px;
                         flex-direction: column;
                         align-items: flex-start;
+                        gap: 12px;
                     }
                     .exchange-badge-box {
                         width: 100%;
-                        justify-content: flex-start;
+                        box-sizing: border-box;
                     }
                     .header-title {
-                        font-size: 20px;
+                        font-size: 19px;
                     }
                     .stats-grid {
-                        grid-template-columns: 1fr;
-                        gap: 12px;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 10px;
                     }
                     .stat-card {
-                        padding: 16px 18px;
+                        padding: 14px 16px;
                     }
                     .stat-value {
-                        font-size: 22px;
+                        font-size: 20px;
                     }
                     .action-card {
-                        padding: 20px;
+                        padding: 18px 16px;
+                        border-radius: 14px;
                     }
-                    .presets-row {
-                        grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+                    .action-header {
+                        margin-bottom: 16px;
                     }
-                    .crypto-options-grid {
-                        grid-template-columns: repeat(2, 1fr);
+                    .action-title {
+                        font-size: 17px;
                     }
                     .history-header {
                         padding: 16px 18px;
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 12px;
+                    }
+                    .filter-chips {
+                        width: 100%;
+                        display: grid;
+                        grid-template-columns: repeat(4, 1fr);
+                        gap: 4px;
+                    }
+                    .filter-btn {
+                        padding: 6px 2px;
+                        text-align: center;
+                        font-size: 11px;
                     }
                 }
 
-                @media (max-width: 480px) {
+                @media (max-width: 600px) {
                     .main-responsive-container {
-                        padding: 14px 10px;
+                        padding: 12px 8px 95px 8px;
+                        gap: 14px;
+                    }
+                    .header-card {
+                        padding: 14px 14px;
+                    }
+                    .header-title {
+                        font-size: 18px;
                     }
                     .tab-nav-row {
-                        flex-direction: column;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 4px;
+                        padding: 4px;
+                        margin-bottom: 16px;
                     }
                     .method-tab-btn {
-                        padding: 11px;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        padding: 8px 3px;
+                        gap: 3px;
+                        text-align: center;
+                    }
+                    .tab-text-box {
+                        align-items: center;
+                        text-align: center;
+                    }
+                    .tab-title {
+                        font-size: 11px;
+                    }
+                    .tab-subtitle {
+                        font-size: 8.5px;
+                    }
+                    .mfs-logo {
+                        height: 18px;
+                    }
+                    .bkash-logo-img {
+                        height: 18px;
+                    }
+                    .nagad-logo-img {
+                        height: 15px;
                     }
                     .step-guide-strip {
-                        font-size: 11px;
-                        padding: 10px 12px;
+                        font-size: 10.5px;
+                        padding: 8px 10px;
+                        gap: 2px;
                     }
-                    .conversion-info-box {
-                        flex-direction: column;
-                        align-items: flex-start;
+                    .guide-step {
+                        gap: 4px;
+                        font-size: 10px;
+                    }
+                    .step-num {
+                        width: 17px;
+                        height: 17px;
+                        font-size: 9.5px;
+                    }
+                    .guide-arrow {
+                        font-size: 11px;
                     }
                     .presets-row {
                         grid-template-columns: repeat(3, 1fr);
+                        gap: 6px;
+                    }
+                    .preset-btn {
+                        min-height: 48px;
+                        padding: 6px 2px;
+                    }
+                    .preset-bdt {
+                        font-size: 12px;
+                    }
+                    .preset-usd {
+                        font-size: 9.5px;
+                    }
+                    .conversion-info-box {
+                        padding: 10px 12px;
+                        flex-direction: row;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+                    .conv-title {
+                        font-size: 12px;
+                    }
+                    .conv-sub {
+                        font-size: 10px;
+                    }
+                    .conv-amt {
+                        font-size: 16px;
+                    }
+                    .supported-channels-bar {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 6px;
+                        padding: 8px 10px;
+                    }
+                    .channels-pill-list {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 4px;
+                    }
+                    .channel-badge {
+                        padding: 2px 6px;
+                        font-size: 10px;
+                    }
+                    .channel-mini-img {
+                        height: 12px;
+                    }
+                    .crypto-options-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 6px;
+                    }
+                    .crypto-box {
+                        padding: 12px;
+                        gap: 10px;
+                    }
+                    .qr-image {
+                        width: 115px;
+                        height: 115px;
+                    }
+                    .address-container {
+                        padding: 8px 10px;
+                        gap: 6px;
+                    }
+                    .address-text {
+                        font-size: 11px;
+                    }
+                    .crypto-footer-row {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 6px;
+                    }
+                    .btn-sync-crypto {
+                        font-size: 12px;
+                        padding: 9px 12px;
+                    }
+                    .history-table th,
+                    .history-table td {
+                        padding: 10px 12px;
+                        font-size: 12px;
+                    }
+                }
+
+                @media (max-width: 360px) {
+                    .stats-grid {
+                        grid-template-columns: 1fr;
+                    }
+                    .presets-row {
+                        grid-template-columns: repeat(2, 1fr);
                     }
                 }
 
@@ -1800,7 +2289,6 @@ export default function WalletPage() {
                 }
 
                 :global(body.dark-mode) .exchange-badge-box,
-                :global(body.dark-mode) .tab-nav-row,
                 :global(body.dark-mode) .preset-btn,
                 :global(body.dark-mode) .crypto-option-btn,
                 :global(body.dark-mode) .crypto-box,
@@ -1815,6 +2303,59 @@ export default function WalletPage() {
                     color: #94A3B8;
                 }
 
+                :global(body.dark-mode) .tab-nav-row {
+                    background: #0B132B !important;
+                    border-color: #1E293B !important;
+                }
+
+                :global(body.dark-mode) .method-tab-btn {
+                    color: #94A3B8;
+                }
+
+                :global(body.dark-mode) .method-tab-btn:hover:not(.active) {
+                    background: rgba(30, 41, 59, 0.5);
+                }
+
+                :global(body.dark-mode) .method-tab-btn.active {
+                    background-color: #1E293B !important;
+                    border-color: #334155 !important;
+                    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+                }
+
+                :global(body.dark-mode) .method-tab-btn.active.bkash-active {
+                    border-color: #E2136E !important;
+                    box-shadow: 0 0 12px rgba(226, 19, 110, 0.25) !important;
+                }
+
+                :global(body.dark-mode) .method-tab-btn.active.eps-active {
+                    border-color: #F7941D !important;
+                    box-shadow: 0 0 12px rgba(247, 148, 29, 0.25) !important;
+                }
+
+                :global(body.dark-mode) .method-tab-btn.active.crypto-active {
+                    border-color: #0086FF !important;
+                    box-shadow: 0 0 12px rgba(0, 134, 255, 0.25) !important;
+                }
+
+                :global(body.dark-mode) .tab-title {
+                    color: #F8FAFC !important;
+                }
+
+                :global(body.dark-mode) .tab-subtitle {
+                    color: #94A3B8 !important;
+                }
+
+                :global(body.dark-mode) .supported-channels-bar {
+                    background: #0F172A !important;
+                    border-color: #334155 !important;
+                }
+
+                :global(body.dark-mode) .channel-badge {
+                    background: #1E293B !important;
+                    border-color: #334155 !important;
+                    color: #F1F5F9 !important;
+                }
+
                 :global(body.dark-mode) .text-input,
                 :global(body.dark-mode) .address-container {
                     background-color: #0F172A;
@@ -1823,11 +2364,6 @@ export default function WalletPage() {
 
                 :global(body.dark-mode) .preset-bdt {
                     color: #F8FAFC;
-                }
-
-                :global(body.dark-mode) .method-tab-btn.active {
-                    background-color: #1E293B;
-                    color: #38BDF8;
                 }
 
                 :global(body.dark-mode) .preset-btn.selected {
