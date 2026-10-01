@@ -768,56 +768,86 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
                     }
                 }
 
-                /* Dark Mode Styling Overrides */
+                /* Modern Dark Mode Styling Overrides */
+                body.dark-mode {
+                    background-color: #080C14;
+                    color: #F8FAFC;
+                }
+
                 body.dark-mode .dashboard-wrapper {
-                    background-color: #0F172A;
+                    background-color: #080C14;
                     color: #F8FAFC;
                 }
 
                 body.dark-mode .dashboard-sidebar {
-                    background-color: #1E293B;
-                    border-right-color: #334155;
+                    background-color: #0B101D;
+                    border-right-color: rgba(255, 255, 255, 0.07);
                 }
 
                 body.dark-mode .nav-group-header {
-                    color: #94A3B8;
+                    color: #64748B;
+                    font-size: 11px;
+                    letter-spacing: 0.05em;
                 }
 
                 body.dark-mode .nav-item {
                     color: #94A3B8;
+                    border-radius: 8px;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
                 body.dark-mode .nav-item:hover {
-                    background-color: #334155;
-                    color: #3B82F6;
+                    background-color: rgba(255, 255, 255, 0.04);
+                    color: #F8FAFC;
                 }
 
                 body.dark-mode .nav-item.active {
-                    color: #3B82F6;
-                    background-color: #1E3A8A;
+                    color: #38BDF8;
+                    background: linear-gradient(90deg, rgba(0, 134, 255, 0.16) 0%, rgba(0, 134, 255, 0.04) 100%);
+                    border-left: 3px solid #0086FF;
+                    font-weight: 600;
+                    box-shadow: 0 2px 10px rgba(0, 134, 255, 0.12);
                 }
 
                 body.dark-mode .nav-icon {
-                    color: #94A3B8;
+                    color: #64748B;
+                }
+
+                body.dark-mode .nav-item:hover .nav-icon {
+                    color: #CBD5E1;
                 }
 
                 body.dark-mode .nav-item.active .nav-icon {
-                    color: #3B82F6;
+                    color: #38BDF8;
                 }
 
                 body.dark-mode .dashboard-header {
-                    background-color: #1E293B;
-                    border-bottom-color: #334155;
+                    background-color: rgba(11, 16, 29, 0.85);
+                    backdrop-filter: blur(16px);
+                    -webkit-backdrop-filter: blur(16px);
+                    border-bottom-color: rgba(255, 255, 255, 0.07);
                 }
 
                 body.dark-mode .sidebar-toggle {
-                    background-color: #1E293B;
-                    border-color: #334155;
+                    background-color: rgba(255, 255, 255, 0.04);
+                    border-color: rgba(255, 255, 255, 0.1);
                     color: #F8FAFC;
                 }
 
                 body.dark-mode .sidebar-toggle:hover {
-                    background-color: #334155;
+                    background-color: rgba(255, 255, 255, 0.08);
+                    border-color: rgba(255, 255, 255, 0.15);
+                }
+
+                body.dark-mode .header-wallet-balance-link {
+                    background: rgba(0, 134, 255, 0.12);
+                    border-color: rgba(0, 134, 255, 0.3);
+                    color: #38BDF8;
+                }
+
+                body.dark-mode .header-wallet-balance-link:hover {
+                    background: rgba(0, 134, 255, 0.2);
+                    border-color: #0086ff;
                 }
 
                 body.dark-mode .user-name {
@@ -825,11 +855,28 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
                 }
 
                 body.dark-mode .user-profile {
-                    border-left-color: #334155;
+                    border-left-color: rgba(255, 255, 255, 0.08);
                 }
 
                 body.dark-mode .header-icon {
                     color: #94A3B8;
+                    transition: color 0.2s;
+                }
+
+                body.dark-mode .header-icon:hover {
+                    color: #F8FAFC;
+                }
+
+                body.dark-mode .logout-btn {
+                    border-color: rgba(239, 68, 68, 0.35);
+                    background-color: rgba(239, 68, 68, 0.08);
+                    color: #F87171;
+                    transition: all 0.2s;
+                }
+
+                body.dark-mode .logout-btn:hover {
+                    background-color: rgba(239, 68, 68, 0.18);
+                    border-color: #EF4444;
                 }
             `}</style>
         </div>

@@ -2228,53 +2228,52 @@ export default function WalletPage() {
                     }
                 }
 
-                :global(body.dark-mode) .stat-card,
+                /* Modern Dark Mode Styling Overrides */
+                :global(body.dark-mode) .stat-card {
+                    background: linear-gradient(180deg, #111827 0%, #0D1322 100%) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+                    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                }
+
+                :global(body.dark-mode) .balance-highlight-card {
+                    background: linear-gradient(180deg, rgba(0, 134, 255, 0.14) 0%, #0D1322 100%) !important;
+                    border: 1px solid rgba(0, 134, 255, 0.35) !important;
+                    box-shadow: 0 4px 25px -2px rgba(0, 134, 255, 0.2), inset 0 1px 0 rgba(0, 134, 255, 0.2) !important;
+                }
+
                 :global(body.dark-mode) .action-card,
-                :global(body.dark-mode) .history-container,
-                :global(body.dark-mode) .history-header {
-                    background-color: #1E293B !important;
-                    border-color: #334155 !important;
+                :global(body.dark-mode) .history-container {
+                    background: linear-gradient(180deg, #111827 0%, #0D1322 100%) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                    box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
                 }
 
                 :global(body.dark-mode) .header-title,
                 :global(body.dark-mode) .action-title,
                 :global(body.dark-mode) .stat-value,
-                :global(body.dark-mode) .history-empty h4,
-                :global(body.dark-mode) .exchange-val,
-                :global(body.dark-mode) .text-input,
-                :global(body.dark-mode) .conv-title,
-                :global(body.dark-mode) .coin-lbl,
-                :global(body.dark-mode) .history-table td {
+                :global(body.dark-mode) .history-empty h4 {
                     color: #F8FAFC !important;
                 }
 
-                :global(body.dark-mode) .header-desc,
                 :global(body.dark-mode) .stat-title,
                 :global(body.dark-mode) .field-label,
-                :global(body.dark-mode) .conv-sub,
-                :global(body.dark-mode) .history-table th,
-                :global(body.dark-mode) .exchange-label,
-                :global(body.dark-mode) .table-date,
-                :global(body.dark-mode) .table-method,
-                :global(body.dark-mode) .table-balance,
-                :global(body.dark-mode) .history-subtitle,
-                :global(body.dark-mode) .step-guide-strip {
+                :global(body.dark-mode) .history-subtitle {
                     color: #94A3B8 !important;
                 }
 
-                :global(body.dark-mode) .compact-exchange-pill,
-                :global(body.dark-mode) .preset-btn,
-                :global(body.dark-mode) .crypto-option-btn,
-                :global(body.dark-mode) .crypto-box,
-                :global(body.dark-mode) .step-guide-strip,
-                :global(body.dark-mode) .history-table th,
-                :global(body.dark-mode) .empty-icon-wrap,
-                :global(body.dark-mode) .filter-btn,
-                :global(body.dark-mode) .page-btn,
-                :global(body.dark-mode) .copy-icon-btn {
-                    background-color: #0F172A;
-                    border-color: #334155;
-                    color: #94A3B8;
+                :global(body.dark-mode) .stat-sub,
+                :global(body.dark-mode) .field-hint,
+                :global(body.dark-mode) .channels-label,
+                :global(body.dark-mode) .crypto-sync-tip,
+                :global(body.dark-mode) .history-empty p {
+                    color: #64748B !important;
+                }
+
+                :global(body.dark-mode) .compact-exchange-pill {
+                    background: rgba(0, 134, 255, 0.08) !important;
+                    border: 1px solid rgba(0, 134, 255, 0.25) !important;
+                    color: #94A3B8 !important;
+                    box-shadow: 0 2px 8px rgba(0, 134, 255, 0.1) !important;
                 }
 
                 :global(body.dark-mode) .compact-exchange-pill strong {
@@ -2282,42 +2281,42 @@ export default function WalletPage() {
                 }
 
                 :global(body.dark-mode) .mini-rate-tag {
-                    background: rgba(0, 134, 255, 0.2) !important;
+                    background: rgba(0, 134, 255, 0.16) !important;
+                    border: 1px solid rgba(0, 134, 255, 0.3) !important;
                     color: #38BDF8 !important;
                 }
 
                 :global(body.dark-mode) .tab-nav-row {
-                    background: #0B132B !important;
-                    border-color: #1E293B !important;
+                    background: #080D1A !important;
+                    border: 1px solid rgba(255, 255, 255, 0.07) !important;
                 }
 
                 :global(body.dark-mode) .method-tab-btn {
-                    color: #94A3B8;
+                    color: #94A3B8 !important;
+                    border: 1.5px solid transparent !important;
                 }
 
                 :global(body.dark-mode) .method-tab-btn:hover:not(.active) {
-                    background: rgba(30, 41, 59, 0.5);
-                }
-
-                :global(body.dark-mode) .method-tab-btn.active {
-                    background-color: #1E293B !important;
-                    border-color: #334155 !important;
-                    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+                    background: rgba(255, 255, 255, 0.04) !important;
+                    color: #F8FAFC !important;
                 }
 
                 :global(body.dark-mode) .method-tab-btn.active.bkash-active {
+                    background: linear-gradient(180deg, rgba(226, 19, 110, 0.18) 0%, rgba(226, 19, 110, 0.04) 100%), #111A2E !important;
                     border-color: #E2136E !important;
-                    box-shadow: 0 0 12px rgba(226, 19, 110, 0.25) !important;
+                    box-shadow: 0 4px 18px rgba(226, 19, 110, 0.25), inset 0 1px 0 rgba(226, 19, 110, 0.2) !important;
                 }
 
                 :global(body.dark-mode) .method-tab-btn.active.eps-active {
+                    background: linear-gradient(180deg, rgba(247, 148, 29, 0.18) 0%, rgba(247, 148, 29, 0.04) 100%), #111A2E !important;
                     border-color: #F7941D !important;
-                    box-shadow: 0 0 12px rgba(247, 148, 29, 0.25) !important;
+                    box-shadow: 0 4px 18px rgba(247, 148, 29, 0.25), inset 0 1px 0 rgba(247, 148, 29, 0.2) !important;
                 }
 
                 :global(body.dark-mode) .method-tab-btn.active.crypto-active {
+                    background: linear-gradient(180deg, rgba(0, 134, 255, 0.2) 0%, rgba(0, 134, 255, 0.04) 100%), #111A2E !important;
                     border-color: #0086FF !important;
-                    box-shadow: 0 0 12px rgba(0, 134, 255, 0.25) !important;
+                    box-shadow: 0 4px 18px rgba(0, 134, 255, 0.25), inset 0 1px 0 rgba(0, 134, 255, 0.2) !important;
                 }
 
                 :global(body.dark-mode) .tab-title {
@@ -2325,45 +2324,306 @@ export default function WalletPage() {
                 }
 
                 :global(body.dark-mode) .tab-subtitle {
-                    color: #94A3B8 !important;
+                    color: #64748B !important;
+                }
+
+                :global(body.dark-mode) .step-guide-strip {
+                    background: #080D1A !important;
+                    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                    color: #CBD5E1 !important;
+                }
+
+                :global(body.dark-mode) .guide-arrow {
+                    color: #475569 !important;
                 }
 
                 :global(body.dark-mode) .supported-channels-bar {
-                    background: #0F172A !important;
-                    border-color: #334155 !important;
+                    background: #080D1A !important;
+                    border: 1px solid rgba(255, 255, 255, 0.06) !important;
                 }
 
                 :global(body.dark-mode) .channel-badge {
-                    background: #1E293B !important;
-                    border-color: #334155 !important;
-                    color: #F1F5F9 !important;
+                    background: #111A2E !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                    color: #CBD5E1 !important;
                 }
 
-                :global(body.dark-mode) .text-input,
-                :global(body.dark-mode) .address-container {
-                    background-color: #0F172A;
-                    border-color: #334155;
+                :global(body.dark-mode) .preset-btn {
+                    background: #080D1A !important;
+                    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
                 }
 
-                :global(body.dark-mode) .preset-bdt {
-                    color: #F8FAFC;
+                :global(body.dark-mode) .preset-btn:hover:not(.selected) {
+                    background: #10172A !important;
+                    border-color: rgba(0, 134, 255, 0.4) !important;
+                    transform: translateY(-1px);
+                }
+
+                :global(body.dark-mode) .preset-btn .preset-bdt {
+                    color: #F8FAFC !important;
+                }
+
+                :global(body.dark-mode) .preset-btn .preset-usd {
+                    color: #64748B !important;
                 }
 
                 :global(body.dark-mode) .preset-btn.selected {
-                    background-color: #0086ff;
+                    background: linear-gradient(135deg, #0086FF 0%, #005AC2 100%) !important;
+                    border-color: #38BDF8 !important;
+                    box-shadow: 0 4px 18px rgba(0, 134, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
                 }
 
                 :global(body.dark-mode) .preset-btn.selected .preset-bdt {
-                    color: #fff;
+                    color: #FFFFFF !important;
                 }
 
-                :global(body.dark-mode) .history-table td {
-                    border-bottom-color: #334155;
+                :global(body.dark-mode) .preset-btn.selected .preset-usd {
+                    color: rgba(255, 255, 255, 0.85) !important;
+                }
+
+                :global(body.dark-mode) .input-wrap {
+                    background-color: #080D1A !important;
+                    border: 1.5px solid rgba(255, 255, 255, 0.09) !important;
+                    transition: all 0.2s ease !important;
+                }
+
+                :global(body.dark-mode) .input-wrap:focus-within {
+                    border-color: #0086FF !important;
+                    box-shadow: 0 0 0 3px rgba(0, 134, 255, 0.25) !important;
+                    background-color: #0A1020 !important;
+                }
+
+                :global(body.dark-mode) .text-input {
+                    background: transparent !important;
+                    color: #F8FAFC !important;
+                }
+
+                :global(body.dark-mode) .text-input::placeholder {
+                    color: #475569 !important;
+                }
+
+                :global(body.dark-mode) .currency-prefix,
+                :global(body.dark-mode) .currency-suffix {
+                    color: #64748B !important;
                 }
 
                 :global(body.dark-mode) .conversion-info-box {
-                    background-color: rgba(0, 134, 255, 0.12);
-                    border-color: rgba(0, 134, 255, 0.25);
+                    background: linear-gradient(135deg, rgba(0, 134, 255, 0.12) 0%, rgba(0, 134, 255, 0.03) 100%) !important;
+                    border: 1px solid rgba(0, 134, 255, 0.25) !important;
+                    box-shadow: inset 0 1px 0 rgba(0, 134, 255, 0.15) !important;
+                }
+
+                :global(body.dark-mode) .conv-title {
+                    color: #38BDF8 !important;
+                }
+
+                :global(body.dark-mode) .conv-sub {
+                    color: #94A3B8 !important;
+                }
+
+                :global(body.dark-mode) .conv-amt {
+                    color: #38BDF8 !important;
+                }
+
+                :global(body.dark-mode) .crypto-option-btn {
+                    background: #080D1A !important;
+                    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+                    color: #94A3B8 !important;
+                }
+
+                :global(body.dark-mode) .crypto-option-btn:hover:not(.selected) {
+                    background: #10172A !important;
+                    border-color: rgba(0, 134, 255, 0.35) !important;
+                    color: #F8FAFC !important;
+                }
+
+                :global(body.dark-mode) .crypto-option-btn.selected {
+                    background: linear-gradient(135deg, rgba(0, 134, 255, 0.2) 0%, rgba(0, 134, 255, 0.05) 100%), #111A2E !important;
+                    border-color: #0086FF !important;
+                    box-shadow: 0 4px 16px rgba(0, 134, 255, 0.25) !important;
+                }
+
+                :global(body.dark-mode) .crypto-option-btn.selected .coin-lbl {
+                    color: #38BDF8 !important;
+                }
+
+                :global(body.dark-mode) .coin-lbl {
+                    color: #F8FAFC !important;
+                }
+
+                :global(body.dark-mode) .coin-bdg {
+                    background: rgba(255, 255, 255, 0.06) !important;
+                    color: #94A3B8 !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                }
+
+                :global(body.dark-mode) .crypto-box {
+                    background: #080D1A !important;
+                    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+                }
+
+                :global(body.dark-mode) .address-container {
+                    background-color: #0B1120 !important;
+                    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+                }
+
+                :global(body.dark-mode) .addr-header-lbl {
+                    color: #64748B !important;
+                }
+
+                :global(body.dark-mode) .address-text {
+                    color: #38BDF8 !important;
+                }
+
+                :global(body.dark-mode) .copy-icon-btn {
+                    background: rgba(255, 255, 255, 0.05) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                    color: #CBD5E1 !important;
+                }
+
+                :global(body.dark-mode) .copy-icon-btn:hover {
+                    background: rgba(0, 134, 255, 0.2) !important;
+                    border-color: #0086FF !important;
+                    color: #38BDF8 !important;
+                }
+
+                :global(body.dark-mode) .crypto-min-note {
+                    color: #64748B !important;
+                }
+
+                :global(body.dark-mode) .crypto-min-note strong {
+                    color: #F8FAFC !important;
+                }
+
+                :global(body.dark-mode) .btn-sync-crypto {
+                    background: rgba(0, 134, 255, 0.12) !important;
+                    border: 1px solid rgba(0, 134, 255, 0.3) !important;
+                    color: #38BDF8 !important;
+                }
+
+                :global(body.dark-mode) .btn-sync-crypto:hover:not(:disabled) {
+                    background: rgba(0, 134, 255, 0.22) !important;
+                    border-color: #0086FF !important;
+                }
+
+                :global(body.dark-mode) .history-header {
+                    background: transparent !important;
+                    background-color: transparent !important;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+                }
+
+                :global(body.dark-mode) .pagination-footer {
+                    border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+                    color: #64748B !important;
+                }
+
+                :global(body.dark-mode) .filter-btn {
+                    background: #080D1A !important;
+                    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+                    color: #94A3B8 !important;
+                }
+
+                :global(body.dark-mode) .filter-btn:hover:not(.active) {
+                    background: #111A2E !important;
+                    color: #F8FAFC !important;
+                }
+
+                :global(body.dark-mode) .filter-btn.active {
+                    background: #0086FF !important;
+                    border-color: #0086FF !important;
+                    color: #FFFFFF !important;
+                    box-shadow: 0 2px 12px rgba(0, 134, 255, 0.35) !important;
+                }
+
+                :global(body.dark-mode) .history-table th {
+                    background: #080D1A !important;
+                    color: #64748B !important;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+                    font-size: 11px !important;
+                    letter-spacing: 0.05em !important;
+                }
+
+                :global(body.dark-mode) .history-table td {
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+                    color: #CBD5E1 !important;
+                }
+
+                :global(body.dark-mode) .history-table tr:hover td {
+                    background: rgba(255, 255, 255, 0.02) !important;
+                }
+
+                :global(body.dark-mode) .table-date {
+                    color: #94A3B8 !important;
+                }
+
+                :global(body.dark-mode) .table-method {
+                    color: #CBD5E1 !important;
+                }
+
+                :global(body.dark-mode) .table-balance {
+                    color: #64748B !important;
+                }
+
+                :global(body.dark-mode) .type-tag {
+                    background: rgba(255, 255, 255, 0.05) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                    color: #94A3B8 !important;
+                }
+
+                :global(body.dark-mode) .type-tag.topup {
+                    background: rgba(16, 185, 129, 0.12) !important;
+                    border-color: rgba(16, 185, 129, 0.25) !important;
+                    color: #34D399 !important;
+                }
+
+                :global(body.dark-mode) .type-tag.purchase {
+                    background: rgba(99, 102, 241, 0.12) !important;
+                    border-color: rgba(99, 102, 241, 0.25) !important;
+                    color: #A5B4FC !important;
+                }
+
+                :global(body.dark-mode) .status-badge.success,
+                :global(body.dark-mode) .status-badge.paid,
+                :global(body.dark-mode) .status-badge.completed {
+                    background: rgba(16, 185, 129, 0.12) !important;
+                    border: 1px solid rgba(16, 185, 129, 0.28) !important;
+                    color: #34D399 !important;
+                }
+
+                :global(body.dark-mode) .status-badge.pending,
+                :global(body.dark-mode) .status-badge.processing {
+                    background: rgba(245, 158, 11, 0.12) !important;
+                    border: 1px solid rgba(245, 158, 11, 0.28) !important;
+                    color: #FBBF24 !important;
+                }
+
+                :global(body.dark-mode) .status-badge.failed,
+                :global(body.dark-mode) .status-badge.cancelled {
+                    background: rgba(239, 68, 68, 0.12) !important;
+                    border: 1px solid rgba(239, 68, 68, 0.28) !important;
+                    color: #F87171 !important;
+                }
+
+                :global(body.dark-mode) .page-btn {
+                    background: #080D1A !important;
+                    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+                    color: #94A3B8 !important;
+                }
+
+                :global(body.dark-mode) .page-btn:hover:not(:disabled) {
+                    background: #111A2E !important;
+                    border-color: rgba(0, 134, 255, 0.4) !important;
+                    color: #F8FAFC !important;
+                }
+
+                :global(body.dark-mode) .page-btn:disabled {
+                    opacity: 0.3 !important;
+                }
+
+                :global(body.dark-mode) .empty-icon-wrap {
+                    background: #080D1A !important;
+                    border: 1px solid rgba(255, 255, 255, 0.06) !important;
                 }
             `}</style>
         </div>
