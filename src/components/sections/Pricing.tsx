@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { API_URL } from '@/lib/config';
+import { createPaymentSession, getUserFromToken } from '@/lib/paymentApi';
 
 const Pricing = () => {
     const router = useRouter();
@@ -203,6 +204,13 @@ const Pricing = () => {
             return;
         }
 
+        const userInfo = getUserFromToken();
+        if (!userInfo || !userInfo.userId) {
+            toast.error("Please login to proceed with payment.");
+            router.push('/login');
+            return;
+        }
+
         setIsLoading(true);
         try {
             let packageId = "custom";
@@ -217,39 +225,36 @@ const Pricing = () => {
                 else if (bandwidth === 100) packageId = "res_100gb";
             }
 
-            const apiUrl = API_URL;
-            const amount = parseFloat(current.totalBDT);
-            const customerOrderId = `${proxyType === 'Premium Residential' ? 'ST' : 'PR'}${Date.now()}`.substring(0, 16);
-            const merchantTransactionId = `${proxyType === 'Premium Residential' ? 'ST' : 'PR'}${Date.now()}`.substring(0, 16);
+            const amountBdt = appliedDiscount 
+                ? Math.round(parseFloat(current.totalBDT) * (1 - appliedDiscount / 100))
+                : parseFloat(current.totalBDT);
 
-            const userEmail = localStorage.getItem('user_email') || 'customer@realproxy.io';
-            const userName = userEmail.split('@')[0];
+            const userPhone = localStorage.getItem('user_phone') || "01700000000";
+            const userName = localStorage.getItem('user_name') || userInfo.email.split('@')[0];
 
-            const response = await axios.post(`${apiUrl}/api/Payment/initialize`, {
-                customerOrderId: customerOrderId,
-                merchantTransactionId: merchantTransactionId,
-                totalAmount: amount,
+            const session = await createPaymentSession({
+                sourceApp: "REALPROXY",
+                userId: userInfo.userId,
+                amount: amountBdt,
+                currency: "BDT",
+                gatewayProvider: "PayStation",
+                customerEmail: userInfo.email,
+                customerPhone: userPhone,
                 customerName: userName,
-                customerEmail: userEmail,
-                customerPhone: "01700000000",
-                productName: `${proxyType} Proxy (${bandwidth} GB)`,
-                promoCode: promoCode
-            }, {
-                headers: {
-                    'accept': '*/*',
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
+                callbackUrl: `${window.location.origin}/payment/success`,
+                itemCategory: "ProxyBandwidth",
+                externalReference: `PROXY-${packageId}-${bandwidth}GB`
             });
 
-            if (response.data && response.data.redirectUrl) {
-                window.location.href = response.data.redirectUrl;
+            if (session.success && (session.paymentUrl || session.hostedInvoiceUrl)) {
+                toast.success("Redirecting to PayStation Gateway...");
+                window.location.href = session.paymentUrl || session.hostedInvoiceUrl!;
             } else {
-                toast.error("Failed to get payment URL.");
+                toast.error(session.message || "Failed to initialize payment gateway.");
                 setIsLoading(false);
             }
         } catch (error: any) {
-            console.error("Payment error detail:", error.response?.data);
+            console.error("Payment error detail:", error);
             toast.error("Payment initialization failed.");
             setIsLoading(false);
         }
@@ -1105,13 +1110,13 @@ const Pricing = () => {
                                     <Check size={20} color="#0086FF" style={{ marginLeft: 'auto', opacity: 0.5 }} />
                                 </button>
 
-                                <button className="pm-btn pm-card" style={{ padding: '24px', borderRadius: '24px', border: '1.5px solid #f2f4f7', marginBottom: '16px' }} onClick={handleFiatPayment} disabled={isLoading}>
-                                    <div className="option-icon"><ShoppingCart size={24} /></div>
+                                <button className="pm-btn pm-card" style={{ padding: '24px', borderRadius: '24px', border: '1.5px solid #0086FF', background: 'rgba(0, 134, 255, 0.03)', marginBottom: '16px' }} onClick={handleFiatPayment} disabled={isLoading}>
+                                    <div className="option-icon" style={{ background: '#E6F3FF', color: '#0086FF' }}><ShoppingCart size={24} /></div>
                                     <div className="option-info">
-                                        <h4>Bkash, Nagad, Bank Payment</h4>
+                                        <h4 style={{ color: '#041026' }}>PayStation (bKash, Nagad, Rocket, Cards)</h4>
                                         <p>Secure local payment via bKash, Nagad or Cards.</p>
                                     </div>
-                                    <Check size={20} color="#0086FF" style={{ marginLeft: 'auto', opacity: 0.5 }} />
+                                    <span style={{ marginLeft: 'auto', background: '#0086FF', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '3px 8px', borderRadius: '12px' }}>FAST</span>
                                 </button>
 
                                 {!appliedDiscount && isWalletLoading ? (

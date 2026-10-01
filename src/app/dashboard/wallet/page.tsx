@@ -26,8 +26,10 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 import { API_URL } from '@/lib/config';
 import { useWallet } from '@/context/WalletContext';
+import { createPaymentSession, getPaymentStatus, getUserFromToken } from '@/lib/paymentApi';
 import Link from 'next/link';
 
 interface StaticWalletData {
@@ -76,15 +78,17 @@ export default function WalletPage() {
         refreshWallet
     } = useWallet();
 
-    const [activeTab, setActiveTab] = useState<'eps' | 'crypto'>('eps');
+    const router = useRouter();
+    const [activeTab, setActiveTab] = useState<'paystation' | 'crypto'>('paystation');
     const [customBdt, setCustomBdt] = useState<string>('1000');
-    const [isEpsLoading, setIsEpsLoading] = useState<boolean>(false);
+    const [isPayStationLoading, setIsPayStationLoading] = useState<boolean>(false);
     const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
     // Crypto State
     const [selectedCrypto, setSelectedCrypto] = useState(SUPPORTED_CRYPTO_NETWORKS[0]);
     const [staticWallet, setStaticWallet] = useState<StaticWalletData | null>(null);
     const [isCryptoLoading, setIsCryptoLoading] = useState<boolean>(false);
+    const [isSyncingCrypto, setIsSyncingCrypto] = useState<boolean>(false);
     const [copied, setCopied] = useState<boolean>(false);
 
     // Transactions State
@@ -137,6 +141,35 @@ export default function WalletPage() {
         fetchTransactions(txPage, txFilter);
     }, [txPage, txFilter, fetchTransactions]);
 
+    // Check return callback from PayStation
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const params = new URLSearchParams(window.location.search);
+        const invoice = params.get('invoice');
+        const status = params.get('status');
+
+        if (!invoice) return;
+
+        if (status === 'success') {
+            getPaymentStatus(invoice).then(async (result) => {
+                if (result && (result.status === 'SUCCESS' || result.status === 'Paid')) {
+                    toast.success(`🎉 Deposit Confirmed! ৳${Number(result.amount).toLocaleString()} BDT credited to your wallet!`, {
+                        duration: 6000
+                    });
+                    await refreshWallet();
+                    await fetchTransactions(1, txFilter);
+                }
+            }).catch(() => {
+                refreshWallet();
+            }).finally(() => {
+                window.history.replaceState({}, '', window.location.pathname);
+            });
+        } else if (status === 'failed' || status === 'cancelled') {
+            toast.error("Payment was cancelled or could not be completed. No funds were deducted.", { duration: 5000 });
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, [refreshWallet, fetchTransactions, txFilter]);
+
     // Fetch Static Crypto Wallet Address
     const fetchStaticWallet = useCallback(async (currency: string, network: string) => {
         setIsCryptoLoading(true);
@@ -165,37 +198,69 @@ export default function WalletPage() {
         }
     }, [activeTab, selectedCrypto, fetchStaticWallet]);
 
-    // Auto-polling for incoming crypto deposit (every 6 seconds while on crypto tab)
+    // Auto-sync for incoming crypto deposit (every 10 seconds while on crypto tab)
     useEffect(() => {
         if (activeTab !== 'crypto') return;
 
-        let previousBalance = balanceUsd;
-        const interval = setInterval(async () => {
+        const checkDeposits = async () => {
             const token = localStorage.getItem('auth_token');
             if (!token) return;
 
             try {
-                const res = await axios.get(`${API_URL}/api/Wallet/summary`, {
+                const syncRes = await axios.post(`${API_URL}/api/Wallet/crypto/sync`, {}, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
-                const newBalance = Number(res.data?.balanceUsd ?? 0);
-                if (newBalance > previousBalance && previousBalance > 0) {
-                    const creditedAmount = newBalance - previousBalance;
-                    toast.success(`🎉 Deposit Confirmed! +$${creditedAmount.toFixed(2)} USD credited!`, {
+                if (syncRes.data?.newlyCreditedCount > 0) {
+                    toast.success(`🎉 Deposit Confirmed! +$${Number(syncRes.data.totalCreditedUsd).toFixed(2)} USD credited to your wallet!`, {
                         duration: 6000
                     });
-                    refreshWallet();
-                    fetchTransactions(1, txFilter);
+                    await refreshWallet();
+                    await fetchTransactions(1, txFilter);
                 }
-                previousBalance = newBalance;
             } catch {
                 // Ignore background polling errors
             }
-        }, 6000);
+        };
 
+        const interval = setInterval(checkDeposits, 10000);
         return () => clearInterval(interval);
-    }, [activeTab, balanceUsd, refreshWallet, fetchTransactions, txFilter]);
+    }, [activeTab, refreshWallet, fetchTransactions, txFilter]);
+
+    const handleSyncCryptoDeposits = async () => {
+        setIsSyncingCrypto(true);
+        try {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                toast.error("Please login to check deposits.");
+                return;
+            }
+
+            const res = await axios.post(`${API_URL}/api/Wallet/crypto/sync`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (res.data) {
+                if (res.data.newlyCreditedCount > 0) {
+                    toast.success(`🎉 Deposit Confirmed! +$${Number(res.data.totalCreditedUsd).toFixed(2)} USD added to your wallet!`, {
+                        duration: 6000
+                    });
+                    await refreshWallet();
+                    await fetchTransactions(1, txFilter);
+                } else {
+                    toast(res.data.message || "No new confirmed payment detected yet. If you just sent crypto, please wait 1-2 minutes for blockchain confirmations.", {
+                        icon: 'ℹ️',
+                        duration: 5000
+                    });
+                }
+            }
+        } catch (error: any) {
+            console.error("Crypto sync error:", error);
+            toast.error(error.response?.data?.message || "Failed to check crypto deposit status.");
+        } finally {
+            setIsSyncingCrypto(false);
+        }
+    };
 
     const handleCopyAddress = () => {
         if (!staticWallet?.address) return;
@@ -205,32 +270,50 @@ export default function WalletPage() {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const handleEpsTopUp = async () => {
+    const handlePayStationTopUp = async () => {
         const amount = Number(customBdt);
         if (!amount || amount < 125) {
             toast.error("Minimum deposit amount is ৳125 BDT ($1.00 USD).");
             return;
         }
 
-        setIsEpsLoading(true);
+        const userInfo = getUserFromToken();
+        if (!userInfo || !userInfo.userId) {
+            toast.error("Please login to proceed with top-up.");
+            router.push('/login');
+            return;
+        }
+
+        setIsPayStationLoading(true);
         try {
-            const token = localStorage.getItem('auth_token');
-            const res = await axios.post(`${API_URL}/api/Wallet/topup/eps/initialize`, {
-                amountBdt: amount
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
+            const userPhone = localStorage.getItem('user_phone') || "01700000000";
+            const userName = localStorage.getItem('user_name') || userInfo.email.split('@')[0];
+
+            const session = await createPaymentSession({
+                sourceApp: "REALPROXY",
+                userId: userInfo.userId,
+                amount: amount,
+                currency: "BDT",
+                gatewayProvider: "PayStation",
+                customerEmail: userInfo.email,
+                customerPhone: userPhone,
+                customerName: userName,
+                callbackUrl: `${window.location.origin}/dashboard/wallet`,
+                itemCategory: "WalletTopup",
+                externalReference: `WLT-${userInfo.userId}-${amount}BDT`
             });
 
-            if (res.data && res.data.redirectUrl) {
-                toast.success("Redirecting to EPS Payment Gateway...");
-                window.location.href = res.data.redirectUrl;
+            if (session.success && (session.hostedInvoiceUrl || session.paymentUrl)) {
+                toast.success("Redirecting to PayStation (bKash / Nagad / Cards)...");
+                window.location.href = session.hostedInvoiceUrl || session.paymentUrl!;
             } else {
-                toast.error(res.data?.message || "Failed to initialize EPS payment.");
+                toast.error(session.message || "Failed to initialize PayStation payment.");
+                setIsPayStationLoading(false);
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to start EPS top-up.");
-        } finally {
-            setIsEpsLoading(false);
+            console.error("PayStation top-up error:", error);
+            toast.error("Payment initialization failed. Please try again.");
+            setIsPayStationLoading(false);
         }
     };
 
@@ -379,11 +462,11 @@ export default function WalletPage() {
                         <div className="tab-nav-row">
                             <button
                                 type="button"
-                                onClick={() => setActiveTab('eps')}
-                                className={`method-tab-btn ${activeTab === 'eps' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('paystation')}
+                                className={`method-tab-btn ${activeTab === 'paystation' ? 'active' : ''}`}
                             >
                                 <Smartphone size={16} />
-                                <span>bKash / Nagad / Cards</span>
+                                <span>bKash / Nagad / Cards (PayStation)</span>
                             </button>
                             <button
                                 type="button"
@@ -395,7 +478,7 @@ export default function WalletPage() {
                             </button>
                         </div>
 
-                        {activeTab === 'eps' ? (
+                        {activeTab === 'paystation' ? (
                             <div className="method-content">
                                 {/* 3-Step Guide for Local MFS */}
                                 <div className="step-guide-strip">
@@ -469,14 +552,14 @@ export default function WalletPage() {
 
                                 <button
                                     type="button"
-                                    onClick={handleEpsTopUp}
-                                    disabled={isEpsLoading || Number(customBdt) < 125}
+                                    onClick={handlePayStationTopUp}
+                                    disabled={isPayStationLoading || Number(customBdt) < 125}
                                     className="btn-primary custom-action-btn"
                                 >
-                                    {isEpsLoading ? (
+                                    {isPayStationLoading ? (
                                         <>
                                             <RefreshCw size={16} className="spinner" />
-                                            <span>Connecting to EPS Gateway...</span>
+                                            <span>Connecting to PayStation Gateway...</span>
                                         </>
                                     ) : (
                                         <>
@@ -566,6 +649,21 @@ export default function WalletPage() {
                                                 <span className="green-dot"></span>
                                                 <span>Auto-detected in {selectedCrypto.speed}</span>
                                             </span>
+                                        </div>
+
+                                        <div className="crypto-sync-action-box">
+                                            <button
+                                                type="button"
+                                                onClick={handleSyncCryptoDeposits}
+                                                disabled={isSyncingCrypto}
+                                                className="btn-sync-crypto"
+                                            >
+                                                <RefreshCw size={15} className={isSyncingCrypto ? "spinner" : ""} />
+                                                <span>{isSyncingCrypto ? "Scanning Blockchain & Cryptomus..." : "Check Deposit Status / I Have Paid"}</span>
+                                            </button>
+                                            <p className="crypto-sync-tip">
+                                                Deposits to your static address are permanent and auto-credited upon blockchain confirmation. Click above to instantly verify and credit any pending transfer.
+                                            </p>
                                         </div>
                                     </div>
                                 ) : null}
@@ -1329,6 +1427,51 @@ export default function WalletPage() {
                     gap: 10px;
                     color: #64748B;
                     font-size: 13px;
+                }
+
+                .crypto-sync-action-box {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    padding-top: 6px;
+                    border-top: 1px dashed #CBD5E1;
+                }
+
+                .btn-sync-crypto {
+                    width: 100%;
+                    padding: 11px 16px;
+                    background: #FFFFFF;
+                    border: 1.5px solid var(--primary, #0086FF);
+                    color: var(--primary, #0086FF);
+                    font-weight: 600;
+                    font-size: 13px;
+                    border-radius: 9px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    transition: all 0.2s ease;
+                }
+
+                .btn-sync-crypto:hover:not(:disabled) {
+                    background: rgba(0, 134, 255, 0.06);
+                    border-color: #0076e5;
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 6px rgba(0, 134, 255, 0.15);
+                }
+
+                .btn-sync-crypto:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+
+                .crypto-sync-tip {
+                    margin: 0;
+                    font-size: 11px;
+                    color: #64748B;
+                    line-height: 1.4;
+                    text-align: center;
                 }
 
                 /* History Column & Table */

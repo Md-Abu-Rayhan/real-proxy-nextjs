@@ -6,6 +6,7 @@ import { CheckCircle2, Home, ArrowRight, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { Suspense } from 'react';
 import { API_URL } from '@/lib/config';
+import { getPaymentStatus } from '@/lib/paymentApi';
 
 const PaymentSuccessContent = () => {
     const router = useRouter();
@@ -13,15 +14,16 @@ const PaymentSuccessContent = () => {
     const [isVerifying, setIsVerifying] = useState(true);
     const [paymentDetails, setPaymentDetails] = useState<any>(null);
 
+    const invoice = searchParams.get('invoice') || searchParams.get('invoiceNumber') || searchParams.get('invoice_number');
     const merchantTransactionId = searchParams.get('merchantTransactionId');
     const orderId = searchParams.get('orderId');
-    const urlStatus = searchParams.get('status'); // 'Pending' when EPS retry exhausted
+    const urlStatus = searchParams.get('status');
 
     useEffect(() => {
         let cancelled = false;
 
         const verifyPayment = async () => {
-            if (!merchantTransactionId && !orderId) {
+            if (!invoice && !merchantTransactionId && !orderId) {
                 setIsVerifying(false);
                 return;
             }
@@ -42,7 +44,22 @@ const PaymentSuccessContent = () => {
 
                 try {
                     let response;
-                    if (orderId) {
+                    if (invoice) {
+                        // PayStation Payment Verification via real-payment-api
+                        const statusData = await getPaymentStatus(invoice);
+                        if (statusData && (statusData.status === 'SUCCESS' || statusData.status === 'Completed')) {
+                            if (!cancelled) {
+                                setPaymentDetails({
+                                    totalAmount: statusData.amount,
+                                    status: 'Success',
+                                    transactionId: statusData.gatewayTrxId || statusData.invoiceNumber,
+                                    productName: 'Proxy Bandwidth'
+                                });
+                                setIsVerifying(false);
+                            }
+                            return;
+                        }
+                    } else if (orderId) {
                         // Crypto Payment Verification
                         response = await axios.get(`${apiUrl}/api/CryptoPayment/verify/${orderId}`, {
                             headers: { 'Authorization': `Bearer ${token}` }
@@ -60,7 +77,7 @@ const PaymentSuccessContent = () => {
                             return;
                         }
                         // Not yet confirmed — continue polling
-                    } else {
+                    } else if (merchantTransactionId) {
                         // EPS Payment Verification
                         response = await axios.get(`${apiUrl}/api/Payment/verify/${merchantTransactionId}`, {
                             headers: { 'Authorization': `Bearer ${token}` }
