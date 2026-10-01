@@ -392,36 +392,40 @@ export default function WalletPage() {
             <div className="stats-grid">
                 {/* Available Balance */}
                 <div className="stat-card balance-highlight-card">
-                    <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(0, 134, 255, 0.1)' }}>
-                        <Wallet color="#0086FF" size={22} strokeWidth={2.5} />
-                    </div>
-                    <div className="stat-info">
-                        <div className="stat-title-row">
-                            <p className="stat-title">Available Balance</p>
+                    <div className="stat-card-header">
+                        <div className="stat-title-group">
+                            <span className="stat-title">Available Balance</span>
                             <button
                                 type="button"
                                 onClick={handleManualRefresh}
                                 className="refresh-mini-btn"
                                 title="Refresh Balance"
                             >
-                                <RefreshCw size={13} className={isRefreshing ? "spinner" : ""} />
+                                <RefreshCw size={12} className={isRefreshing ? "spinner" : ""} />
                             </button>
                         </div>
+                        <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(0, 134, 255, 0.1)' }}>
+                            <Wallet color="#0086FF" size={17} strokeWidth={2.5} />
+                        </div>
+                    </div>
+                    <div className="stat-card-body">
                         <p className="stat-value text-primary">${balanceUsd.toFixed(2)}</p>
                         <div className="balance-sub-row">
                             <span className="stat-sub">≈ ৳{balanceBdt.toFixed(2)} BDT</span>
-                            <span className="mini-rate-tag" title="Exchange Rate">1 USD = ৳{rate.toFixed(0)}</span>
+                            <span className="mini-rate-tag" title="Exchange Rate">৳{rate.toFixed(0)}/$1</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Total Deposited */}
                 <div className="stat-card">
-                    <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
-                        <ArrowDownRight color="#10B981" size={22} strokeWidth={2.5} />
+                    <div className="stat-card-header">
+                        <span className="stat-title">Total Deposited</span>
+                        <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+                            <ArrowDownRight color="#10B981" size={17} strokeWidth={2.5} />
+                        </div>
                     </div>
-                    <div className="stat-info">
-                        <p className="stat-title">Total Deposited</p>
+                    <div className="stat-card-body">
                         <p className="stat-value">${totalDepositedUsd.toFixed(2)}</p>
                         <span className="stat-sub">All-time approved funds</span>
                     </div>
@@ -429,11 +433,13 @@ export default function WalletPage() {
 
                 {/* Total Spent */}
                 <div className="stat-card">
-                    <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)' }}>
-                        <ArrowUpRight color="#6366F1" size={22} strokeWidth={2.5} />
+                    <div className="stat-card-header">
+                        <span className="stat-title">Total Spent</span>
+                        <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)' }}>
+                            <ArrowUpRight color="#6366F1" size={17} strokeWidth={2.5} />
+                        </div>
                     </div>
-                    <div className="stat-info">
-                        <p className="stat-title">Total Spent</p>
+                    <div className="stat-card-body">
                         <p className="stat-value">${totalSpentUsd.toFixed(2)}</p>
                         <span className="stat-sub">Bandwidth purchases</span>
                     </div>
@@ -441,11 +447,13 @@ export default function WalletPage() {
 
                 {/* Affiliate Earnings */}
                 <div className="stat-card">
-                    <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
-                        <Gift color="#F59E0B" size={22} strokeWidth={2.5} />
+                    <div className="stat-card-header">
+                        <span className="stat-title">Affiliate Earnings</span>
+                        <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+                            <Gift color="#F59E0B" size={17} strokeWidth={2.5} />
+                        </div>
                     </div>
-                    <div className="stat-info">
-                        <p className="stat-title">Affiliate Earnings</p>
+                    <div className="stat-card-body">
                         <p className="stat-value">${affiliateBalanceUsd.toFixed(2)}</p>
                         {affiliateBalanceUsd > 0 ? (
                             <button
@@ -949,13 +957,13 @@ export default function WalletPage() {
             {/* Spacious, Generously Padded Stylesheet */}
             <style jsx>{`
                 .main-responsive-container {
-                    padding: 30px;
+                    padding: 0 0 24px 0;
                     max-width: 1800px;
                     width: 100%;
                     margin: 0 auto;
                     display: flex;
                     flex-direction: column;
-                    gap: 28px;
+                    gap: 20px;
                     font-family: var(--font-poppins, sans-serif);
                     box-sizing: border-box;
                     min-width: 0;
@@ -966,7 +974,7 @@ export default function WalletPage() {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    margin-top: 3px;
+                    margin-top: 4px;
                     flex-wrap: wrap;
                     gap: 6px;
                 }
@@ -985,19 +993,21 @@ export default function WalletPage() {
                 .stats-grid {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
-                    gap: 22px;
+                    gap: 16px;
                 }
 
                 .stat-card {
                     background-color: #FFFFFF;
-                    padding: 22px 24px;
-                    border-radius: 16px;
+                    padding: 16px 18px;
+                    border-radius: 14px;
                     border: 1px solid #E2E8F0;
                     display: flex;
-                    align-items: flex-start;
-                    gap: 16px;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    min-height: 104px;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.01);
                     transition: transform 0.2s, box-shadow 0.2s;
+                    box-sizing: border-box;
                 }
 
                 .stat-card:hover {
@@ -1010,34 +1020,37 @@ export default function WalletPage() {
                     border-color: rgba(0, 134, 255, 0.3);
                 }
 
-                .stat-icon-wrapper {
-                    padding: 12px;
-                    border-radius: 12px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    flex-shrink: 0;
-                }
-
-                .stat-info {
-                    display: flex;
-                    flex-direction: column;
-                    flex: 1;
-                    min-width: 0;
-                }
-
-                .stat-title-row {
+                .stat-card-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    margin-bottom: 3px;
+                    gap: 8px;
+                    margin-bottom: 8px;
+                }
+
+                .stat-title-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    min-width: 0;
                 }
 
                 .stat-title {
                     font-size: 13px;
                     color: #64748B;
                     margin: 0;
-                    font-weight: 500;
+                    font-weight: 600;
+                    white-space: nowrap;
+                }
+
+                .stat-icon-wrapper {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
                 }
 
                 .refresh-mini-btn {
@@ -1049,15 +1062,21 @@ export default function WalletPage() {
                     opacity: 0.7;
                     transition: opacity 0.2s;
                     display: flex;
+                    align-items: center;
                 }
 
                 .refresh-mini-btn:hover { opacity: 1; }
 
+                .stat-card-body {
+                    display: flex;
+                    flex-direction: column;
+                }
+
                 .stat-value {
-                    font-size: 24px;
+                    font-size: 22px;
                     font-weight: 700;
                     color: #0F172A;
-                    margin: 0;
+                    margin: 0 0 2px 0;
                     line-height: 1.2;
                 }
 
@@ -1067,10 +1086,12 @@ export default function WalletPage() {
 
                 .stat-sub {
                     font-size: 12px;
-                    color: #94A3B8;
-                    margin-top: 4px;
-                }
-
+                    color: #64748B;
+                    margin: 0;
+                    line-height: 1.3;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 .stat-action-link {
                     font-size: 12px;
                     color: #F59E0B;
@@ -1988,40 +2009,28 @@ export default function WalletPage() {
                 @media (max-width: 1200px) {
                     .stats-grid {
                         grid-template-columns: repeat(2, 1fr);
+                        gap: 14px;
                     }
                     .dashboard-main-grid {
                         grid-template-columns: 1fr;
-                        gap: 22px;
+                        gap: 20px;
                     }
                 }
 
                 @media (max-width: 768px) {
                     .main-responsive-container {
-                        padding: 16px 12px;
+                        padding: 0 0 20px 0;
                         gap: 16px;
-                    }
-                    .header-card {
-                        padding: 16px 18px;
-                        flex-direction: column;
-                        align-items: flex-start;
-                        gap: 12px;
-                    }
-                    .exchange-badge-box {
-                        width: 100%;
-                        box-sizing: border-box;
-                    }
-                    .header-title {
-                        font-size: 19px;
                     }
                     .stats-grid {
                         grid-template-columns: repeat(2, 1fr);
                         gap: 10px;
                     }
                     .stat-card {
-                        padding: 14px 16px;
+                        padding: 12px 14px;
                     }
                     .stat-value {
-                        font-size: 20px;
+                        font-size: 19px;
                     }
                     .action-card {
                         padding: 18px 16px;
@@ -2054,14 +2063,8 @@ export default function WalletPage() {
 
                 @media (max-width: 600px) {
                     .main-responsive-container {
-                        padding: 12px 8px 95px 8px;
+                        padding: 0 0 95px 0;
                         gap: 14px;
-                    }
-                    .header-card {
-                        padding: 14px 14px;
-                    }
-                    .header-title {
-                        font-size: 18px;
                     }
                     .tab-nav-row {
                         grid-template-columns: repeat(3, 1fr);
@@ -2204,14 +2207,12 @@ export default function WalletPage() {
                     }
                 }
 
-                /* ================= DARK MODE OVERRIDES ================= */
-                :global(body.dark-mode) .header-card,
                 :global(body.dark-mode) .stat-card,
                 :global(body.dark-mode) .action-card,
                 :global(body.dark-mode) .history-container,
                 :global(body.dark-mode) .history-header {
-                    background-color: #1E293B;
-                    border-color: #334155;
+                    background-color: #1E293B !important;
+                    border-color: #334155 !important;
                 }
 
                 :global(body.dark-mode) .header-title,
