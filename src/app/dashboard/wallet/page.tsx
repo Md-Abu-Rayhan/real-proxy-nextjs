@@ -388,30 +388,6 @@ export default function WalletPage() {
 
     return (
         <div className="main-responsive-container">
-            {/* Header Section */}
-            <div className="header-card">
-                <div className="header-content">
-                    <h1 className="header-title">
-                        <div className="title-icon-box">
-                            <Wallet color="#0086FF" size={26} />
-                        </div>
-                        <span>My Wallet & Billing</span>
-                    </h1>
-                    <p className="header-desc">
-                        Manage your prepaid balance, add funds via bKash/Nagad or Crypto, and purchase proxy bandwidth instantly.
-                    </p>
-                </div>
-                <div className="exchange-badge-box">
-                    <div className="exchange-icon-circle">
-                        <TrendingUp size={16} color="#0086FF" />
-                    </div>
-                    <div className="exchange-info">
-                        <span className="exchange-label">Exchange Rate</span>
-                        <span className="exchange-val">৳{rate.toFixed(2)} BDT = $1.00 USD</span>
-                    </div>
-                </div>
-            </div>
-
             {/* Stats Grid */}
             <div className="stats-grid">
                 {/* Available Balance */}
@@ -432,7 +408,10 @@ export default function WalletPage() {
                             </button>
                         </div>
                         <p className="stat-value text-primary">${balanceUsd.toFixed(2)}</p>
-                        <span className="stat-sub">≈ ৳{balanceBdt.toFixed(2)} BDT</span>
+                        <div className="balance-sub-row">
+                            <span className="stat-sub">≈ ৳{balanceBdt.toFixed(2)} BDT</span>
+                            <span className="mini-rate-tag" title="Exchange Rate">1 USD = ৳{rate.toFixed(0)}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -492,7 +471,13 @@ export default function WalletPage() {
                 <div className="actions-column">
                     <div className="action-card">
                         <div className="action-header">
-                            <h2 className="action-title">Add Funds to Wallet</h2>
+                            <div className="action-title-row">
+                                <h2 className="action-title">Add Funds to Wallet</h2>
+                                <div className="compact-exchange-pill" title="Official Conversion Rate">
+                                    <TrendingUp size={13} color="#0086FF" />
+                                    <span>Exchange Rate: <strong>৳{rate.toFixed(2)} BDT = $1.00 USD</strong></span>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Top-up Method Switcher */}
@@ -977,89 +962,22 @@ export default function WalletPage() {
                     overflow-x: hidden;
                 }
 
-                /* Header Card */
-                .header-card {
+                .balance-sub-row {
                     display: flex;
-                    flex-direction: row;
+                    align-items: center;
                     justify-content: space-between;
-                    align-items: center;
-                    background-color: #FFFFFF;
-                    padding: 26px 32px;
-                    border-radius: 16px;
-                    border: 1px solid #E2E8F0;
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-                    gap: 24px;
+                    margin-top: 3px;
+                    flex-wrap: wrap;
+                    gap: 6px;
                 }
 
-                .header-content {
-                    flex: 1;
-                }
-
-                .title-icon-box {
-                    background-color: rgba(0, 134, 255, 0.08);
-                    border-radius: 10px;
-                    padding: 8px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .header-title {
-                    font-size: 24px;
-                    font-weight: 700;
-                    color: var(--navy, #163561);
-                    margin: 0 0 6px 0;
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                }
-
-                .header-desc {
-                    margin: 0;
-                    color: #64748B;
-                    font-size: 14px;
-                    line-height: 1.5;
-                }
-
-                .exchange-badge-box {
-                    background-color: #F8FAFC;
-                    padding: 12px 20px;
-                    border-radius: 12px;
-                    border: 1px solid #E2E8F0;
-                    display: flex;
-                    align-items: center;
-                    gap: 14px;
-                    flex-shrink: 0;
-                }
-
-                .exchange-icon-circle {
-                    width: 34px;
-                    height: 34px;
-                    border-radius: 8px;
-                    background: rgba(0, 134, 255, 0.1);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    flex-shrink: 0;
-                }
-
-                .exchange-info {
-                    display: flex;
-                    flex-direction: column;
-                }
-
-                .exchange-label {
+                .mini-rate-tag {
                     font-size: 11px;
-                    color: #64748B;
+                    padding: 2px 7px;
+                    background: rgba(0, 134, 255, 0.08);
+                    color: #0086FF;
+                    border-radius: 6px;
                     font-weight: 600;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                }
-
-                .exchange-val {
-                    font-size: 14px;
-                    color: #0F172A;
-                    font-weight: 700;
                     white-space: nowrap;
                 }
 
@@ -1183,10 +1101,10 @@ export default function WalletPage() {
                     width: 100%;
                 }
 
-                /* Ultra-wide / Big Desktop Displays (>= 1536px) can use 2-column side-by-side ratio */
-                @media (min-width: 1536px) {
+                /* Ultra-wide / Big Desktop Displays (>= 1440px) */
+                @media (min-width: 1440px) {
                     .dashboard-main-grid {
-                        grid-template-columns: 480px minmax(0, 1fr);
+                        grid-template-columns: minmax(580px, 640px) minmax(0, 1fr);
                     }
                 }
 
@@ -1202,7 +1120,7 @@ export default function WalletPage() {
                     background-color: #FFFFFF;
                     border-radius: 16px;
                     border: 1px solid #E2E8F0;
-                    padding: 28px;
+                    padding: 28px 30px;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.01);
                     box-sizing: border-box;
                     width: 100%;
@@ -1212,11 +1130,38 @@ export default function WalletPage() {
                     margin-bottom: 22px;
                 }
 
+                .action-title-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 12px;
+                }
+
                 .action-title {
-                    font-size: 19px;
+                    font-size: 20px;
                     font-weight: 700;
                     color: var(--navy, #163561);
                     margin: 0;
+                }
+
+                .compact-exchange-pill {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 5px 12px;
+                    background: #F8FAFC;
+                    border: 1px solid #E2E8F0;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    color: #475569;
+                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+                    white-space: nowrap;
+                }
+
+                .compact-exchange-pill strong {
+                    color: #0086FF;
+                    font-weight: 700;
                 }
 
                 .tab-nav-row {
@@ -2295,7 +2240,7 @@ export default function WalletPage() {
                     color: #94A3B8 !important;
                 }
 
-                :global(body.dark-mode) .exchange-badge-box,
+                :global(body.dark-mode) .compact-exchange-pill,
                 :global(body.dark-mode) .preset-btn,
                 :global(body.dark-mode) .crypto-option-btn,
                 :global(body.dark-mode) .crypto-box,
@@ -2308,6 +2253,15 @@ export default function WalletPage() {
                     background-color: #0F172A;
                     border-color: #334155;
                     color: #94A3B8;
+                }
+
+                :global(body.dark-mode) .compact-exchange-pill strong {
+                    color: #38BDF8 !important;
+                }
+
+                :global(body.dark-mode) .mini-rate-tag {
+                    background: rgba(0, 134, 255, 0.2) !important;
+                    color: #38BDF8 !important;
                 }
 
                 :global(body.dark-mode) .tab-nav-row {

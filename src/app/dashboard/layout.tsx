@@ -37,41 +37,20 @@ import { WalletProvider, useWallet } from '@/context/WalletContext';
 const HeaderWalletBadge = () => {
     const { balanceUsd, balanceBdt, isLoading } = useWallet();
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '6px' }}>
+        <div className="header-wallet-badge-container">
             <Link
                 href="/dashboard/wallet"
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '5px 10px',
-                    borderRadius: '8px',
-                    background: 'rgba(0, 134, 255, 0.12)',
-                    border: '1px solid rgba(0, 134, 255, 0.3)',
-                    color: '#0086ff',
-                    textDecoration: 'none',
-                    fontWeight: 700,
-                    fontSize: '12px'
-                }}
+                className="header-wallet-balance-link"
             >
-                <Wallet size={14} />
-                <span>${balanceUsd.toFixed(2)}</span>
-                <span style={{ fontSize: '11px', opacity: 0.8, fontWeight: 500 }}>
+                <Wallet size={14} className="header-wallet-icon" />
+                <span className="header-balance-usd">${balanceUsd.toFixed(2)}</span>
+                <span className="header-balance-bdt">
                     (৳{balanceBdt.toFixed(0)})
                 </span>
             </Link>
             <Link
                 href="/dashboard/wallet"
-                style={{
-                    padding: '5px 9px',
-                    borderRadius: '8px',
-                    background: 'linear-gradient(135deg, #0086ff 0%, #0066cc 100%)',
-                    color: '#fff',
-                    textDecoration: 'none',
-                    fontWeight: 700,
-                    fontSize: '11px',
-                    boxShadow: '0 2px 6px rgba(0, 134, 255, 0.3)'
-                }}
+                className="header-topup-btn"
             >
                 + Top Up
             </Link>
@@ -551,6 +530,66 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
                     gap: 24px;
                 }
 
+                .header-wallet-badge-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    flex-shrink: 0;
+                }
+
+                .header-wallet-balance-link {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 5px 10px;
+                    border-radius: 8px;
+                    background: rgba(0, 134, 255, 0.12);
+                    border: 1px solid rgba(0, 134, 255, 0.3);
+                    color: #0086ff;
+                    text-decoration: none;
+                    font-weight: 700;
+                    font-size: 12px;
+                    white-space: nowrap;
+                    flex-shrink: 0;
+                    transition: all 0.2s;
+                }
+
+                .header-wallet-balance-link:hover {
+                    background: rgba(0, 134, 255, 0.18);
+                    border-color: #0086ff;
+                }
+
+                .header-balance-bdt {
+                    font-size: 11px;
+                    opacity: 0.8;
+                    font-weight: 500;
+                }
+
+                .header-topup-btn {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 5px 10px;
+                    height: 28px;
+                    border-radius: 8px;
+                    background: linear-gradient(135deg, #0086ff 0%, #0066cc 100%);
+                    color: #fff;
+                    text-decoration: none;
+                    font-weight: 700;
+                    font-size: 11px;
+                    box-shadow: 0 2px 6px rgba(0, 134, 255, 0.3);
+                    white-space: nowrap;
+                    flex-shrink: 0;
+                    line-height: 1;
+                    box-sizing: border-box;
+                    transition: all 0.2s;
+                }
+
+                .header-topup-btn:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 3px 8px rgba(0, 134, 255, 0.4);
+                }
+
                 .header-actions {
                     display: flex;
                     gap: 20px;
@@ -697,6 +736,28 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
                 }
 
                 @media (max-width: 640px) {
+                    .dashboard-header {
+                        padding: 0 10px;
+                    }
+                    .header-right {
+                        gap: 6px;
+                    }
+                    .header-wallet-badge-container {
+                        gap: 4px;
+                    }
+                    .header-wallet-balance-link {
+                        padding: 4px 6px;
+                        font-size: 11px;
+                        gap: 4px;
+                    }
+                    .header-balance-bdt {
+                        display: none;
+                    }
+                    .header-topup-btn {
+                        padding: 4px 8px;
+                        height: 26px;
+                        font-size: 10px;
+                    }
                     .language-selector {
                         display: none;
                     }
