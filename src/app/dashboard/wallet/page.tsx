@@ -496,7 +496,12 @@ export default function WalletPage() {
                                 className={`method-tab-btn ${activeTab === 'bkash' ? 'active bkash-active' : ''}`}
                             >
                                 <div className="tab-icon-box">
-                                    <img src="/bKash-Logo.png" alt="bKash" className="mfs-logo bkash-logo-img" />
+                                    <img
+                                        src="/bKash-Logo.png"
+                                        alt="bKash"
+                                        className="mfs-logo bkash-logo-img"
+                                        style={{ maxHeight: '22px', maxWidth: '36px', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block' }}
+                                    />
                                 </div>
                                 <div className="tab-text-box">
                                     <span className="tab-title">bKash</span>
@@ -510,7 +515,12 @@ export default function WalletPage() {
                                 className={`method-tab-btn ${activeTab === 'eps' ? 'active eps-active' : ''}`}
                             >
                                 <div className="tab-icon-box eps-icons-combo">
-                                    <img src="/Nagad-Logo.png" alt="Nagad" className="mfs-logo nagad-logo-img" />
+                                    <img
+                                        src="/Nagad-Logo.png"
+                                        alt="Nagad"
+                                        className="mfs-logo nagad-logo-img"
+                                        style={{ maxHeight: '20px', maxWidth: '32px', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block' }}
+                                    />
                                     <CreditCard size={13} className="mfs-card-icon" />
                                 </div>
                                 <div className="tab-text-box">
@@ -1092,6 +1102,8 @@ export default function WalletPage() {
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
+                }
+
                 .stat-action-link {
                     font-size: 12px;
                     color: #F59E0B;
@@ -1236,32 +1248,41 @@ export default function WalletPage() {
                 }
 
                 .tab-icon-box {
+                    width: 32px;
+                    height: 24px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     flex-shrink: 0;
+                    overflow: hidden;
                 }
 
                 .eps-icons-combo {
+                    width: auto;
+                    min-width: 32px;
                     display: flex;
                     align-items: center;
                     gap: 3px;
                 }
 
                 .mfs-logo {
-                    height: 20px;
+                    max-height: 22px;
+                    max-width: 36px;
                     width: auto;
-                    max-width: 32px;
+                    height: auto;
                     object-fit: contain;
                     display: block;
+                    flex-shrink: 0;
                 }
 
                 .bkash-logo-img {
-                    height: 22px;
+                    max-height: 22px;
+                    max-width: 36px;
                 }
 
                 .nagad-logo-img {
-                    height: 18px;
+                    max-height: 20px;
+                    max-width: 32px;
                 }
 
                 .mfs-card-icon {
