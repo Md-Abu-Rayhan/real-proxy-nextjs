@@ -79,6 +79,26 @@ export function getUserFromToken(): { userId: number; email: string } | null {
 export async function createPaymentSession(
   params: CreatePaymentSessionParams
 ): Promise<PaymentSessionResult> {
+  const currency = (params.currency || 'BDT').toUpperCase();
+  const provider = (params.gatewayProvider || 'PayStation').toLowerCase();
+
+  if (currency === 'BDT') {
+    if (provider === 'paystation' && params.amount < 500) {
+      return {
+        success: false,
+        message: 'Minimum deposit amount for bKash is ৳500 BDT.',
+        errorCode: 'MIN_AMOUNT_500_BDT',
+      };
+    }
+    if (params.amount < 125) {
+      return {
+        success: false,
+        message: 'Minimum deposit amount is ৳125 BDT ($1.00 USD).',
+        errorCode: 'MIN_AMOUNT_125_BDT',
+      };
+    }
+  }
+
   const payload = {
     sourceApp: params.sourceApp || 'REALPROXY',
     userId: params.userId,

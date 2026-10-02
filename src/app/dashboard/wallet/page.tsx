@@ -273,8 +273,8 @@ export default function WalletPage() {
 
     const handlePayStationTopUp = async () => {
         const amount = Number(customBdt);
-        if (!amount || amount < 125) {
-            toast.error("Minimum deposit amount is ৳125 BDT ($1.00 USD).");
+        if (!amount || amount < 500) {
+            toast.error("Minimum deposit amount for bKash is ৳500 BDT.");
             return;
         }
 
@@ -305,7 +305,7 @@ export default function WalletPage() {
             });
 
             if (session.success && (session.hostedInvoiceUrl || session.paymentUrl)) {
-                toast.success("Redirecting to PayStation (bKash / Nagad / Cards)...");
+                toast.success("Redirecting to PayStation (bKash)...");
                 window.location.href = session.hostedInvoiceUrl || session.paymentUrl!;
             } else {
                 toast.error(session.message || "Failed to initialize PayStation payment.");
@@ -321,7 +321,7 @@ export default function WalletPage() {
     const handleEpsTopUp = async () => {
         const amount = Number(customBdt);
         if (!amount || amount < 125) {
-            toast.error("Minimum deposit amount is ৳125 BDT ($1.00 USD).");
+            toast.error("Minimum deposit amount for Nagad / Cards is ৳125 BDT ($1.00 USD).");
             return;
         }
 
@@ -492,7 +492,12 @@ export default function WalletPage() {
                         <div className="tab-nav-row">
                             <button
                                 type="button"
-                                onClick={() => setActiveTab('bkash')}
+                                onClick={() => {
+                                    setActiveTab('bkash');
+                                    if (!customBdt || Number(customBdt) < 500) {
+                                        setCustomBdt('1000');
+                                    }
+                                }}
                                 className={`method-tab-btn ${activeTab === 'bkash' ? 'active bkash-active' : ''}`}
                             >
                                 <div className="tab-icon-box">
@@ -508,7 +513,12 @@ export default function WalletPage() {
 
                             <button
                                 type="button"
-                                onClick={() => setActiveTab('eps')}
+                                onClick={() => {
+                                    setActiveTab('eps');
+                                    if (!customBdt || Number(customBdt) < 125) {
+                                        setCustomBdt('1000');
+                                    }
+                                }}
                                 className={`method-tab-btn ${activeTab === 'eps' ? 'active eps-active' : ''}`}
                             >
                                 <div className="tab-icon-box eps-icons-combo">
@@ -559,7 +569,7 @@ export default function WalletPage() {
                                 <div className="field-group">
                                     <div className="field-label-row">
                                         <label className="field-label">Quick Select (BDT)</label>
-                                        <span className="field-hint">Minimum Deposit: ৳125 ($1.00 USD)</span>
+                                        <span className="field-hint">Minimum Deposit: ৳500 BDT (~${(500 / rate).toFixed(2)} USD)</span>
                                     </div>
                                     <div className="presets-row">
                                         {[500, 1000, 2500, 5000, 10000].map((amt) => {
@@ -587,15 +597,20 @@ export default function WalletPage() {
                                         <span className="currency-prefix">৳</span>
                                         <input
                                             type="number"
-                                            min="125"
+                                            min="500"
                                             step="1"
                                             value={customBdt}
                                             onChange={(e) => setCustomBdt(e.target.value)}
-                                            placeholder="Enter amount (e.g. 1000)"
+                                            placeholder="Enter amount (min ৳500)"
                                             className="text-input"
                                         />
                                         <span className="currency-suffix">BDT</span>
                                     </div>
+                                    {customBdt !== '' && Number(customBdt) < 500 && (
+                                        <div className="min-bdt-warning bkash-warning">
+                                            ⚠️ Minimum deposit amount for bKash is ৳500 BDT
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Conversion Preview */}
@@ -610,7 +625,7 @@ export default function WalletPage() {
                                 <button
                                     type="button"
                                     onClick={handlePayStationTopUp}
-                                    disabled={isPayStationLoading || Number(customBdt) < 125}
+                                    disabled={isPayStationLoading || !customBdt || Number(customBdt) < 500}
                                     className="btn-primary custom-action-btn btn-bkash-theme"
                                 >
                                     {isPayStationLoading ? (
@@ -675,7 +690,7 @@ export default function WalletPage() {
                                         <span className="field-hint">Minimum Deposit: ৳125 ($1.00 USD)</span>
                                     </div>
                                     <div className="presets-row">
-                                        {[500, 1000, 2500, 5000, 10000].map((amt) => {
+                                        {[125, 500, 1000, 2500, 5000].map((amt) => {
                                             const isSelected = customBdt === amt.toString();
                                             const usd = (amt / rate).toFixed(0);
                                             return (
@@ -704,11 +719,16 @@ export default function WalletPage() {
                                             step="1"
                                             value={customBdt}
                                             onChange={(e) => setCustomBdt(e.target.value)}
-                                            placeholder="Enter amount (e.g. 1000)"
+                                            placeholder="Enter amount (min ৳125)"
                                             className="text-input"
                                         />
                                         <span className="currency-suffix">BDT</span>
                                     </div>
+                                    {customBdt !== '' && Number(customBdt) < 125 && (
+                                        <div className="min-bdt-warning eps-warning">
+                                            ⚠️ Minimum deposit amount for Nagad / Cards is ৳125 BDT ($1.00 USD)
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Conversion Preview */}
@@ -723,7 +743,7 @@ export default function WalletPage() {
                                 <button
                                     type="button"
                                     onClick={handleEpsTopUp}
-                                    disabled={isEpsLoading || Number(customBdt) < 125}
+                                    disabled={isEpsLoading || !customBdt || Number(customBdt) < 125}
                                     className="btn-primary custom-action-btn btn-eps-theme"
                                 >
                                     {isEpsLoading ? (
@@ -1560,6 +1580,23 @@ export default function WalletPage() {
                 .text-input:focus {
                     border-color: var(--primary, #0086FF);
                     box-shadow: 0 0 0 3px rgba(0, 134, 255, 0.08);
+                }
+
+                .min-bdt-warning {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    margin-top: 6px;
+                }
+
+                .min-bdt-warning.bkash-warning {
+                    color: #E2136E;
+                }
+
+                .min-bdt-warning.eps-warning {
+                    color: #E65100;
                 }
 
                 .conversion-info-box {
@@ -2495,6 +2532,14 @@ export default function WalletPage() {
                 }
 
                 :global(body.dark-mode) .conv-amt-eps {
+                    color: #FBA94B !important;
+                }
+
+                :global(body.dark-mode) .min-bdt-warning.bkash-warning {
+                    color: #FF4D94 !important;
+                }
+
+                :global(body.dark-mode) .min-bdt-warning.eps-warning {
                     color: #FBA94B !important;
                 }
 
