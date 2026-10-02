@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { CheckCircle2, Wallet, ArrowRight, X, Sparkles, ShieldCheck } from 'lucide-react';
+import { Check, ArrowRight, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export interface DepositSuccessData {
@@ -28,7 +28,6 @@ export const DepositSuccessModal: React.FC<DepositSuccessModalProps> = ({
 }) => {
     const router = useRouter();
 
-    // Close on Escape key
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && isOpen) {
@@ -47,129 +46,84 @@ export const DepositSuccessModal: React.FC<DepositSuccessModalProps> = ({
     const displayNetwork = data.network || data.currency || 'Crypto';
 
     return (
-        <div
-            className="deposit-modal-backdrop"
-            onClick={onClose}
-            style={{
-                position: 'fixed',
-                inset: 0,
-                zIndex: 99999,
-                backgroundColor: 'rgba(10, 15, 29, 0.75)',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '16px'
-            }}
-        >
-            <div
-                className="deposit-modal-card"
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                    position: 'relative',
-                    width: '100%',
-                    maxWidth: '440px',
-                    borderRadius: '24px',
-                    overflow: 'hidden',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(226, 232, 240, 0.8)'
-                }}
-            >
-                {/* Top ambient glow bar */}
-                <div className="glow-banner" />
-
-                {/* Close Button */}
-                <button
-                    onClick={onClose}
-                    className="modal-close-btn"
-                    aria-label="Close"
-                    type="button"
-                >
-                    <X size={18} />
-                </button>
-
-                <div className="modal-content-inner">
-                    {/* Animated Celebration Icon */}
-                    <div className="celebration-icon-wrap">
-                        <div className="pulse-ring" />
-                        <div className="icon-circle">
-                            <CheckCircle2 size={40} className="success-icon" />
+        <div className="deposit-modal-backdrop" onClick={onClose}>
+            <div className="deposit-modal-card" onClick={(e) => e.stopPropagation()}>
+                {/* Header */}
+                <div className="modal-header">
+                    <div className="header-left">
+                        <div className="status-icon-badge">
+                            <Check size={18} strokeWidth={2.5} />
                         </div>
-                        <div className="sparkle-badge">
-                            <Sparkles size={13} />
+                        <div>
+                            <h3 className="modal-title">Deposit Confirmed</h3>
+                            <p className="modal-subtitle">Funds have been credited to your wallet</p>
                         </div>
                     </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="modal-close-btn"
+                        aria-label="Close"
+                    >
+                        <X size={18} />
+                    </button>
+                </div>
 
-                    {/* Title & Subtitle */}
-                    <h3 className="modal-heading">Deposit Confirmed!</h3>
-                    <p className="modal-subheading">
-                        Your payment has been verified on the blockchain and instantly credited to your wallet.
-                    </p>
+                {/* Hero Amount Display */}
+                <div className="modal-hero">
+                    <span className="hero-label">Amount Credited</span>
+                    <div className="hero-amount">
+                        <span className="hero-currency">$</span>
+                        <span className="hero-number">{formattedAmount}</span>
+                        <span className="hero-code">USD</span>
+                    </div>
+                </div>
 
-                    {/* Credited Amount Card */}
-                    <div className="amount-highlight-card">
-                        <span className="amount-label">Credited to Balance</span>
-                        <div className="amount-row">
-                            <span className="plus-sign">+</span>
-                            <span className="dollar-symbol">$</span>
-                            <span className="amount-val">{formattedAmount}</span>
-                            <span className="currency-tag">USD</span>
-                        </div>
+                {/* Receipt Breakdown Card */}
+                <div className="ledger-card">
+                    <div className="ledger-row">
+                        <span className="ledger-label">Payment Method</span>
+                        <span className="ledger-value">{displayMethod} ({displayNetwork})</span>
                     </div>
 
-                    {/* Details Breakdown */}
-                    <div className="details-card">
-                        <div className="detail-item">
-                            <span className="detail-label">Status</span>
-                            <div className="status-badge">
-                                <span className="status-dot" />
-                                <span>Completed</span>
-                            </div>
-                        </div>
-
-                        <div className="detail-item">
-                            <span className="detail-label">Method / Network</span>
-                            <span className="detail-value">
-                                <ShieldCheck size={14} className="val-icon" />
-                                {displayMethod} ({displayNetwork})
-                            </span>
-                        </div>
-
-                        <div className="detail-item total-row">
-                            <span className="detail-label">Updated Wallet Balance</span>
-                            <div className="new-balance-wrap">
-                                <Wallet size={15} className="wallet-icon" />
-                                <span className="new-balance-val">${formattedNewBalance} USD</span>
-                            </div>
-                        </div>
+                    <div className="ledger-row">
+                        <span className="ledger-label">Status</span>
+                        <span className="ledger-value status-badge-pill">
+                            <span className="status-dot" /> Confirmed
+                        </span>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="modal-actions">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                onClose();
-                                if (onBuyProxies) {
-                                    onBuyProxies();
-                                } else {
-                                    router.push('/dashboard/premium-residential-proxies');
-                                }
-                            }}
-                            className="btn-buy-proxies"
-                        >
-                            <span>Buy Premium Proxies</span>
-                            <ArrowRight size={16} />
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="btn-done"
-                        >
-                            Done
-                        </button>
+                    <div className="ledger-row ledger-divider">
+                        <span className="ledger-label">Updated Balance</span>
+                        <span className="ledger-value balance-value">${formattedNewBalance} USD</span>
                     </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="modal-footer">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="btn-secondary"
+                    >
+                        Close
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            onClose();
+                            if (onBuyProxies) {
+                                onBuyProxies();
+                            } else {
+                                router.push('/dashboard/premium-residential-proxies');
+                            }
+                        }}
+                        className="btn-primary"
+                    >
+                        <span>Buy Premium Proxies</span>
+                        <ArrowRight size={15} />
+                    </button>
                 </div>
             </div>
 
@@ -178,9 +132,9 @@ export const DepositSuccessModal: React.FC<DepositSuccessModalProps> = ({
                     position: fixed !important;
                     inset: 0 !important;
                     z-index: 99999 !important;
-                    background-color: rgba(10, 15, 29, 0.78) !important;
-                    backdrop-filter: blur(8px) !important;
-                    -webkit-backdrop-filter: blur(8px) !important;
+                    background: rgba(15, 23, 42, 0.7) !important;
+                    backdrop-filter: blur(6px) !important;
+                    -webkit-backdrop-filter: blur(6px) !important;
                     display: flex !important;
                     align-items: center !important;
                     justify-content: center !important;
@@ -195,376 +149,316 @@ export const DepositSuccessModal: React.FC<DepositSuccessModalProps> = ({
 
                 .deposit-modal-card {
                     background-color: #FFFFFF !important;
-                    border-radius: 24px !important;
+                    border-radius: 18px !important;
                     width: 100% !important;
                     max-width: 440px !important;
+                    box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.25), 0 0 0 1px #E2E8F0 !important;
                     overflow: hidden !important;
                     position: relative !important;
-                    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(226, 232, 240, 0.8) !important;
-                    animation: popInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                    animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
                 }
 
-                @keyframes popInModal {
-                    from { transform: scale(0.92); opacity: 0; }
-                    to { transform: scale(1); opacity: 1; }
+                @keyframes modalPopIn {
+                    from { transform: scale(0.96) translateY(6px); opacity: 0; }
+                    to { transform: scale(1) translateY(0); opacity: 1; }
                 }
 
                 body.dark-mode .deposit-modal-card {
                     background-color: #0F172A !important;
-                    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
                 }
 
-                .glow-banner {
-                    height: 5px !important;
-                    width: 100% !important;
-                    background: linear-gradient(90deg, #10B981, #0086FF, #10B981) !important;
-                    background-size: 200% 100% !important;
-                    animation: shineGlowBar 3s linear infinite !important;
+                /* Header */
+                .modal-header {
+                    padding: 18px 22px !important;
+                    background-color: #F8FAFC !important;
+                    border-bottom: 1px solid #E2E8F0 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: space-between !important;
                 }
 
-                @keyframes shineGlowBar {
-                    0% { background-position: 0% 50%; }
-                    100% { background-position: 200% 50%; }
+                body.dark-mode .modal-header {
+                    background-color: #111A2E !important;
+                    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
                 }
 
-                .modal-close-btn {
-                    position: absolute !important;
-                    top: 16px !important;
-                    right: 16px !important;
-                    width: 32px !important;
-                    height: 32px !important;
-                    border-radius: 50% !important;
-                    border: none !important;
-                    background: #F1F5F9 !important;
-                    color: #64748B !important;
+                .header-left {
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 12px !important;
+                }
+
+                .status-icon-badge {
+                    width: 36px !important;
+                    height: 36px !important;
+                    border-radius: 10px !important;
+                    background-color: rgba(16, 185, 129, 0.12) !important;
+                    color: #10B981 !important;
                     display: flex !important;
                     align-items: center !important;
                     justify-content: center !important;
-                    cursor: pointer !important;
-                    transition: all 0.2s ease !important;
-                    z-index: 10 !important;
+                    flex-shrink: 0 !important;
                 }
 
-                .modal-close-btn:hover {
-                    background: #E2E8F0 !important;
+                body.dark-mode .status-icon-badge {
+                    background-color: rgba(16, 185, 129, 0.2) !important;
+                    color: #34D399 !important;
+                }
+
+                .modal-title {
+                    font-size: 15px !important;
+                    font-weight: 700 !important;
                     color: #0F172A !important;
+                    margin: 0 !important;
+                    line-height: 1.2 !important;
                 }
 
-                body.dark-mode .modal-close-btn {
-                    background: rgba(255, 255, 255, 0.1) !important;
+                body.dark-mode .modal-title {
+                    color: #F8FAFC !important;
+                }
+
+                .modal-subtitle {
+                    font-size: 12px !important;
+                    color: #64748B !important;
+                    margin: 2px 0 0 0 !important;
+                }
+
+                body.dark-mode .modal-subtitle {
                     color: #94A3B8 !important;
                 }
 
-                body.dark-mode .modal-close-btn:hover {
-                    background: rgba(255, 255, 255, 0.18) !important;
-                    color: #FFFFFF !important;
+                .modal-close-btn {
+                    background: transparent !important;
+                    border: none !important;
+                    color: #94A3B8 !important;
+                    cursor: pointer !important;
+                    padding: 4px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    border-radius: 6px !important;
+                    transition: color 0.15s, background-color 0.15s !important;
                 }
 
-                .modal-content-inner {
-                    padding: 28px 24px 24px 24px !important;
+                .modal-close-btn:hover {
+                    color: #0F172A !important;
+                    background-color: #E2E8F0 !important;
+                }
+
+                body.dark-mode .modal-close-btn:hover {
+                    color: #FFFFFF !important;
+                    background-color: rgba(255, 255, 255, 0.1) !important;
+                }
+
+                /* Hero Amount Display */
+                .modal-hero {
+                    padding: 24px 22px 18px 22px !important;
                     display: flex !important;
                     flex-direction: column !important;
                     align-items: center !important;
                     text-align: center !important;
                 }
 
-                .celebration-icon-wrap {
-                    position: relative !important;
-                    margin-bottom: 16px !important;
-                }
-
-                .pulse-ring {
-                    position: absolute !important;
-                    inset: -8px !important;
-                    border-radius: 50% !important;
-                    background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0) 70%) !important;
-                    animation: pulseExpandRing 2s infinite ease-out !important;
-                }
-
-                @keyframes pulseExpandRing {
-                    0% { transform: scale(0.9); opacity: 0.8; }
-                    50% { transform: scale(1.25); opacity: 0.3; }
-                    100% { transform: scale(0.9); opacity: 0.8; }
-                }
-
-                .icon-circle {
-                    width: 72px !important;
-                    height: 72px !important;
-                    border-radius: 50% !important;
-                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%) !important;
-                    border: 2px solid rgba(16, 185, 129, 0.3) !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    color: #10B981 !important;
-                    position: relative !important;
-                    z-index: 1 !important;
-                    box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3) !important;
-                }
-
-                .sparkle-badge {
-                    position: absolute !important;
-                    top: -2px !important;
-                    right: -4px !important;
-                    width: 24px !important;
-                    height: 24px !important;
-                    border-radius: 50% !important;
-                    background: #F59E0B !important;
-                    color: #FFFFFF !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4) !important;
-                    z-index: 2 !important;
-                }
-
-                .modal-heading {
-                    font-size: 20px !important;
-                    font-weight: 800 !important;
-                    color: #0F172A !important;
-                    margin: 0 0 6px 0 !important;
-                    letter-spacing: -0.02em !important;
-                }
-
-                body.dark-mode .modal-heading {
-                    color: #F8FAFC !important;
-                }
-
-                .modal-subheading {
-                    font-size: 13px !important;
-                    color: #64748B !important;
-                    margin: 0 0 18px 0 !important;
-                    line-height: 1.45 !important;
-                    max-width: 340px !important;
-                }
-
-                body.dark-mode .modal-subheading {
-                    color: #94A3B8 !important;
-                }
-
-                .amount-highlight-card {
-                    width: 100% !important;
-                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(0, 134, 255, 0.05) 100%) !important;
-                    border: 1.5px solid rgba(16, 185, 129, 0.25) !important;
-                    border-radius: 16px !important;
-                    padding: 14px 18px !important;
-                    margin-bottom: 18px !important;
-                    display: flex !important;
-                    flex-direction: column !important;
-                    align-items: center !important;
-                }
-
-                body.dark-mode .amount-highlight-card {
-                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(0, 134, 255, 0.08) 100%) !important;
-                    border-color: rgba(16, 185, 129, 0.35) !important;
-                }
-
-                .amount-label {
+                .hero-label {
                     font-size: 11px !important;
-                    font-weight: 700 !important;
+                    font-weight: 600 !important;
                     text-transform: uppercase !important;
-                    letter-spacing: 0.06em !important;
-                    color: #059669 !important;
+                    letter-spacing: 0.05em !important;
+                    color: #64748B !important;
                     margin-bottom: 4px !important;
                 }
 
-                body.dark-mode .amount-label {
-                    color: #34D399 !important;
+                body.dark-mode .hero-label {
+                    color: #94A3B8 !important;
                 }
 
-                .amount-row {
+                .hero-amount {
                     display: flex !important;
                     align-items: baseline !important;
                     gap: 2px !important;
                 }
 
-                .plus-sign {
-                    font-size: 22px !important;
-                    font-weight: 800 !important;
-                    color: #10B981 !important;
+                .hero-currency {
+                    font-size: 24px !important;
+                    font-weight: 700 !important;
+                    color: #0F172A !important;
                 }
 
-                .dollar-symbol {
-                    font-size: 18px !important;
-                    font-weight: 800 !important;
-                    color: #10B981 !important;
-                    margin-right: 1px !important;
+                body.dark-mode .hero-currency {
+                    color: #F8FAFC !important;
                 }
 
-                .amount-val {
-                    font-size: 32px !important;
-                    font-weight: 900 !important;
+                .hero-number {
+                    font-size: 40px !important;
+                    font-weight: 800 !important;
                     color: #0F172A !important;
                     letter-spacing: -0.03em !important;
+                    line-height: 1 !important;
                 }
 
-                body.dark-mode .amount-val {
+                body.dark-mode .hero-number {
                     color: #FFFFFF !important;
                 }
 
-                .currency-tag {
-                    font-size: 13px !important;
-                    font-weight: 700 !important;
-                    color: #10B981 !important;
+                .hero-code {
+                    font-size: 14px !important;
+                    font-weight: 600 !important;
+                    color: #64748B !important;
                     margin-left: 6px !important;
                 }
 
-                .details-card {
-                    width: 100% !important;
-                    background: #F8FAFC !important;
+                body.dark-mode .hero-code {
+                    color: #94A3B8 !important;
+                }
+
+                /* Receipt Card */
+                .ledger-card {
+                    margin: 0 22px 22px 22px !important;
+                    background-color: #F8FAFC !important;
                     border: 1px solid #E2E8F0 !important;
-                    border-radius: 14px !important;
-                    padding: 12px 14px !important;
-                    margin-bottom: 20px !important;
+                    border-radius: 12px !important;
+                    padding: 14px 16px !important;
                     display: flex !important;
                     flex-direction: column !important;
                     gap: 10px !important;
                 }
 
-                body.dark-mode .details-card {
-                    background: #111A2E !important;
+                body.dark-mode .ledger-card {
+                    background-color: #111A2E !important;
                     border-color: rgba(255, 255, 255, 0.08) !important;
                 }
 
-                .detail-item {
+                .ledger-row {
                     display: flex !important;
                     align-items: center !important;
                     justify-content: space-between !important;
-                    font-size: 12px !important;
+                    font-size: 13px !important;
                 }
 
-                .detail-label {
+                .ledger-label {
                     color: #64748B !important;
                     font-weight: 500 !important;
                 }
 
-                body.dark-mode .detail-label {
+                body.dark-mode .ledger-label {
                     color: #94A3B8 !important;
                 }
 
-                .detail-value {
+                .ledger-value {
                     color: #0F172A !important;
                     font-weight: 600 !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    gap: 5px !important;
+                    text-align: right !important;
                 }
 
-                body.dark-mode .detail-value {
+                body.dark-mode .ledger-value {
                     color: #E2E8F0 !important;
                 }
 
-                .val-icon {
-                    color: #0086FF !important;
-                }
-
-                .status-badge {
+                .status-badge-pill {
                     display: inline-flex !important;
                     align-items: center !important;
                     gap: 6px !important;
-                    padding: 2px 9px !important;
-                    border-radius: 20px !important;
-                    background: rgba(16, 185, 129, 0.12) !important;
                     color: #059669 !important;
-                    font-weight: 700 !important;
-                    font-size: 11px !important;
+                    font-weight: 600 !important;
+                    font-size: 12px !important;
                 }
 
-                body.dark-mode .status-badge {
-                    background: rgba(16, 185, 129, 0.2) !important;
+                body.dark-mode .status-badge-pill {
                     color: #34D399 !important;
                 }
 
                 .status-dot {
-                    width: 6px !important;
-                    height: 6px !important;
+                    width: 7px !important;
+                    height: 7px !important;
                     border-radius: 50% !important;
-                    background: #10B981 !important;
-                    box-shadow: 0 0 6px #10B981 !important;
+                    background-color: #10B981 !important;
                 }
 
-                .total-row {
-                    padding-top: 8px !important;
+                .ledger-divider {
+                    padding-top: 10px !important;
+                    margin-top: 2px !important;
                     border-top: 1px dashed #CBD5E1 !important;
                 }
 
-                body.dark-mode .total-row {
+                body.dark-mode .ledger-divider {
                     border-top-color: rgba(255, 255, 255, 0.1) !important;
                 }
 
-                .new-balance-wrap {
+                .balance-value {
+                    color: #0086FF !important;
+                    font-weight: 700 !important;
+                }
+
+                body.dark-mode .balance-value {
+                    color: #38BDF8 !important;
+                }
+
+                /* Footer */
+                .modal-footer {
+                    padding: 0 22px 22px 22px !important;
                     display: flex !important;
                     align-items: center !important;
-                    gap: 6px !important;
+                    gap: 10px !important;
                 }
 
-                .wallet-icon {
-                    color: #10B981 !important;
-                }
-
-                .new-balance-val {
+                .btn-secondary {
+                    flex: 1 !important;
+                    height: 44px !important;
+                    border: 1px solid #CBD5E1 !important;
+                    background-color: #FFFFFF !important;
+                    color: #475569 !important;
                     font-size: 13px !important;
-                    font-weight: 800 !important;
-                    color: #10B981 !important;
+                    font-weight: 600 !important;
+                    border-radius: 10px !important;
+                    cursor: pointer !important;
+                    transition: all 0.15s ease !important;
                 }
 
-                .modal-actions {
-                    width: 100% !important;
-                    display: flex !important;
-                    flex-direction: column !important;
-                    gap: 9px !important;
+                .btn-secondary:hover {
+                    background-color: #F8FAFC !important;
+                    border-color: #94A3B8 !important;
+                    color: #0F172A !important;
                 }
 
-                .btn-buy-proxies {
-                    width: 100% !important;
-                    padding: 12px 18px !important;
-                    border-radius: 12px !important;
+                body.dark-mode .btn-secondary {
+                    background-color: transparent !important;
+                    border-color: rgba(255, 255, 255, 0.15) !important;
+                    color: #94A3B8 !important;
+                }
+
+                body.dark-mode .btn-secondary:hover {
+                    background-color: rgba(255, 255, 255, 0.05) !important;
+                    border-color: rgba(255, 255, 255, 0.3) !important;
+                    color: #F8FAFC !important;
+                }
+
+                .btn-primary {
+                    flex: 1.5 !important;
+                    height: 44px !important;
                     border: none !important;
-                    background: linear-gradient(135deg, #0086FF 0%, #005AC2 100%) !important;
+                    background-color: #0086FF !important;
                     color: #FFFFFF !important;
                     font-size: 13px !important;
-                    font-weight: 700 !important;
+                    font-weight: 600 !important;
+                    border-radius: 10px !important;
+                    cursor: pointer !important;
                     display: flex !important;
                     align-items: center !important;
                     justify-content: center !important;
                     gap: 8px !important;
-                    cursor: pointer !important;
-                    box-shadow: 0 4px 14px rgba(0, 134, 255, 0.35) !important;
-                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                    box-shadow: 0 2px 8px rgba(0, 134, 255, 0.25) !important;
+                    transition: all 0.15s ease !important;
                 }
 
-                .btn-buy-proxies:hover {
+                .btn-primary:hover {
+                    background-color: #0070D6 !important;
+                    box-shadow: 0 4px 12px rgba(0, 134, 255, 0.35) !important;
                     transform: translateY(-1px) !important;
-                    box-shadow: 0 6px 18px rgba(0, 134, 255, 0.45) !important;
                 }
 
-                .btn-done {
-                    width: 100% !important;
-                    padding: 10px 18px !important;
-                    border-radius: 12px !important;
-                    border: 1px solid #E2E8F0 !important;
-                    background: #FFFFFF !important;
-                    color: #64748B !important;
-                    font-size: 13px !important;
-                    font-weight: 600 !important;
-                    cursor: pointer !important;
-                    transition: all 0.2s ease !important;
-                }
-
-                .btn-done:hover {
-                    background: #F8FAFC !important;
-                    color: #0F172A !important;
-                }
-
-                body.dark-mode .btn-done {
-                    background: transparent !important;
-                    border-color: rgba(255, 255, 255, 0.12) !important;
-                    color: #94A3B8 !important;
-                }
-
-                body.dark-mode .btn-done:hover {
-                    background: rgba(255, 255, 255, 0.05) !important;
-                    color: #F8FAFC !important;
+                .btn-primary:active {
+                    transform: translateY(0) !important;
                 }
             `}</style>
         </div>
