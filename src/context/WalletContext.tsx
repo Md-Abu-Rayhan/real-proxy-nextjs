@@ -24,7 +24,7 @@ interface WalletContextType {
     isTopUpModalOpen: boolean;
     openTopUpModal: () => void;
     closeTopUpModal: () => void;
-    refreshWallet: () => Promise<void>;
+    refreshWallet: () => Promise<WalletSummary | undefined>;
 }
 
 const WalletContext = createContext<WalletContextType>({
@@ -38,7 +38,7 @@ const WalletContext = createContext<WalletContextType>({
     isTopUpModalOpen: false,
     openTopUpModal: () => {},
     closeTopUpModal: () => {},
-    refreshWallet: async () => {},
+    refreshWallet: async () => undefined,
 });
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -67,20 +67,23 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             });
 
             if (res.data) {
-                setWalletData({
+                const freshData: WalletSummary = {
                     balanceUsd: Number(res.data.balanceUsd ?? 0),
                     balanceBdt: Number(res.data.balanceBdt ?? 0),
                     totalDepositedUsd: Number(res.data.totalDepositedUsd ?? 0),
                     totalSpentUsd: Number(res.data.totalSpentUsd ?? 0),
                     affiliateBalanceUsd: Number(res.data.affiliateBalanceUsd ?? 0),
                     exchangeRateBdt: Number(res.data.exchangeRateBdt ?? 125),
-                });
+                };
+                setWalletData(freshData);
+                return freshData;
             }
         } catch (error) {
             console.warn('Failed to fetch wallet summary:', error);
         } finally {
             setIsLoading(false);
         }
+        return undefined;
     }, []);
 
     useEffect(() => {
@@ -93,8 +96,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }
         };
 
+        // Auto-refresh when tab is focused (e.g. user returns after paying on Binance/Crypto wallet)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                refreshWallet();
+            }
+        };
+
         window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
+        window.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, [refreshWallet]);
 
     const openTopUpModal = () => setIsTopUpModalOpen(true);

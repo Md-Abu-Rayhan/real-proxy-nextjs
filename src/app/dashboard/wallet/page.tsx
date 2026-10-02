@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Wallet,
     ArrowDownRight,
@@ -31,6 +31,7 @@ import { API_URL } from '@/lib/config';
 import { useWallet } from '@/context/WalletContext';
 import { createPaymentSession, getPaymentStatus, getUserFromToken } from '@/lib/paymentApi';
 import Link from 'next/link';
+import { DepositSuccessModal, DepositSuccessData } from '@/components/ui/DepositSuccessModal';
 
 interface StaticWalletData {
     currency: string;
@@ -102,6 +103,17 @@ export default function WalletPage() {
     // Affiliate Convert State
     const [isConvertingAffiliate, setIsConvertingAffiliate] = useState<boolean>(false);
 
+    // Deposit Celebration Modal State
+    const [depositSuccessData, setDepositSuccessData] = useState<DepositSuccessData | null>(null);
+    const [isDepositSuccessOpen, setIsDepositSuccessOpen] = useState<boolean>(false);
+    const lastKnownBalanceRef = useRef<number>(balanceUsd);
+
+    useEffect(() => {
+        if (balanceUsd > 0) {
+            lastKnownBalanceRef.current = balanceUsd;
+        }
+    }, [balanceUsd]);
+
     const handleManualRefresh = async () => {
         setIsRefreshing(true);
         try {
@@ -154,11 +166,28 @@ export default function WalletPage() {
         if (status === 'success') {
             getPaymentStatus(invoice).then(async (result) => {
                 if (result && (result.status === 'SUCCESS' || result.status === 'Paid')) {
-                    toast.success(`🎉 Deposit Confirmed! ৳${Number(result.amount).toLocaleString()} BDT credited to your wallet!`, {
+                    const bdtAmount = Number(result.amount || 0);
+                    const currentRate = exchangeRateBdt > 0 ? exchangeRateBdt : 125;
+                    const usdEquiv = Number((bdtAmount / currentRate).toFixed(2));
+
+                    const updated = await refreshWallet();
+                    await fetchTransactions(1, txFilter);
+
+                    const newBal = updated?.balanceUsd ?? (balanceUsd + usdEquiv);
+                    lastKnownBalanceRef.current = newBal;
+
+                    setDepositSuccessData({
+                        amountUsd: usdEquiv,
+                        newBalanceUsd: newBal,
+                        currency: 'BDT',
+                        network: `৳${bdtAmount.toLocaleString()} BDT`,
+                        method: 'PayStation (bKash)'
+                    });
+                    setIsDepositSuccessOpen(true);
+
+                    toast.success(`🎉 Deposit Confirmed! ৳${bdtAmount.toLocaleString()} BDT (+$${usdEquiv} USD) credited to your wallet!`, {
                         duration: 6000
                     });
-                    await refreshWallet();
-                    await fetchTransactions(1, txFilter);
                 }
             }).catch(() => {
                 refreshWallet();
@@ -199,34 +228,65 @@ export default function WalletPage() {
         }
     }, [activeTab, selectedCrypto, fetchStaticWallet]);
 
-    // Auto-sync for incoming crypto deposit (every 10 seconds while on crypto tab)
+    // Auto-sync for incoming crypto deposit (every 5 seconds while on crypto tab)
     useEffect(() => {
         if (activeTab !== 'crypto') return;
 
+        let isPolling = false;
         const checkDeposits = async () => {
+            if (isPolling) return;
             const token = localStorage.getItem('auth_token');
             if (!token) return;
 
+            isPolling = true;
             try {
+                const prevBal = lastKnownBalanceRef.current;
                 const syncRes = await axios.post(`${API_URL}/api/Wallet/crypto/sync`, {}, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
-                if (syncRes.data?.newlyCreditedCount > 0) {
-                    toast.success(`🎉 Deposit Confirmed! +$${Number(syncRes.data.totalCreditedUsd).toFixed(2)} USD credited to your wallet!`, {
-                        duration: 6000
-                    });
+                const data = syncRes.data;
+                const newlyCredited = (data?.newlyCreditedCount ?? 0) > 0;
+                const backendBalance = typeof data?.newBalanceUsd === 'number' ? data.newBalanceUsd : null;
+                const balanceIncreased = backendBalance !== null && prevBal > 0 && backendBalance > prevBal + 0.001;
+
+                if (newlyCredited || balanceIncreased) {
+                    const amountAdded = newlyCredited && data?.totalCreditedUsd > 0
+                        ? Number(data.totalCreditedUsd)
+                        : (backendBalance !== null && prevBal > 0 ? Number((backendBalance - prevBal).toFixed(2)) : 0);
+
+                    if (backendBalance !== null) {
+                        lastKnownBalanceRef.current = backendBalance;
+                    }
+
+                    // Refresh wallet state across entire application
                     await refreshWallet();
                     await fetchTransactions(1, txFilter);
+
+                    // Trigger the celebratory Deposit Success Modal Popup
+                    setDepositSuccessData({
+                        amountUsd: amountAdded > 0 ? amountAdded : (backendBalance !== null && prevBal > 0 ? backendBalance - prevBal : 0),
+                        newBalanceUsd: backendBalance ?? (prevBal + amountAdded),
+                        currency: selectedCrypto.currency,
+                        network: selectedCrypto.label,
+                        method: 'Cryptomus'
+                    });
+                    setIsDepositSuccessOpen(true);
+
+                    toast.success(`🎉 Deposit Confirmed! +$${amountAdded.toFixed(2)} USD added to your wallet!`, {
+                        duration: 6000
+                    });
                 }
             } catch {
                 // Ignore background polling errors
+            } finally {
+                isPolling = false;
             }
         };
 
-        const interval = setInterval(checkDeposits, 10000);
+        const interval = setInterval(checkDeposits, 5000);
         return () => clearInterval(interval);
-    }, [activeTab, refreshWallet, fetchTransactions, txFilter]);
+    }, [activeTab, selectedCrypto, refreshWallet, fetchTransactions, txFilter]);
 
     const handleSyncCryptoDeposits = async () => {
         setIsSyncingCrypto(true);
@@ -237,26 +297,55 @@ export default function WalletPage() {
                 return;
             }
 
+            const prevBal = lastKnownBalanceRef.current || balanceUsd;
+
             const res = await axios.post(`${API_URL}/api/Wallet/crypto/sync`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            if (res.data) {
-                if (res.data.newlyCreditedCount > 0) {
-                    toast.success(`🎉 Deposit Confirmed! +$${Number(res.data.totalCreditedUsd).toFixed(2)} USD added to your wallet!`, {
-                        duration: 6000
-                    });
-                    await refreshWallet();
-                    await fetchTransactions(1, txFilter);
-                } else {
-                    toast(res.data.message || "No new confirmed payment detected yet. If you just sent crypto, please wait 1-2 minutes for blockchain confirmations.", {
-                        icon: 'ℹ️',
-                        duration: 5000
-                    });
+            // Always immediately refresh wallet summary so UI is guaranteed up to date with DB
+            const updatedSummary = await refreshWallet();
+            await fetchTransactions(1, txFilter);
+
+            const data = res.data;
+            const newlyCredited = (data?.newlyCreditedCount ?? 0) > 0;
+            const backendBalance = typeof data?.newBalanceUsd === 'number'
+                ? data.newBalanceUsd
+                : (updatedSummary?.balanceUsd ?? null);
+
+            const balanceIncreased = backendBalance !== null && backendBalance > prevBal + 0.001;
+
+            if (newlyCredited || balanceIncreased) {
+                const amountAdded = newlyCredited && data?.totalCreditedUsd > 0
+                    ? Number(data.totalCreditedUsd)
+                    : (backendBalance !== null && prevBal > 0 ? Number((backendBalance - prevBal).toFixed(2)) : 0);
+
+                if (backendBalance !== null) {
+                    lastKnownBalanceRef.current = backendBalance;
                 }
+
+                setDepositSuccessData({
+                    amountUsd: amountAdded > 0 ? amountAdded : (backendBalance !== null && prevBal > 0 ? backendBalance - prevBal : 0),
+                    newBalanceUsd: backendBalance ?? (prevBal + amountAdded),
+                    currency: selectedCrypto.currency,
+                    network: selectedCrypto.label,
+                    method: 'Cryptomus'
+                });
+                setIsDepositSuccessOpen(true);
+
+                toast.success(`🎉 Deposit Confirmed! +$${amountAdded.toFixed(2)} USD added to your wallet!`, {
+                    duration: 6000
+                });
+            } else {
+                toast(`Scanning Blockchain & Cryptomus... No new uncredited payment found yet. Current balance: $${(backendBalance ?? prevBal).toFixed(2)} USD. If you just sent crypto, please allow 1-2 minutes for blockchain confirmations.`, {
+                    icon: '⏳',
+                    duration: 6000
+                });
             }
         } catch (error: any) {
             console.error("Crypto sync error:", error);
+            // Even on error, attempt refreshing wallet just in case
+            await refreshWallet();
             toast.error(error.response?.data?.message || "Failed to check crypto deposit status.");
         } finally {
             setIsSyncingCrypto(false);
@@ -974,6 +1063,14 @@ export default function WalletPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Deposit Success Celebration Modal */}
+            <DepositSuccessModal
+                isOpen={isDepositSuccessOpen}
+                onClose={() => setIsDepositSuccessOpen(false)}
+                data={depositSuccessData}
+                onBuyProxies={() => router.push('/dashboard/residential-proxies')}
+            />
 
             {/* Spacious, Generously Padded Stylesheet */}
             <style jsx>{`
