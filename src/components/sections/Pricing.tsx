@@ -8,7 +8,6 @@ import { toast } from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { API_URL } from '@/lib/config';
-import { createPaymentSession, getUserFromToken } from '@/lib/paymentApi';
 
 const Pricing = () => {
     const router = useRouter();
@@ -36,6 +35,11 @@ const Pricing = () => {
     };
 
     const current = getPricing(bandwidth);
+    const pricePerGb = proxyType === 'Premium Residential' ? 1.50 : 1.00;
+    const baseCostUsd = bandwidth * pricePerGb;
+    const discountAmtUsd = appliedDiscount ? (baseCostUsd * appliedDiscount) / 100 : 0;
+    const finalCostUsd = Math.max(0.01, baseCostUsd - discountAmtUsd);
+    const hasSufficientBalance = !isWalletLoading && walletBalance >= finalCostUsd;
 
     React.useEffect(() => {
         const typeParam = searchParams.get('type');
@@ -136,15 +140,13 @@ const Pricing = () => {
     const handleBuyNowClick = () => {
         const token = localStorage.getItem('auth_token');
         if (!token) {
-            toast.error("Please login to proceed with payment.");
+            toast.error("Please login to proceed with purchase.");
             router.push('/login');
             return;
         }
-        // Open modal immediately for instant UX
-        setWalletBalance(0);
         setIsWalletLoading(true);
         setShowPaymentModal(true);
-        // Fetch wallet balance in background
+        // Fetch fresh wallet balance
         axios.get(`${API_URL}/api/Wallet/summary`, {
             headers: { Authorization: `Bearer ${token}` }
         }).then(res => {
@@ -157,124 +159,16 @@ const Pricing = () => {
         });
     };
 
-    const handleCryptoPayment = async () => {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-            toast.error("Please login to proceed with payment.");
-            router.push('/login');
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const orderId = `${proxyType === 'Premium Residential' ? 'ST' : 'CR'}${Date.now()}`.substring(0, 16);
-            const amount = parseFloat(current.total);
-            const apiUrl = API_URL;
-            const response = await axios.post(`${apiUrl}/api/CryptoPayment/initialize`, {
-                orderId: orderId,
-                amount: amount,
-                quoteAssetId: "usd",
-                promoCode: promoCode
-            }, {
-                headers: {
-                    'accept': '*/*',
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.data && response.data.paymentUrl) {
-                window.location.href = response.data.paymentUrl;
-            } else {
-                toast.error(response.data.message || "Failed to get crypto payment URL.");
-                setIsLoading(false);
-            }
-        } catch (error: any) {
-            console.error("Crypto payment error:", error.response?.data || error.message);
-            toast.error("Crypto payment initialization failed.");
-            setIsLoading(false);
-        }
-    };
-
-    const handleFiatPayment = async () => {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-            toast.error("Please login to proceed with payment.");
-            router.push('/login');
-            return;
-        }
-
-        const userInfo = getUserFromToken();
-        if (!userInfo || !userInfo.userId) {
-            toast.error("Please login to proceed with payment.");
-            router.push('/login');
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            let packageId = "custom";
-            if (proxyType === 'Premium Residential') {
-                if (bandwidth === 10) packageId = "static_10gb";
-                else if (bandwidth === 50) packageId = "static_50gb";
-                else if (bandwidth === 100) packageId = "static_100gb";
-                else packageId = "static_custom";
-            } else {
-                if (bandwidth === 10) packageId = "res_10gb";
-                else if (bandwidth === 50) packageId = "res_50gb";
-                else if (bandwidth === 100) packageId = "res_100gb";
-            }
-
-            const amountBdt = appliedDiscount 
-                ? Math.round(parseFloat(current.totalBDT) * (1 - appliedDiscount / 100))
-                : parseFloat(current.totalBDT);
-
-            const userPhone = localStorage.getItem('user_phone') || "01700000000";
-            const userName = localStorage.getItem('user_name') || userInfo.email.split('@')[0];
-
-            const session = await createPaymentSession({
-                sourceApp: "REALPROXY",
-                userId: userInfo.userId,
-                amount: amountBdt,
-                currency: "BDT",
-                gatewayProvider: "PayStation",
-                customerEmail: userInfo.email,
-                customerPhone: userPhone,
-                customerName: userName,
-                callbackUrl: `${window.location.origin}/payment/success`,
-                itemCategory: "ProxyBandwidth",
-                externalReference: `PROXY-${packageId}-${bandwidth}GB`
-            });
-
-            if (session.success && (session.paymentUrl || session.hostedInvoiceUrl)) {
-                toast.success("Redirecting to PayStation Gateway...");
-                window.location.href = session.paymentUrl || session.hostedInvoiceUrl!;
-            } else {
-                toast.error(session.message || "Failed to initialize payment gateway.");
-                setIsLoading(false);
-            }
-        } catch (error: any) {
-            console.error("Payment error detail:", error);
-            toast.error("Payment initialization failed.");
-            setIsLoading(false);
-        }
-    };
-
     const handleWalletPayment = async () => {
         const token = localStorage.getItem('auth_token');
         if (!token) {
-            toast.error("Please login to proceed with payment.");
+            toast.error("Please login to proceed with purchase.");
             router.push('/login');
             return;
         }
 
-        const pricePerGb = proxyType === 'Premium Residential' ? 1.50 : 1.00;
-        const baseCost = bandwidth * pricePerGb;
-        const discountAmt = appliedDiscount ? (baseCost * appliedDiscount) / 100 : 0;
-        const finalCost = Math.max(0.01, baseCost - discountAmt);
-
-        if (walletBalance < finalCost) {
-            toast.error(`Insufficient wallet balance. Available: $${walletBalance.toFixed(2)}, Required: $${finalCost.toFixed(2)}. Please top up your wallet.`);
+        if (walletBalance < finalCostUsd) {
+            toast.error(`Insufficient wallet balance. Available: $${walletBalance.toFixed(2)}, Required: $${finalCostUsd.toFixed(2)}. Please add funds to your wallet.`);
             return;
         }
 
@@ -290,7 +184,7 @@ const Pricing = () => {
             });
 
             if (response.data && response.data.success) {
-                setWalletBalance(Number(response.data.remainingBalanceUsd ?? Math.max(0, walletBalance - finalCost)));
+                setWalletBalance(Number(response.data.remainingBalanceUsd ?? Math.max(0, walletBalance - finalCostUsd)));
                 toast.success(`🎉 ${response.data.message || 'Successfully purchased proxy bandwidth!'}`);
                 setShowPaymentModal(false);
                 router.push(proxyType === 'Premium Residential' ? '/dashboard/premium-residential-proxies' : '/dashboard/residential-proxies');
@@ -743,6 +637,70 @@ const Pricing = () => {
                     border-radius: 16px;
                     border: 1px solid #eaecf0;
                 }
+                .wallet-balance-banner {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 16px;
+                    border-radius: 16px;
+                    margin-bottom: 20px;
+                    border: 1.5px solid;
+                    transition: all 0.3s ease;
+                }
+                .wallet-balance-banner.sufficient {
+                    background: rgba(0, 182, 122, 0.05);
+                    border-color: rgba(0, 182, 122, 0.25);
+                }
+                .wallet-balance-banner.insufficient {
+                    background: rgba(239, 68, 68, 0.04);
+                    border-color: rgba(239, 68, 68, 0.2);
+                }
+                .btn-wallet-confirm {
+                    width: 100%;
+                    padding: 16px 24px;
+                    background: linear-gradient(135deg, #0086FF 0%, #0066FF 100%);
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 14px;
+                    font-size: 16px;
+                    font-weight: 800;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    box-shadow: 0 8px 24px rgba(0, 134, 255, 0.25);
+                    transition: all 0.25s ease;
+                }
+                .btn-wallet-confirm:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 12px 28px rgba(0, 134, 255, 0.35);
+                }
+                .btn-wallet-confirm:disabled {
+                    opacity: 0.65;
+                    cursor: not-allowed;
+                }
+                .btn-wallet-topup {
+                    width: 100%;
+                    padding: 16px 24px;
+                    background: linear-gradient(135deg, #0086FF 0%, #0066FF 100%);
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 14px;
+                    font-size: 15px;
+                    font-weight: 800;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    box-shadow: 0 8px 20px rgba(0, 134, 255, 0.25);
+                    transition: all 0.25s ease;
+                }
+                .btn-wallet-topup:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 12px 28px rgba(0, 134, 255, 0.35);
+                }
 
                 .loading-overlay {
                     position: fixed;
@@ -1050,11 +1008,11 @@ const Pricing = () => {
                                         </div>
 
                                         <button onClick={handleBuyNowClick} disabled={isLoading} className="btn-buy-premium">
-                                            <ShoppingCart size={20} fill="white" /> {isLoading ? 'Processing...' : 'Buy Now'}
+                                            <Wallet size={20} /> {isLoading ? 'Processing...' : 'Buy with Wallet Balance'}
                                         </button>
 
                                         <div className="pay-logos">
-                                            <div className="pay-logos-text">Securely Pay with</div>
+                                            <div className="pay-logos-text">Prepaid Wallet • Top up via bKash • Nagad • Crypto • Cards</div>
                                             <div className="logos-row">
                                                 {/* <img src="/binance-pay.png" alt="binance-pay" className="binance-logo" />
                                                 <img src="/Bitcoin-Logo.png" alt="bitcoin" /> */}
@@ -1088,7 +1046,7 @@ const Pricing = () => {
                 </div>
             </div>
 
-            {/* Selection Modal */}
+            {/* Wallet Purchase Modal */}
             <AnimatePresence>
                 {showPaymentModal && (
                     <div className="modal-overlay modal-bg" onClick={() => setShowPaymentModal(false)}>
@@ -1097,96 +1055,127 @@ const Pricing = () => {
                                 <Plus size={20} style={{ transform: 'rotate(45deg)' }} />
                             </button>
 
-                            <h3 className="modal-title">Select Payment Method</h3>
-                            <p className="modal-subtitle">Choose your preferred way to complete the purchase.</p>
-
-                            <div className="payment-options">
-                                <button className="pm-btn pm-card" style={{ padding: '24px', borderRadius: '24px', border: '1.5px solid #f2f4f7', marginBottom: '16px' }} onClick={handleCryptoPayment} disabled={isLoading}>
-                                    <div className="option-icon"><Zap size={24} /></div>
-                                    <div className="option-info">
-                                        <h4>Cryptocurrency (Binance Pay)</h4>
-                                        <p>Fast and anonymous. BTC, ETH, USDT & more.</p>
-                                    </div>
-                                    <Check size={20} color="#0086FF" style={{ marginLeft: 'auto', opacity: 0.5 }} />
-                                </button>
-
-                                <button className="pm-btn pm-card" style={{ padding: '24px', borderRadius: '24px', border: '1.5px solid #0086FF', background: 'rgba(0, 134, 255, 0.03)', marginBottom: '16px' }} onClick={handleFiatPayment} disabled={isLoading}>
-                                    <div className="option-icon" style={{ background: '#E6F3FF', color: '#0086FF' }}><ShoppingCart size={24} /></div>
-                                    <div className="option-info">
-                                        <h4 style={{ color: '#041026' }}>PayStation (bKash, Nagad, Rocket, Cards)</h4>
-                                        <p>Secure local payment via bKash, Nagad or Cards.</p>
-                                    </div>
-                                    <span style={{ marginLeft: 'auto', background: '#0086FF', color: '#fff', fontSize: '11px', fontWeight: '700', padding: '3px 8px', borderRadius: '12px' }}>FAST</span>
-                                </button>
-
-                                {!appliedDiscount && isWalletLoading ? (
-                                    <button
-                                        className="pm-btn pm-card"
-                                        style={{
-                                            padding: '24px', borderRadius: '24px',
-                                            border: '1.5px solid #e4e7ec',
-                                            background: '#fafafa',
-                                            cursor: 'not-allowed',
-                                            opacity: 0.7
-                                        }}
-                                        disabled
-                                    >
-                                        <div className="option-icon" style={{ background: '#f2f4f7', color: '#98a2b3' }}>
-                                            <Wallet size={24} />
-                                        </div>
-                                        <div className="option-info">
-                                            <h4 style={{ color: '#98a2b3' }}>Purchase with Wallet Balance</h4>
-                                            <p style={{ color: '#c0c8d4' }}>Checking balance…</p>
-                                        </div>
-                                        <div style={{ marginLeft: 'auto', width: 18, height: 18, border: '2.5px solid #d0d5dd', borderTopColor: '#0086FF', borderRadius: '50%', animation: 'spin-anim 0.8s linear infinite' }} />
-                                    </button>
-                                ) : !appliedDiscount && walletBalance >= (parseFloat(current.totalBDT) / 125) ? (
-                                    <button
-                                        className="pm-btn pm-card"
-                                        style={{
-                                            padding: '24px', borderRadius: '24px',
-                                            border: '1.5px solid #00b67a',
-                                            background: 'rgba(0,182,122,0.03)'
-                                        }}
-                                        onClick={handleWalletPayment}
-                                        disabled={isLoading}
-                                    >
-                                        <div className="option-icon" style={{ background: 'rgba(0,182,122,0.1)', color: '#00b67a' }}>
-                                            <Wallet size={24} />
-                                        </div>
-                                        <div className="option-info">
-                                            <h4 style={{ color: '#00b67a' }}>Purchase with Wallet Balance</h4>
-                                            <p>Available: <strong style={{ color: '#00b67a' }}>${(walletBalance).toFixed(4)}</strong> — instant, no redirect needed.</p>
-                                        </div>
-                                        <Check size={20} color="#00b67a" style={{ marginLeft: 'auto', opacity: 0.7 }} />
-                                    </button>
-                                ) : null}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+                                <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(0, 134, 255, 0.1)', color: '#0086FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <Wallet size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="modal-title" style={{ margin: 0, fontSize: '20px' }}>Confirm Proxy Purchase</h3>
+                                    <p className="modal-subtitle" style={{ margin: 0, fontSize: '13px' }}>Bandwidth activated instantly via Wallet Balance</p>
+                                </div>
                             </div>
 
-                            <div className="order-summary" style={{ marginTop: '32px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                    <span style={{ fontSize: '14px', color: '#98a2b3', fontWeight: '1000' }}>Package</span>
-                                    <span style={{ fontSize: '14px', color: '#041026', fontWeight: '700' }}>{bandwidth} GB Residential</span>
+                            {/* Wallet Balance Status Banner */}
+                            <div className={`wallet-balance-banner ${hasSufficientBalance ? 'sufficient' : 'insufficient'}`}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: hasSufficientBalance ? 'rgba(0,182,122,0.12)' : 'rgba(239,68,68,0.12)', color: hasSufficientBalance ? '#00b67a' : '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Wallet size={20} />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '12px', color: '#667085', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Wallet Balance</div>
+                                        {isWalletLoading ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                                <div style={{ width: '14px', height: '14px', border: '2px solid #0086FF', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin-anim 0.8s linear infinite' }} />
+                                                <span style={{ fontSize: '13px', color: '#667085' }}>Checking balance...</span>
+                                            </div>
+                                        ) : (
+                                            <div style={{ fontSize: '19px', fontWeight: '800', color: hasSufficientBalance ? '#00b67a' : '#ef4444' }}>
+                                                ${walletBalance.toFixed(2)} <span style={{ fontSize: '12px', fontWeight: '600' }}>USD</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: walletBalance > 0 ? '8px' : '0' }}>
-                                    <span style={{ fontSize: '14px', color: '#98a2b3', fontWeight: '1000' }}>Total Price</span>
-                                    <span style={{ fontSize: '18px', color: '#0086FF', fontWeight: '800' }}>
-                                        $ {appliedDiscount ? (Math.round(parseFloat(current.totalBDT) * (1 - appliedDiscount / 100)) / 125).toFixed(2) : (parseFloat(current.totalBDT) / 125).toFixed(2)}
+                                {!isWalletLoading && (
+                                    <span style={{
+                                        fontSize: '12px',
+                                        fontWeight: '700',
+                                        padding: '4px 10px',
+                                        borderRadius: '20px',
+                                        background: hasSufficientBalance ? 'rgba(0,182,122,0.12)' : 'rgba(239,68,68,0.12)',
+                                        color: hasSufficientBalance ? '#00b67a' : '#ef4444'
+                                    }}>
+                                        {hasSufficientBalance ? '✓ Sufficient' : '✗ Insufficient'}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Order Summary Details */}
+                            <div className="order-summary" style={{ marginBottom: '20px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                    <span style={{ fontSize: '13px', color: '#667085', fontWeight: '600' }}>Proxy Plan</span>
+                                    <span style={{ fontSize: '13px', color: '#041026', fontWeight: '700' }}>{proxyType} Proxies</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                    <span style={{ fontSize: '13px', color: '#667085', fontWeight: '600' }}>Bandwidth</span>
+                                    <span style={{ fontSize: '13px', color: '#041026', fontWeight: '700' }}>{bandwidth} GB</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                    <span style={{ fontSize: '13px', color: '#667085', fontWeight: '600' }}>Unit Rate</span>
+                                    <span style={{ fontSize: '13px', color: '#041026', fontWeight: '700' }}>${pricePerGb.toFixed(2)} USD / GB</span>
+                                </div>
+                                {appliedDiscount && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                        <span style={{ fontSize: '13px', color: '#00b67a', fontWeight: '700' }}>
+                                            Promo Discount ({appliedDiscount}%)
+                                        </span>
+                                        <span style={{ fontSize: '13px', color: '#00b67a', fontWeight: '700' }}>
+                                            -${discountAmtUsd.toFixed(2)} USD
+                                        </span>
+                                    </div>
+                                )}
+                                <div style={{ height: '1px', background: '#eaecf0', margin: '10px 0' }} />
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '14px', color: '#041026', fontWeight: '800' }}>Total Price</span>
+                                    <span style={{ fontSize: '20px', color: '#0086FF', fontWeight: '800' }}>
+                                        ${finalCostUsd.toFixed(2)} USD
                                     </span>
                                 </div>
-                                {!appliedDiscount && (walletBalance > 0 || isWalletLoading) && (
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontSize: '14px', color: '#98a2b3', fontWeight: '1000' }}>Wallet Balance</span>
-                                        {isWalletLoading ? (
-                                            <span style={{ width: 80, height: 16, background: '#e4e7ec', borderRadius: 6, display: 'inline-block', animation: 'pulse 1.2s ease-in-out infinite' }} />
-                                        ) : (
-                                            <span style={{ fontSize: '14px', color: walletBalance >= (parseFloat(current.totalBDT) / 125) ? '#00b67a' : '#ef4444', fontWeight: '700' }}>
-                                                ${(walletBalance).toFixed(4)} {walletBalance >= (parseFloat(current.totalBDT) / 125) ? '✓ Sufficient' : '✗ Insufficient'}
-                                            </span>
-                                        )}
+                                {hasSufficientBalance && !isWalletLoading && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed #eaecf0' }}>
+                                        <span style={{ fontSize: '12px', color: '#667085', fontWeight: '500' }}>Remaining Balance After Purchase</span>
+                                        <span style={{ fontSize: '12px', color: '#041026', fontWeight: '700' }}>
+                                            ${Math.max(0, walletBalance - finalCostUsd).toFixed(2)} USD
+                                        </span>
                                     </div>
                                 )}
                             </div>
+
+                            {/* Action CTA */}
+                            {hasSufficientBalance ? (
+                                <button
+                                    onClick={handleWalletPayment}
+                                    disabled={isLoading || isWalletLoading}
+                                    className="btn-wallet-confirm"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <div style={{ width: '18px', height: '18px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin-anim 0.8s linear infinite' }} />
+                                            <span>Activating Bandwidth...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Check size={18} />
+                                            <span>Confirm & Pay ${finalCostUsd.toFixed(2)} USD from Wallet</span>
+                                        </>
+                                    )}
+                                </button>
+                            ) : (
+                                <div>
+                                    <button
+                                        onClick={() => {
+                                            setShowPaymentModal(false);
+                                            router.push('/dashboard/wallet');
+                                        }}
+                                        className="btn-wallet-topup"
+                                    >
+                                        <Wallet size={18} />
+                                        <span>Add Funds to Wallet (bKash / Nagad / Crypto)</span>
+                                    </button>
+                                    <p style={{ margin: '12px 0 0', fontSize: '12px', color: '#667085', textAlign: 'center', lineHeight: '1.4' }}>
+                                        You need ${(finalCostUsd - walletBalance).toFixed(2)} USD more. Add funds to your wallet balance to complete this purchase.
+                                    </p>
+                                </div>
+                            )}
                         </motion.div>
                     </div>
                 )}
