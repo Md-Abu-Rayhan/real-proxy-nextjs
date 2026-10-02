@@ -153,12 +153,12 @@ export const DepositSuccessModal: React.FC<DepositSuccessModalProps> = ({
                                 if (onBuyProxies) {
                                     onBuyProxies();
                                 } else {
-                                    router.push('/dashboard/residential-proxies');
+                                    router.push('/dashboard/premium-residential-proxies');
                                 }
                             }}
                             className="btn-buy-proxies"
                         >
-                            <span>Buy Proxies Now</span>
+                            <span>Buy Premium Proxies</span>
                             <ArrowRight size={16} />
                         </button>
 
