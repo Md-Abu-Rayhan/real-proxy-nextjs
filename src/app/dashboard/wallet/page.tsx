@@ -76,7 +76,8 @@ export default function WalletPage() {
         totalSpentUsd,
         exchangeRateBdt,
         refreshWallet,
-        showDepositSuccess
+        showDepositSuccess,
+        startDepositListening
     } = useWallet();
 
     const router = useRouter();
@@ -103,6 +104,7 @@ export default function WalletPage() {
     // Affiliate Convert State
     const [isConvertingAffiliate, setIsConvertingAffiliate] = useState<boolean>(false);
     const lastKnownBalanceRef = useRef<number>(balanceUsd);
+    const lastManualSyncRef = useRef<number>(0);
 
     useEffect(() => {
         if (balanceUsd > 0) {
@@ -219,17 +221,24 @@ export default function WalletPage() {
 
     useEffect(() => {
         if (activeTab === 'crypto') {
+            startDepositListening(15);
             fetchStaticWallet(selectedCrypto.currency, selectedCrypto.network);
         }
-    }, [activeTab, selectedCrypto, fetchStaticWallet]);
+    }, [activeTab, selectedCrypto, fetchStaticWallet, startDepositListening]);
 
-    // Auto-sync for incoming crypto deposit (every 5 seconds while on crypto tab)
+    // Auto-sync for incoming crypto deposit (while on crypto tab, paused when tab is hidden)
     useEffect(() => {
         if (activeTab !== 'crypto') return;
 
         let isPolling = false;
+        let lastSyncTime = 0;
+
         const checkDeposits = async () => {
             if (isPolling) return;
+            // Zero load when tab is minimized or hidden
+            if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+                return;
+            }
             const token = localStorage.getItem('auth_token');
             if (!token) return;
 
@@ -240,6 +249,7 @@ export default function WalletPage() {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
+                lastSyncTime = Date.now();
                 const data = syncRes.data;
                 const newlyCredited = (data?.newlyCreditedCount ?? 0) > 0;
                 const backendBalance = typeof data?.newBalanceUsd === 'number' ? data.newBalanceUsd : null;
@@ -255,8 +265,13 @@ export default function WalletPage() {
                     }
 
                     // Refresh wallet state across entire application
-                    await refreshWallet();
+                    await refreshWallet(true);
                     await fetchTransactions(1, txFilter);
+
+                    // Clear pending deposit flag
+                    try {
+                        sessionStorage.removeItem('crypto_deposit_listening_until');
+                    } catch {}
 
                     // Trigger the celebratory Deposit Success Modal Popup globally
                     showDepositSuccess({
@@ -278,11 +293,36 @@ export default function WalletPage() {
             }
         };
 
-        const interval = setInterval(checkDeposits, 5000);
-        return () => clearInterval(interval);
+        // Poll every 12 seconds while on crypto tab (Cryptomus has webhook; sync is supplementary)
+        const interval = setInterval(checkDeposits, 12000);
+
+        // Instant sync when user refocuses the tab (e.g. returns from Binance/crypto app)
+        const handleTabFocus = () => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                if (Date.now() - lastSyncTime > 4000) {
+                    checkDeposits();
+                }
+            }
+        };
+
+        window.addEventListener('visibilitychange', handleTabFocus);
+        window.addEventListener('focus', handleTabFocus);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('visibilitychange', handleTabFocus);
+            window.removeEventListener('focus', handleTabFocus);
+        };
     }, [activeTab, selectedCrypto, refreshWallet, fetchTransactions, txFilter, showDepositSuccess]);
 
     const handleSyncCryptoDeposits = async () => {
+        const now = Date.now();
+        if (now - lastManualSyncRef.current < 4000) {
+            toast("Please wait a moment between checking status...", { icon: '⏳' });
+            return;
+        }
+        lastManualSyncRef.current = now;
+        startDepositListening(15);
         setIsSyncingCrypto(true);
         try {
             const token = localStorage.getItem('auth_token');
@@ -298,7 +338,7 @@ export default function WalletPage() {
             });
 
             // Always immediately refresh wallet summary so UI is guaranteed up to date with DB
-            const updatedSummary = await refreshWallet();
+            const updatedSummary = await refreshWallet(true);
             await fetchTransactions(1, txFilter);
 
             const data = res.data;
@@ -317,6 +357,11 @@ export default function WalletPage() {
                 if (backendBalance !== null) {
                     lastKnownBalanceRef.current = backendBalance;
                 }
+
+                // Clear pending session flag
+                try {
+                    sessionStorage.removeItem('crypto_deposit_listening_until');
+                } catch {}
 
                 showDepositSuccess({
                     amountUsd: amountAdded > 0 ? amountAdded : (backendBalance !== null && prevBal > 0 ? backendBalance - prevBal : 0),
@@ -338,7 +383,7 @@ export default function WalletPage() {
         } catch (error: any) {
             console.error("Crypto sync error:", error);
             // Even on error, attempt refreshing wallet just in case
-            await refreshWallet();
+            await refreshWallet(true);
             toast.error(error.response?.data?.message || "Failed to check crypto deposit status.");
         } finally {
             setIsSyncingCrypto(false);
@@ -348,6 +393,7 @@ export default function WalletPage() {
     const handleCopyAddress = () => {
         if (!staticWallet?.address) return;
         navigator.clipboard.writeText(staticWallet.address);
+        startDepositListening(15);
         setCopied(true);
         toast.success("Address copied to clipboard!");
         setTimeout(() => setCopied(false), 2000);

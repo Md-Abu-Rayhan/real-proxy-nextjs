@@ -25,10 +25,11 @@ interface WalletContextType {
     isTopUpModalOpen: boolean;
     openTopUpModal: () => void;
     closeTopUpModal: () => void;
-    refreshWallet: () => Promise<WalletSummary | undefined>;
+    refreshWallet: (force?: boolean) => Promise<WalletSummary | undefined>;
     depositSuccessData: DepositSuccessData | null;
     showDepositSuccess: (data: DepositSuccessData) => void;
     closeDepositSuccess: () => void;
+    startDepositListening: (durationMinutes?: number) => void;
 }
 
 const WalletContext = createContext<WalletContextType>({
@@ -46,6 +47,7 @@ const WalletContext = createContext<WalletContextType>({
     depositSuccessData: null,
     showDepositSuccess: () => {},
     closeDepositSuccess: () => {},
+    startDepositListening: () => {},
 });
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -64,6 +66,37 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [depositSuccessData, setDepositSuccessData] = useState<DepositSuccessData | null>(null);
     const [isDepositSuccessOpen, setIsDepositSuccessOpen] = useState<boolean>(false);
     const lastKnownBalanceRef = useRef<number | null>(null);
+    const isFetchingRef = useRef<boolean>(false);
+    const lastFetchTimeRef = useRef<number>(0);
+
+    const startDepositListening = useCallback((durationMinutes = 15) => {
+        if (typeof window === 'undefined') return;
+        try {
+            sessionStorage.setItem('crypto_deposit_listening_until', String(Date.now() + durationMinutes * 60 * 1000));
+        } catch {
+            // Ignore storage restrictions
+        }
+    }, []);
+
+    const isDepositListeningActive = useCallback((): boolean => {
+        if (typeof window === 'undefined') return false;
+        try {
+            const expiry = sessionStorage.getItem('crypto_deposit_listening_until');
+            if (!expiry) return false;
+            return Date.now() < Number(expiry);
+        } catch {
+            return false;
+        }
+    }, []);
+
+    const stopDepositListening = useCallback(() => {
+        if (typeof window === 'undefined') return;
+        try {
+            sessionStorage.removeItem('crypto_deposit_listening_until');
+        } catch {
+            // Ignore
+        }
+    }, []);
 
     const showDepositSuccess = useCallback((data: DepositSuccessData) => {
         setDepositSuccessData(data);
@@ -74,7 +107,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsDepositSuccessOpen(false);
     }, []);
 
-    const refreshWallet = useCallback(async () => {
+    const refreshWallet = useCallback(async (force = false) => {
         if (typeof window === 'undefined') return;
         const token = localStorage.getItem('auth_token');
         if (!token) {
@@ -82,10 +115,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             return;
         }
 
+        // Throttle rapid duplicate calls unless forced
+        const now = Date.now();
+        if (!force && isFetchingRef.current) return;
+        if (!force && now - lastFetchTimeRef.current < 2000) return;
+
+        isFetchingRef.current = true;
         try {
             const res = await axios.get<WalletSummary>(`${API_URL}/api/Wallet/summary`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+
+            lastFetchTimeRef.current = Date.now();
 
             if (res.data) {
                 const newBal = Number(res.data.balanceUsd ?? 0);
@@ -104,6 +145,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 // If balance increased in background on ANY page, trigger global celebration popup!
                 if (prevBal !== null && newBal > prevBal + 0.001) {
                     const diff = Number((newBal - prevBal).toFixed(2));
+                    // Deposit completed! Stop active polling session immediately
+                    stopDepositListening();
+
                     showDepositSuccess({
                         amountUsd: diff,
                         newBalanceUsd: newBal,
@@ -119,47 +163,55 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } catch (error) {
             console.warn('Failed to fetch wallet summary:', error);
         } finally {
+            isFetchingRef.current = false;
             setIsLoading(false);
         }
         return undefined;
-    }, [showDepositSuccess]);
+    }, [showDepositSuccess, stopDepositListening]);
 
     useEffect(() => {
-        refreshWallet();
+        refreshWallet(true);
 
         // Listen for storage events (e.g. login/logout in another tab)
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === 'auth_token') {
-                refreshWallet();
+                refreshWallet(true);
             }
         };
 
-        // Auto-refresh when tab is focused (e.g. user returns after paying on Binance/Crypto wallet)
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                refreshWallet();
+        // Instant refresh when user returns to tab (e.g. from Binance or crypto app)
+        const handleVisibilityOrFocus = () => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                if (Date.now() - lastFetchTimeRef.current > 4000) {
+                    refreshWallet();
+                }
             }
         };
 
         window.addEventListener('storage', handleStorageChange);
-        window.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('visibilitychange', handleVisibilityOrFocus);
+        window.addEventListener('focus', handleVisibilityOrFocus);
         return () => {
             window.removeEventListener('storage', handleStorageChange);
-            window.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+            window.removeEventListener('focus', handleVisibilityOrFocus);
         };
     }, [refreshWallet]);
 
-    // Global background interval to monitor incoming deposits across all dashboard pages
+    // Smart zero-load interval: Only polls IF user has an active deposit listening session AND the tab is visible!
+    // Regular users browsing other dashboard pages generate ZERO background polling load.
     useEffect(() => {
-        const token = localStorage.getItem('auth_token');
-        if (!token) return;
-
         const interval = setInterval(() => {
-            refreshWallet();
-        }, 8000);
+            if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+                return; // Tab is minimized or hidden -> Zero load
+            }
+            if (isDepositListeningActive()) {
+                refreshWallet();
+            }
+        }, 12000);
 
         return () => clearInterval(interval);
-    }, [refreshWallet]);
+    }, [isDepositListeningActive, refreshWallet]);
 
     const openTopUpModal = () => setIsTopUpModalOpen(true);
     const closeTopUpModal = () => setIsTopUpModalOpen(false);
@@ -181,6 +233,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 depositSuccessData,
                 showDepositSuccess,
                 closeDepositSuccess,
+                startDepositListening,
             }}
         >
             {children}
