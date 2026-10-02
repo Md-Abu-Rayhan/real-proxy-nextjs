@@ -31,7 +31,6 @@ import { API_URL } from '@/lib/config';
 import { useWallet } from '@/context/WalletContext';
 import { createPaymentSession, getPaymentStatus, getUserFromToken } from '@/lib/paymentApi';
 import Link from 'next/link';
-import { DepositSuccessModal, DepositSuccessData } from '@/components/ui/DepositSuccessModal';
 
 interface StaticWalletData {
     currency: string;
@@ -76,7 +75,8 @@ export default function WalletPage() {
         totalDepositedUsd,
         totalSpentUsd,
         exchangeRateBdt,
-        refreshWallet
+        refreshWallet,
+        showDepositSuccess
     } = useWallet();
 
     const router = useRouter();
@@ -102,10 +102,6 @@ export default function WalletPage() {
 
     // Affiliate Convert State
     const [isConvertingAffiliate, setIsConvertingAffiliate] = useState<boolean>(false);
-
-    // Deposit Celebration Modal State
-    const [depositSuccessData, setDepositSuccessData] = useState<DepositSuccessData | null>(null);
-    const [isDepositSuccessOpen, setIsDepositSuccessOpen] = useState<boolean>(false);
     const lastKnownBalanceRef = useRef<number>(balanceUsd);
 
     useEffect(() => {
@@ -176,14 +172,13 @@ export default function WalletPage() {
                     const newBal = updated?.balanceUsd ?? (balanceUsd + usdEquiv);
                     lastKnownBalanceRef.current = newBal;
 
-                    setDepositSuccessData({
+                    showDepositSuccess({
                         amountUsd: usdEquiv,
                         newBalanceUsd: newBal,
                         currency: 'BDT',
                         network: `৳${bdtAmount.toLocaleString()} BDT`,
                         method: 'PayStation (bKash)'
                     });
-                    setIsDepositSuccessOpen(true);
 
                     toast.success(`🎉 Deposit Confirmed! ৳${bdtAmount.toLocaleString()} BDT (+$${usdEquiv} USD) credited to your wallet!`, {
                         duration: 6000
@@ -263,15 +258,14 @@ export default function WalletPage() {
                     await refreshWallet();
                     await fetchTransactions(1, txFilter);
 
-                    // Trigger the celebratory Deposit Success Modal Popup
-                    setDepositSuccessData({
+                    // Trigger the celebratory Deposit Success Modal Popup globally
+                    showDepositSuccess({
                         amountUsd: amountAdded > 0 ? amountAdded : (backendBalance !== null && prevBal > 0 ? backendBalance - prevBal : 0),
                         newBalanceUsd: backendBalance ?? (prevBal + amountAdded),
                         currency: selectedCrypto.currency,
                         network: selectedCrypto.label,
                         method: 'Cryptomus'
                     });
-                    setIsDepositSuccessOpen(true);
 
                     toast.success(`🎉 Deposit Confirmed! +$${amountAdded.toFixed(2)} USD added to your wallet!`, {
                         duration: 6000
@@ -286,7 +280,7 @@ export default function WalletPage() {
 
         const interval = setInterval(checkDeposits, 5000);
         return () => clearInterval(interval);
-    }, [activeTab, selectedCrypto, refreshWallet, fetchTransactions, txFilter]);
+    }, [activeTab, selectedCrypto, refreshWallet, fetchTransactions, txFilter, showDepositSuccess]);
 
     const handleSyncCryptoDeposits = async () => {
         setIsSyncingCrypto(true);
@@ -324,14 +318,13 @@ export default function WalletPage() {
                     lastKnownBalanceRef.current = backendBalance;
                 }
 
-                setDepositSuccessData({
+                showDepositSuccess({
                     amountUsd: amountAdded > 0 ? amountAdded : (backendBalance !== null && prevBal > 0 ? backendBalance - prevBal : 0),
                     newBalanceUsd: backendBalance ?? (prevBal + amountAdded),
                     currency: selectedCrypto.currency,
                     network: selectedCrypto.label,
                     method: 'Cryptomus'
                 });
-                setIsDepositSuccessOpen(true);
 
                 toast.success(`🎉 Deposit Confirmed! +$${amountAdded.toFixed(2)} USD added to your wallet!`, {
                     duration: 6000
@@ -1063,14 +1056,6 @@ export default function WalletPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Deposit Success Celebration Modal */}
-            <DepositSuccessModal
-                isOpen={isDepositSuccessOpen}
-                onClose={() => setIsDepositSuccessOpen(false)}
-                data={depositSuccessData}
-                onBuyProxies={() => router.push('/dashboard/residential-proxies')}
-            />
 
             {/* Spacious, Generously Padded Stylesheet */}
             <style jsx>{`

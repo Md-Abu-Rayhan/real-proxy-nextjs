@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, DollarSign, Wallet, ArrowRight, X, Sparkles, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Wallet, ArrowRight, X, Sparkles, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export interface DepositSuccessData {
@@ -48,509 +47,526 @@ export const DepositSuccessModal: React.FC<DepositSuccessModalProps> = ({
     const displayNetwork = data.network || data.currency || 'Crypto';
 
     return (
-        <AnimatePresence>
-            <div className="deposit-modal-backdrop" onClick={onClose}>
-                <motion.div
-                    className="deposit-modal-card"
-                    initial={{ opacity: 0, scale: 0.92, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.92, y: 20 }}
-                    transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                    onClick={(e) => e.stopPropagation()}
+        <div
+            className="deposit-modal-backdrop"
+            onClick={onClose}
+            style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 99999,
+                backgroundColor: 'rgba(10, 15, 29, 0.75)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '16px'
+            }}
+        >
+            <div
+                className="deposit-modal-card"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    position: 'relative',
+                    width: '100%',
+                    maxWidth: '440px',
+                    borderRadius: '24px',
+                    overflow: 'hidden',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(226, 232, 240, 0.8)'
+                }}
+            >
+                {/* Top ambient glow bar */}
+                <div className="glow-banner" />
+
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    className="modal-close-btn"
+                    aria-label="Close"
+                    type="button"
                 >
-                    {/* Top ambient glow bar */}
-                    <div className="glow-banner" />
+                    <X size={18} />
+                </button>
 
-                    {/* Close Button */}
-                    <button onClick={onClose} className="modal-close-btn" aria-label="Close">
-                        <X size={18} />
-                    </button>
-
-                    <div className="modal-content">
-                        {/* Animated Celebration Icon */}
-                        <div className="celebration-icon-wrap">
-                            <div className="pulse-ring" />
-                            <div className="icon-circle">
-                                <CheckCircle2 size={44} className="success-icon" />
-                            </div>
-                            <div className="sparkle-badge">
-                                <Sparkles size={14} />
-                            </div>
+                <div className="modal-content-inner">
+                    {/* Animated Celebration Icon */}
+                    <div className="celebration-icon-wrap">
+                        <div className="pulse-ring" />
+                        <div className="icon-circle">
+                            <CheckCircle2 size={40} className="success-icon" />
                         </div>
-
-                        {/* Title & Subtitle */}
-                        <h3 className="modal-heading">Deposit Confirmed!</h3>
-                        <p className="modal-subheading">
-                            Your payment has been verified on the blockchain and instantly credited to your wallet.
-                        </p>
-
-                        {/* Credited Amount Card */}
-                        <div className="amount-highlight-card">
-                            <span className="amount-label">Credited to Balance</span>
-                            <div className="amount-row">
-                                <span className="plus-sign">+</span>
-                                <span className="dollar-symbol">$</span>
-                                <span className="amount-val">{formattedAmount}</span>
-                                <span className="currency-tag">USD</span>
-                            </div>
-                        </div>
-
-                        {/* Details Breakdown */}
-                        <div className="details-card">
-                            <div className="detail-item">
-                                <span className="detail-label">Status</span>
-                                <div className="status-badge">
-                                    <span className="status-dot" />
-                                    <span>Completed</span>
-                                </div>
-                            </div>
-
-                            <div className="detail-item">
-                                <span className="detail-label">Method / Network</span>
-                                <span className="detail-value">
-                                    <ShieldCheck size={14} className="val-icon" />
-                                    {displayMethod} ({displayNetwork})
-                                </span>
-                            </div>
-
-                            <div className="detail-item total-row">
-                                <span className="detail-label">Updated Wallet Balance</span>
-                                <div className="new-balance-wrap">
-                                    <Wallet size={15} className="wallet-icon" />
-                                    <span className="new-balance-val">${formattedNewBalance} USD</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="modal-actions">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    onClose();
-                                    if (onBuyProxies) {
-                                        onBuyProxies();
-                                    } else {
-                                        router.push('/dashboard/residential-proxies');
-                                    }
-                                }}
-                                className="btn-buy-proxies"
-                            >
-                                <span>Buy Proxies Now</span>
-                                <ArrowRight size={16} />
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="btn-done"
-                            >
-                                Done
-                            </button>
+                        <div className="sparkle-badge">
+                            <Sparkles size={13} />
                         </div>
                     </div>
-                </motion.div>
 
-                <style jsx>{`
-                    .deposit-modal-backdrop {
-                        position: fixed;
-                        inset: 0;
-                        z-index: 10000;
-                        background: rgba(10, 15, 29, 0.75);
-                        backdrop-filter: blur(8px);
-                        -webkit-backdrop-filter: blur(8px);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 16px;
-                    }
+                    {/* Title & Subtitle */}
+                    <h3 className="modal-heading">Deposit Confirmed!</h3>
+                    <p className="modal-subheading">
+                        Your payment has been verified on the blockchain and instantly credited to your wallet.
+                    </p>
 
-                    .deposit-modal-card {
-                        background: #FFFFFF;
-                        border-radius: 24px;
-                        width: 100%;
-                        max-width: 440px;
-                        overflow: hidden;
-                        position: relative;
-                        box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(226, 232, 240, 0.8);
-                        animation: popUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                    }
+                    {/* Credited Amount Card */}
+                    <div className="amount-highlight-card">
+                        <span className="amount-label">Credited to Balance</span>
+                        <div className="amount-row">
+                            <span className="plus-sign">+</span>
+                            <span className="dollar-symbol">$</span>
+                            <span className="amount-val">{formattedAmount}</span>
+                            <span className="currency-tag">USD</span>
+                        </div>
+                    </div>
 
-                    :global(body.dark-mode) .deposit-modal-card {
-                        background: #0B1120;
-                        box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
-                    }
+                    {/* Details Breakdown */}
+                    <div className="details-card">
+                        <div className="detail-item">
+                            <span className="detail-label">Status</span>
+                            <div className="status-badge">
+                                <span className="status-dot" />
+                                <span>Completed</span>
+                            </div>
+                        </div>
 
-                    .glow-banner {
-                        height: 5px;
-                        width: 100%;
-                        background: linear-gradient(90deg, #10B981, #0086FF, #10B981);
-                        background-size: 200% 100%;
-                        animation: shineGlow 3s linear infinite;
-                    }
+                        <div className="detail-item">
+                            <span className="detail-label">Method / Network</span>
+                            <span className="detail-value">
+                                <ShieldCheck size={14} className="val-icon" />
+                                {displayMethod} ({displayNetwork})
+                            </span>
+                        </div>
 
-                    @keyframes shineGlow {
-                        0% { background-position: 0% 50%; }
-                        100% { background-position: 200% 50%; }
-                    }
+                        <div className="detail-item total-row">
+                            <span className="detail-label">Updated Wallet Balance</span>
+                            <div className="new-balance-wrap">
+                                <Wallet size={15} className="wallet-icon" />
+                                <span className="new-balance-val">${formattedNewBalance} USD</span>
+                            </div>
+                        </div>
+                    </div>
 
-                    .modal-close-btn {
-                        position: absolute;
-                        top: 16px;
-                        right: 16px;
-                        width: 32px;
-                        height: 32px;
-                        border-radius: 50%;
-                        border: none;
-                        background: #F1F5F9;
-                        color: #64748B;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        cursor: pointer;
-                        transition: all 0.2s ease;
-                        z-index: 10;
-                    }
+                    {/* Action Buttons */}
+                    <div className="modal-actions">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onClose();
+                                if (onBuyProxies) {
+                                    onBuyProxies();
+                                } else {
+                                    router.push('/dashboard/residential-proxies');
+                                }
+                            }}
+                            className="btn-buy-proxies"
+                        >
+                            <span>Buy Proxies Now</span>
+                            <ArrowRight size={16} />
+                        </button>
 
-                    .modal-close-btn:hover {
-                        background: #E2E8F0;
-                        color: #0F172A;
-                    }
-
-                    :global(body.dark-mode) .modal-close-btn {
-                        background: rgba(255, 255, 255, 0.08);
-                        color: #94A3B8;
-                    }
-
-                    :global(body.dark-mode) .modal-close-btn:hover {
-                        background: rgba(255, 255, 255, 0.15);
-                        color: #FFFFFF;
-                    }
-
-                    .modal-content {
-                        padding: 32px 28px 28px 28px;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        text-align: center;
-                    }
-
-                    .celebration-icon-wrap {
-                        position: relative;
-                        margin-bottom: 20px;
-                    }
-
-                    .pulse-ring {
-                        position: absolute;
-                        inset: -8px;
-                        border-radius: 50%;
-                        background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0) 70%);
-                        animation: pulseExpand 2s infinite ease-out;
-                    }
-
-                    @keyframes pulseExpand {
-                        0% { transform: scale(0.9); opacity: 0.8; }
-                        50% { transform: scale(1.25); opacity: 0.3; }
-                        100% { transform: scale(0.9); opacity: 0.8; }
-                    }
-
-                    .icon-circle {
-                        width: 76px;
-                        height: 76px;
-                        border-radius: 50%;
-                        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
-                        border: 2px solid rgba(16, 185, 129, 0.3);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        color: #10B981;
-                        position: relative;
-                        z-index: 1;
-                        box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
-                    }
-
-                    .sparkle-badge {
-                        position: absolute;
-                        top: -2px;
-                        right: -4px;
-                        width: 26px;
-                        height: 26px;
-                        border-radius: 50%;
-                        background: #F59E0B;
-                        color: #FFFFFF;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);
-                        z-index: 2;
-                        animation: bounceSoft 2s infinite ease-in-out;
-                    }
-
-                    @keyframes bounceSoft {
-                        0%, 100% { transform: translateY(0); }
-                        50% { transform: translateY(-3px); }
-                    }
-
-                    .modal-heading {
-                        font-size: 22px;
-                        font-weight: 800;
-                        color: #0F172A;
-                        margin: 0 0 6px 0;
-                        letter-spacing: -0.02em;
-                    }
-
-                    :global(body.dark-mode) .modal-heading {
-                        color: #F8FAFC;
-                    }
-
-                    .modal-subheading {
-                        font-size: 13px;
-                        color: #64748B;
-                        margin: 0 0 22px 0;
-                        line-height: 1.5;
-                        max-width: 340px;
-                    }
-
-                    :global(body.dark-mode) .modal-subheading {
-                        color: #94A3B8;
-                    }
-
-                    .amount-highlight-card {
-                        width: 100%;
-                        background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(0, 134, 255, 0.06) 100%);
-                        border: 1.5px solid rgba(16, 185, 129, 0.25);
-                        border-radius: 16px;
-                        padding: 16px 20px;
-                        margin-bottom: 20px;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                    }
-
-                    :global(body.dark-mode) .amount-highlight-card {
-                        background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(0, 134, 255, 0.08) 100%);
-                        border-color: rgba(16, 185, 129, 0.35);
-                    }
-
-                    .amount-label {
-                        font-size: 11px;
-                        font-weight: 700;
-                        text-transform: uppercase;
-                        letter-spacing: 0.06em;
-                        color: #059669;
-                        margin-bottom: 4px;
-                    }
-
-                    :global(body.dark-mode) .amount-label {
-                        color: #34D399;
-                    }
-
-                    .amount-row {
-                        display: flex;
-                        align-items: baseline;
-                        gap: 2px;
-                    }
-
-                    .plus-sign {
-                        font-size: 24px;
-                        font-weight: 800;
-                        color: #10B981;
-                    }
-
-                    .dollar-symbol {
-                        font-size: 20px;
-                        font-weight: 800;
-                        color: #10B981;
-                        margin-right: 1px;
-                    }
-
-                    .amount-val {
-                        font-size: 34px;
-                        font-weight: 900;
-                        color: #0F172A;
-                        letter-spacing: -0.03em;
-                    }
-
-                    :global(body.dark-mode) .amount-val {
-                        color: #FFFFFF;
-                    }
-
-                    .currency-tag {
-                        font-size: 14px;
-                        font-weight: 700;
-                        color: #10B981;
-                        margin-left: 6px;
-                    }
-
-                    .details-card {
-                        width: 100%;
-                        background: #F8FAFC;
-                        border: 1px solid #E2E8F0;
-                        border-radius: 14px;
-                        padding: 14px 16px;
-                        margin-bottom: 24px;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 12px;
-                    }
-
-                    :global(body.dark-mode) .details-card {
-                        background: #111A2E;
-                        border-color: rgba(255, 255, 255, 0.08);
-                    }
-
-                    .detail-item {
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        font-size: 12px;
-                    }
-
-                    .detail-label {
-                        color: #64748B;
-                        font-weight: 500;
-                    }
-
-                    :global(body.dark-mode) .detail-label {
-                        color: #94A3B8;
-                    }
-
-                    .detail-value {
-                        color: #0F172A;
-                        font-weight: 600;
-                        display: flex;
-                        align-items: center;
-                        gap: 5px;
-                    }
-
-                    :global(body.dark-mode) .detail-value {
-                        color: #E2E8F0;
-                    }
-
-                    .val-icon {
-                        color: #0086FF;
-                    }
-
-                    .status-badge {
-                        display: inline-flex;
-                        align-items: center;
-                        gap: 6px;
-                        padding: 3px 10px;
-                        border-radius: 20px;
-                        background: rgba(16, 185, 129, 0.12);
-                        color: #059669;
-                        font-weight: 700;
-                        font-size: 11px;
-                    }
-
-                    :global(body.dark-mode) .status-badge {
-                        background: rgba(16, 185, 129, 0.2);
-                        color: #34D399;
-                    }
-
-                    .status-dot {
-                        width: 6px;
-                        height: 6px;
-                        border-radius: 50%;
-                        background: #10B981;
-                        box-shadow: 0 0 6px #10B981;
-                        animation: blink 1.5s infinite;
-                    }
-
-                    @keyframes blink {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.4; }
-                    }
-
-                    .total-row {
-                        padding-top: 10px;
-                        border-top: 1px dashed #CBD5E1;
-                    }
-
-                    :global(body.dark-mode) .total-row {
-                        border-top-color: rgba(255, 255, 255, 0.1);
-                    }
-
-                    .new-balance-wrap {
-                        display: flex;
-                        align-items: center;
-                        gap: 6px;
-                    }
-
-                    .wallet-icon {
-                        color: #10B981;
-                    }
-
-                    .new-balance-val {
-                        font-size: 14px;
-                        font-weight: 800;
-                        color: #10B981;
-                    }
-
-                    .modal-actions {
-                        width: 100%;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 10px;
-                    }
-
-                    .btn-buy-proxies {
-                        width: 100%;
-                        padding: 13px 20px;
-                        border-radius: 12px;
-                        border: none;
-                        background: linear-gradient(135deg, #0086FF 0%, #005AC2 100%);
-                        color: #FFFFFF;
-                        font-size: 14px;
-                        font-weight: 700;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 8px;
-                        cursor: pointer;
-                        box-shadow: 0 4px 14px rgba(0, 134, 255, 0.35);
-                        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                    }
-
-                    .btn-buy-proxies:hover {
-                        transform: translateY(-1px);
-                        box-shadow: 0 6px 18px rgba(0, 134, 255, 0.45);
-                    }
-
-                    .btn-buy-proxies:active {
-                        transform: translateY(0);
-                    }
-
-                    .btn-done {
-                        width: 100%;
-                        padding: 11px 20px;
-                        border-radius: 12px;
-                        border: 1px solid #E2E8F0;
-                        background: #FFFFFF;
-                        color: #64748B;
-                        font-size: 13px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        transition: all 0.2s ease;
-                    }
-
-                    .btn-done:hover {
-                        background: #F8FAFC;
-                        color: #0F172A;
-                    }
-
-                    :global(body.dark-mode) .btn-done {
-                        background: transparent;
-                        border-color: rgba(255, 255, 255, 0.12);
-                        color: #94A3B8;
-                    }
-
-                    :global(body.dark-mode) .btn-done:hover {
-                        background: rgba(255, 255, 255, 0.05);
-                        color: #F8FAFC;
-                    }
-                `}</style>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="btn-done"
+                        >
+                            Done
+                        </button>
+                    </div>
+                </div>
             </div>
-        </AnimatePresence>
+
+            <style jsx global>{`
+                .deposit-modal-backdrop {
+                    position: fixed !important;
+                    inset: 0 !important;
+                    z-index: 99999 !important;
+                    background-color: rgba(10, 15, 29, 0.78) !important;
+                    backdrop-filter: blur(8px) !important;
+                    -webkit-backdrop-filter: blur(8px) !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    padding: 16px !important;
+                    animation: backdropFadeIn 0.2s ease-out !important;
+                }
+
+                @keyframes backdropFadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+
+                .deposit-modal-card {
+                    background-color: #FFFFFF !important;
+                    border-radius: 24px !important;
+                    width: 100% !important;
+                    max-width: 440px !important;
+                    overflow: hidden !important;
+                    position: relative !important;
+                    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(226, 232, 240, 0.8) !important;
+                    animation: popInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                }
+
+                @keyframes popInModal {
+                    from { transform: scale(0.92); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+
+                body.dark-mode .deposit-modal-card {
+                    background-color: #0F172A !important;
+                    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
+                }
+
+                .glow-banner {
+                    height: 5px !important;
+                    width: 100% !important;
+                    background: linear-gradient(90deg, #10B981, #0086FF, #10B981) !important;
+                    background-size: 200% 100% !important;
+                    animation: shineGlowBar 3s linear infinite !important;
+                }
+
+                @keyframes shineGlowBar {
+                    0% { background-position: 0% 50%; }
+                    100% { background-position: 200% 50%; }
+                }
+
+                .modal-close-btn {
+                    position: absolute !important;
+                    top: 16px !important;
+                    right: 16px !important;
+                    width: 32px !important;
+                    height: 32px !important;
+                    border-radius: 50% !important;
+                    border: none !important;
+                    background: #F1F5F9 !important;
+                    color: #64748B !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    cursor: pointer !important;
+                    transition: all 0.2s ease !important;
+                    z-index: 10 !important;
+                }
+
+                .modal-close-btn:hover {
+                    background: #E2E8F0 !important;
+                    color: #0F172A !important;
+                }
+
+                body.dark-mode .modal-close-btn {
+                    background: rgba(255, 255, 255, 0.1) !important;
+                    color: #94A3B8 !important;
+                }
+
+                body.dark-mode .modal-close-btn:hover {
+                    background: rgba(255, 255, 255, 0.18) !important;
+                    color: #FFFFFF !important;
+                }
+
+                .modal-content-inner {
+                    padding: 28px 24px 24px 24px !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    align-items: center !important;
+                    text-align: center !important;
+                }
+
+                .celebration-icon-wrap {
+                    position: relative !important;
+                    margin-bottom: 16px !important;
+                }
+
+                .pulse-ring {
+                    position: absolute !important;
+                    inset: -8px !important;
+                    border-radius: 50% !important;
+                    background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0) 70%) !important;
+                    animation: pulseExpandRing 2s infinite ease-out !important;
+                }
+
+                @keyframes pulseExpandRing {
+                    0% { transform: scale(0.9); opacity: 0.8; }
+                    50% { transform: scale(1.25); opacity: 0.3; }
+                    100% { transform: scale(0.9); opacity: 0.8; }
+                }
+
+                .icon-circle {
+                    width: 72px !important;
+                    height: 72px !important;
+                    border-radius: 50% !important;
+                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%) !important;
+                    border: 2px solid rgba(16, 185, 129, 0.3) !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    color: #10B981 !important;
+                    position: relative !important;
+                    z-index: 1 !important;
+                    box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3) !important;
+                }
+
+                .sparkle-badge {
+                    position: absolute !important;
+                    top: -2px !important;
+                    right: -4px !important;
+                    width: 24px !important;
+                    height: 24px !important;
+                    border-radius: 50% !important;
+                    background: #F59E0B !important;
+                    color: #FFFFFF !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4) !important;
+                    z-index: 2 !important;
+                }
+
+                .modal-heading {
+                    font-size: 20px !important;
+                    font-weight: 800 !important;
+                    color: #0F172A !important;
+                    margin: 0 0 6px 0 !important;
+                    letter-spacing: -0.02em !important;
+                }
+
+                body.dark-mode .modal-heading {
+                    color: #F8FAFC !important;
+                }
+
+                .modal-subheading {
+                    font-size: 13px !important;
+                    color: #64748B !important;
+                    margin: 0 0 18px 0 !important;
+                    line-height: 1.45 !important;
+                    max-width: 340px !important;
+                }
+
+                body.dark-mode .modal-subheading {
+                    color: #94A3B8 !important;
+                }
+
+                .amount-highlight-card {
+                    width: 100% !important;
+                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(0, 134, 255, 0.05) 100%) !important;
+                    border: 1.5px solid rgba(16, 185, 129, 0.25) !important;
+                    border-radius: 16px !important;
+                    padding: 14px 18px !important;
+                    margin-bottom: 18px !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    align-items: center !important;
+                }
+
+                body.dark-mode .amount-highlight-card {
+                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(0, 134, 255, 0.08) 100%) !important;
+                    border-color: rgba(16, 185, 129, 0.35) !important;
+                }
+
+                .amount-label {
+                    font-size: 11px !important;
+                    font-weight: 700 !important;
+                    text-transform: uppercase !important;
+                    letter-spacing: 0.06em !important;
+                    color: #059669 !important;
+                    margin-bottom: 4px !important;
+                }
+
+                body.dark-mode .amount-label {
+                    color: #34D399 !important;
+                }
+
+                .amount-row {
+                    display: flex !important;
+                    align-items: baseline !important;
+                    gap: 2px !important;
+                }
+
+                .plus-sign {
+                    font-size: 22px !important;
+                    font-weight: 800 !important;
+                    color: #10B981 !important;
+                }
+
+                .dollar-symbol {
+                    font-size: 18px !important;
+                    font-weight: 800 !important;
+                    color: #10B981 !important;
+                    margin-right: 1px !important;
+                }
+
+                .amount-val {
+                    font-size: 32px !important;
+                    font-weight: 900 !important;
+                    color: #0F172A !important;
+                    letter-spacing: -0.03em !important;
+                }
+
+                body.dark-mode .amount-val {
+                    color: #FFFFFF !important;
+                }
+
+                .currency-tag {
+                    font-size: 13px !important;
+                    font-weight: 700 !important;
+                    color: #10B981 !important;
+                    margin-left: 6px !important;
+                }
+
+                .details-card {
+                    width: 100% !important;
+                    background: #F8FAFC !important;
+                    border: 1px solid #E2E8F0 !important;
+                    border-radius: 14px !important;
+                    padding: 12px 14px !important;
+                    margin-bottom: 20px !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 10px !important;
+                }
+
+                body.dark-mode .details-card {
+                    background: #111A2E !important;
+                    border-color: rgba(255, 255, 255, 0.08) !important;
+                }
+
+                .detail-item {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: space-between !important;
+                    font-size: 12px !important;
+                }
+
+                .detail-label {
+                    color: #64748B !important;
+                    font-weight: 500 !important;
+                }
+
+                body.dark-mode .detail-label {
+                    color: #94A3B8 !important;
+                }
+
+                .detail-value {
+                    color: #0F172A !important;
+                    font-weight: 600 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 5px !important;
+                }
+
+                body.dark-mode .detail-value {
+                    color: #E2E8F0 !important;
+                }
+
+                .val-icon {
+                    color: #0086FF !important;
+                }
+
+                .status-badge {
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    gap: 6px !important;
+                    padding: 2px 9px !important;
+                    border-radius: 20px !important;
+                    background: rgba(16, 185, 129, 0.12) !important;
+                    color: #059669 !important;
+                    font-weight: 700 !important;
+                    font-size: 11px !important;
+                }
+
+                body.dark-mode .status-badge {
+                    background: rgba(16, 185, 129, 0.2) !important;
+                    color: #34D399 !important;
+                }
+
+                .status-dot {
+                    width: 6px !important;
+                    height: 6px !important;
+                    border-radius: 50% !important;
+                    background: #10B981 !important;
+                    box-shadow: 0 0 6px #10B981 !important;
+                }
+
+                .total-row {
+                    padding-top: 8px !important;
+                    border-top: 1px dashed #CBD5E1 !important;
+                }
+
+                body.dark-mode .total-row {
+                    border-top-color: rgba(255, 255, 255, 0.1) !important;
+                }
+
+                .new-balance-wrap {
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 6px !important;
+                }
+
+                .wallet-icon {
+                    color: #10B981 !important;
+                }
+
+                .new-balance-val {
+                    font-size: 13px !important;
+                    font-weight: 800 !important;
+                    color: #10B981 !important;
+                }
+
+                .modal-actions {
+                    width: 100% !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 9px !important;
+                }
+
+                .btn-buy-proxies {
+                    width: 100% !important;
+                    padding: 12px 18px !important;
+                    border-radius: 12px !important;
+                    border: none !important;
+                    background: linear-gradient(135deg, #0086FF 0%, #005AC2 100%) !important;
+                    color: #FFFFFF !important;
+                    font-size: 13px !important;
+                    font-weight: 700 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    gap: 8px !important;
+                    cursor: pointer !important;
+                    box-shadow: 0 4px 14px rgba(0, 134, 255, 0.35) !important;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                }
+
+                .btn-buy-proxies:hover {
+                    transform: translateY(-1px) !important;
+                    box-shadow: 0 6px 18px rgba(0, 134, 255, 0.45) !important;
+                }
+
+                .btn-done {
+                    width: 100% !important;
+                    padding: 10px 18px !important;
+                    border-radius: 12px !important;
+                    border: 1px solid #E2E8F0 !important;
+                    background: #FFFFFF !important;
+                    color: #64748B !important;
+                    font-size: 13px !important;
+                    font-weight: 600 !important;
+                    cursor: pointer !important;
+                    transition: all 0.2s ease !important;
+                }
+
+                .btn-done:hover {
+                    background: #F8FAFC !important;
+                    color: #0F172A !important;
+                }
+
+                body.dark-mode .btn-done {
+                    background: transparent !important;
+                    border-color: rgba(255, 255, 255, 0.12) !important;
+                    color: #94A3B8 !important;
+                }
+
+                body.dark-mode .btn-done:hover {
+                    background: rgba(255, 255, 255, 0.05) !important;
+                    color: #F8FAFC !important;
+                }
+            `}</style>
+        </div>
     );
 };
