@@ -172,6 +172,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     useEffect(() => {
         refreshWallet(true);
 
+        // Allow previewing modal via ?test_deposit=1 query parameter
+        if (typeof window !== 'undefined' && window.location.search.includes('test_deposit=1')) {
+            showDepositSuccess({
+                amountUsd: 15.00,
+                newBalanceUsd: 41.56,
+                currency: 'USDT',
+                network: 'USDT (TRC-20)',
+                method: 'Cryptomus'
+            });
+        }
+
         // Listen for storage events (e.g. login/logout in another tab)
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === 'auth_token') {
@@ -188,15 +199,23 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }
         };
 
+        const handleTriggerDeposit = (e: any) => {
+            if (e.detail) {
+                showDepositSuccess(e.detail);
+            }
+        };
+
         window.addEventListener('storage', handleStorageChange);
         window.addEventListener('visibilitychange', handleVisibilityOrFocus);
         window.addEventListener('focus', handleVisibilityOrFocus);
+        window.addEventListener('trigger_deposit_success', handleTriggerDeposit);
         return () => {
             window.removeEventListener('storage', handleStorageChange);
             window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
             window.removeEventListener('focus', handleVisibilityOrFocus);
+            window.removeEventListener('trigger_deposit_success', handleTriggerDeposit);
         };
-    }, [refreshWallet]);
+    }, [refreshWallet, showDepositSuccess]);
 
     // Smart zero-load interval: Only polls IF user has an active deposit listening session AND the tab is visible!
     // Regular users browsing other dashboard pages generate ZERO background polling load.
