@@ -1144,26 +1144,6 @@ export default function WalletPage() {
                                     </div>
                                 </div>
 
-                                {/* Payment Summary Card */}
-                                <div className="payment-summary-card">
-                                    <div className="summary-row">
-                                        <span className="summary-label">Payment Method:</span>
-                                        <span className="summary-val">Binance Pay (Internal Transfer)</span>
-                                    </div>
-                                    <div className="summary-row">
-                                        <span className="summary-label">Network / Gas Fee:</span>
-                                        <span className="summary-val fee-free">
-                                            $0.00 (Zero Fee) <CheckCircle2 size={13} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
-                                        </span>
-                                    </div>
-                                    <div className="summary-row">
-                                        <span className="summary-label">Estimated Wallet Credit:</span>
-                                        <span className="summary-val credit-val">
-                                            ${Number(binanceAmountUsd || 0).toFixed(2)} USD
-                                        </span>
-                                    </div>
-                                </div>
-
                                 {/* Official Merchant Binance Pay ID Box */}
                                 <div className="binance-payid-box">
                                     <div className="binance-payid-header">
@@ -2714,32 +2694,75 @@ export default function WalletPage() {
 
                 @media (max-width: 600px) {
                     .main-responsive-container {
-                        padding: 0 0 95px 0;
+                        padding: 0 0 125px 0;
                         gap: 14px;
+                        width: 100%;
+                        max-width: 100%;
+                        overflow-x: hidden;
+                    }
+                    .action-card {
+                        padding: 16px 14px;
+                        border-radius: 14px;
+                    }
+                    .action-header {
+                        margin-bottom: 14px;
+                    }
+                    .action-title-row {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 8px;
+                    }
+                    .action-title {
+                        font-size: 17px;
+                    }
+                    .stats-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 8px;
+                    }
+                    .stat-card {
+                        padding: 12px 10px;
+                        min-height: 88px;
+                        border-radius: 12px;
+                    }
+                    .stat-title {
+                        font-size: 11px;
+                    }
+                    .stat-value {
+                        font-size: 18px;
+                    }
+                    .stat-sub {
+                        font-size: 10.5px;
+                    }
+                    .mini-rate-tag {
+                        font-size: 9.5px;
+                        padding: 1px 5px;
                     }
                     .tab-nav-row {
                         grid-template-columns: repeat(2, 1fr);
                         gap: 6px;
-                        padding: 6px;
+                        padding: 5px;
                         margin-bottom: 16px;
                     }
                     .method-tab-btn {
-                        flex-direction: column;
-                        justify-content: center;
+                        display: flex;
+                        flex-direction: row;
                         align-items: center;
-                        padding: 8px 3px;
-                        gap: 3px;
-                        text-align: center;
+                        justify-content: center;
+                        padding: 9px 6px;
+                        gap: 6px;
+                        min-height: 48px;
+                        border-radius: 10px;
                     }
                     .tab-text-box {
-                        align-items: center;
-                        text-align: center;
+                        align-items: flex-start;
+                        text-align: left;
                     }
                     .tab-title {
-                        font-size: 11px;
+                        font-size: 11.5px;
+                        font-weight: 700;
                     }
                     .tab-subtitle {
-                        font-size: 8.5px;
+                        font-size: 9px;
                     }
                     .mfs-logo {
                         height: 18px;
@@ -2751,50 +2774,104 @@ export default function WalletPage() {
                         height: 15px;
                     }
                     .step-guide-strip {
-                        font-size: 10.5px;
-                        padding: 8px 10px;
-                        gap: 2px;
-                    }
-                    .guide-step {
+                        display: grid;
+                        grid-template-columns: 1fr auto 1fr auto 1fr;
+                        align-items: center;
                         gap: 4px;
+                        padding: 9px 10px;
                         font-size: 10px;
                     }
-                    .step-num {
-                        width: 17px;
-                        height: 17px;
+                    .guide-step {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        text-align: center;
+                        gap: 3px;
                         font-size: 9.5px;
+                        line-height: 1.15;
+                    }
+                    .step-num {
+                        width: 20px;
+                        height: 20px;
+                        font-size: 10px;
                     }
                     .guide-arrow {
                         font-size: 11px;
+                        color: #94A3B8;
+                        margin-top: -10px;
+                    }
+                    .field-label-row {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 3px;
+                        margin-bottom: 4px;
+                    }
+                    .field-label {
+                        font-size: 13px;
+                        font-weight: 600;
+                    }
+                    .field-hint {
+                        font-size: 11px;
+                        color: #64748B;
                     }
                     .presets-row {
+                        display: grid;
                         grid-template-columns: repeat(3, 1fr);
-                        gap: 6px;
+                        gap: 7px;
                     }
                     .preset-btn {
-                        min-height: 48px;
-                        padding: 6px 2px;
+                        min-height: 52px;
+                        padding: 8px 4px;
+                        border-radius: 10px;
                     }
                     .preset-bdt {
-                        font-size: 12px;
+                        font-size: 13px;
+                        font-weight: 700;
                     }
                     .preset-usd {
-                        font-size: 9.5px;
+                        font-size: 10px;
+                        margin-top: 1px;
                     }
                     .conversion-info-box {
-                        padding: 10px 12px;
-                        flex-direction: row;
-                        justify-content: space-between;
-                        align-items: center;
+                        padding: 12px 14px;
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 8px;
                     }
                     .conv-title {
                         font-size: 12px;
                     }
                     .conv-sub {
-                        font-size: 10px;
+                        font-size: 10.5px;
                     }
                     .conv-amt {
-                        font-size: 16px;
+                        font-size: 18px;
+                        align-self: flex-start;
+                    }
+                    .binance-payid-box {
+                        padding: 12px 14px;
+                        gap: 8px;
+                    }
+                    .binance-id-row {
+                        padding: 8px 10px;
+                        gap: 8px;
+                    }
+                    .binance-id-val {
+                        font-size: 17px;
+                        letter-spacing: 0.5px;
+                    }
+                    .btn-copy-binance {
+                        padding: 6px 10px;
+                        font-size: 11px;
+                        white-space: nowrap;
+                    }
+                    .custom-action-btn {
+                        padding: 13px 14px;
+                        font-size: 14px;
+                        white-space: normal;
+                        text-align: center;
+                        line-height: 1.3;
                     }
                     .supported-channels-bar {
                         flex-direction: column;
