@@ -81,11 +81,18 @@ export default function WalletPage() {
     } = useWallet();
 
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<'bkash' | 'eps' | 'crypto'>('bkash');
+    const [activeTab, setActiveTab] = useState<'bkash' | 'eps' | 'crypto' | 'binance'>('bkash');
     const [customBdt, setCustomBdt] = useState<string>('1000');
     const [isPayStationLoading, setIsPayStationLoading] = useState<boolean>(false);
     const [isEpsLoading, setIsEpsLoading] = useState<boolean>(false);
     const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+    // Binance Pay State
+    const BINANCE_PAY_ID = '37492687';
+    const [binanceAmountUsd, setBinanceAmountUsd] = useState<string>('5');
+    const [binanceOrderId, setBinanceOrderId] = useState<string>('');
+    const [isBinanceVerifying, setIsBinanceVerifying] = useState<boolean>(false);
+    const [binanceIdCopied, setBinanceIdCopied] = useState<boolean>(false);
 
     // Crypto State
     const [selectedCrypto, setSelectedCrypto] = useState(SUPPORTED_CRYPTO_NETWORKS[0]);
@@ -482,6 +489,77 @@ export default function WalletPage() {
         }
     };
 
+    const handleCopyBinanceId = () => {
+        navigator.clipboard.writeText(BINANCE_PAY_ID);
+        setBinanceIdCopied(true);
+        toast.success("Binance Pay ID copied!");
+        setTimeout(() => setBinanceIdCopied(false), 2000);
+    };
+
+    const handleVerifyBinance = async () => {
+        const amount = Number(binanceAmountUsd);
+        if (!binanceOrderId.trim()) {
+            toast.error("Please enter your Binance Order ID / Transaction ID.");
+            return;
+        }
+        if (binanceOrderId.trim().length < 6) {
+            toast.error("Invalid Order ID format. Please check and try again.");
+            return;
+        }
+        if (isNaN(amount) || amount < 1) {
+            toast.error("Minimum deposit is $1.00 USD.");
+            return;
+        }
+        if (amount > 500) {
+            toast.error("Maximum deposit is $500.00 USD.");
+            return;
+        }
+
+        const userInfo = getUserFromToken();
+        if (!userInfo || !userInfo.userId) {
+            toast.error("Please login to proceed.");
+            router.push('/login');
+            return;
+        }
+
+        setIsBinanceVerifying(true);
+        try {
+            const token = localStorage.getItem('auth_token');
+            const res = await axios.post(`${API_URL}/api/Wallet/binance/verify`, {
+                orderId: binanceOrderId.trim(),
+                expectedAmount: amount
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (res.data && res.data.success) {
+                const credited = res.data.creditedAmount ?? amount;
+                const newBal = res.data.newWalletBalance;
+                toast.success(res.data.message || `Payment Verified! $${credited.toFixed(2)} USD added to your wallet.`);
+                setBinanceOrderId('');
+                await refreshWallet(true);
+                await fetchTransactions(1, txFilter);
+
+                if (showDepositSuccess) {
+                    showDepositSuccess({
+                        amountUsd: credited,
+                        newBalanceUsd: newBal ?? (balanceUsd + credited),
+                        currency: 'USDT',
+                        network: 'Binance Pay',
+                        method: 'Binance Pay'
+                    });
+                }
+            } else {
+                toast.error(res.data?.message || "Verification failed.");
+            }
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || "Failed to verify transaction. Please check your Order ID and try again.";
+            toast.error(msg);
+        } finally {
+            setIsBinanceVerifying(false);
+        }
+    };
+
     const handleConvertAffiliate = async () => {
         if (affiliateBalanceUsd <= 0) {
             toast.error("No affiliate earnings available to transfer.");
@@ -670,6 +748,19 @@ export default function WalletPage() {
                                     <QrCode size={18} />
                                 </div>
                                 <span className="tab-title">Crypto</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('binance')}
+                                className={`method-tab-btn ${activeTab === 'binance' ? 'active binance-active' : ''}`}
+                            >
+                                <div className="tab-icon-box binance-icon-box">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#F0B90B">
+                                        <path d="M16.624 13.9202l2.715-2.715 2.715 2.715-2.715 2.715-2.715-2.715zm-4.624-4.624l2.715-2.715 2.715 2.715-2.715 2.715-2.715-2.715zm0 9.248l2.715-2.715 2.715 2.715-2.715 2.715-2.715-2.715zm-4.624-4.624l2.715-2.715 2.715 2.715-2.715 2.715-2.715-2.715zm4.624-4.624l2.715-2.715 2.715 2.715-2.715 2.715-2.715-2.715zm-7.339 4.624l2.715-2.715 2.715 2.715-2.715 2.715-2.715-2.715zM12 0l3.435 3.435-4.717 4.717-3.435-3.435L12 0zm7.282 7.282l3.435 3.435-3.435 3.435-3.435-3.435 3.435-3.435zM4.718 7.282l3.435 3.435-3.435 3.435L1.283 10.717l3.435-3.435zM12 24l-3.435-3.435 4.717-4.717 3.435 3.435L12 24z"/>
+                                    </svg>
+                                </div>
+                                <span className="tab-title">Binance</span>
                             </button>
                         </div>
 
@@ -888,7 +979,7 @@ export default function WalletPage() {
                                     )}
                                 </button>
                             </div>
-                        ) : (
+                        ) : activeTab === 'crypto' ? (
                             <div className="method-content">
                                 {/* 3-Step Crypto Guide */}
                                 <div className="step-guide-strip">
@@ -987,7 +1078,166 @@ export default function WalletPage() {
                                     </div>
                                 ) : null}
                             </div>
-                        )}
+                        ) : activeTab === 'binance' ? (
+                            <div className="method-content">
+                                {/* 3-Step Guide Strip */}
+                                <div className="step-guide-strip">
+                                    <div className="guide-step">
+                                        <span className="step-num binance-step-num">1</span>
+                                        <span>Select USD Amount</span>
+                                    </div>
+                                    <span className="guide-arrow">→</span>
+                                    <div className="guide-step">
+                                        <span className="step-num binance-step-num">2</span>
+                                        <span>Send USDT to Binance ID</span>
+                                    </div>
+                                    <span className="guide-arrow">→</span>
+                                    <div className="guide-step">
+                                        <span className="step-num binance-step-num">3</span>
+                                        <span>Verify Order ID</span>
+                                    </div>
+                                </div>
+
+                                {/* Quick Select Presets (USD) */}
+                                <div className="field-group">
+                                    <div className="field-label-row">
+                                        <label className="field-label">Quick Select (USD)</label>
+                                        <span className="field-hint">Minimum Deposit: $1.00 USD</span>
+                                    </div>
+                                    <div className="presets-row">
+                                        {['5', '10', '20', '50', '100'].map((amt) => {
+                                            const isSelected = binanceAmountUsd === amt;
+                                            return (
+                                                <button
+                                                    key={amt}
+                                                    type="button"
+                                                    onClick={() => setBinanceAmountUsd(amt)}
+                                                    className={`preset-btn preset-binance ${isSelected ? 'selected selected-binance' : ''}`}
+                                                >
+                                                    <span className="preset-bdt">${amt}</span>
+                                                    <span className="preset-usd">≈ ৳{(Number(amt) * rate).toFixed(0)}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Custom USD Amount */}
+                                <div className="field-group">
+                                    <div className="field-label-row">
+                                        <label className="field-label">Custom Amount in USD</label>
+                                        <span className="field-hint">Min: $1.00 | Max: $500.00 USD</span>
+                                    </div>
+                                    <div className="input-wrap">
+                                        <span className="currency-prefix">$</span>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="500"
+                                            step="any"
+                                            value={binanceAmountUsd}
+                                            onChange={(e) => setBinanceAmountUsd(e.target.value)}
+                                            placeholder="Enter USD amount (e.g. 2.00)"
+                                            className="text-input"
+                                        />
+                                        <span className="currency-suffix">USD</span>
+                                    </div>
+                                </div>
+
+                                {/* Payment Summary Card */}
+                                <div className="payment-summary-card">
+                                    <div className="summary-row">
+                                        <span className="summary-label">Payment Method:</span>
+                                        <span className="summary-val">Binance Pay (Internal Transfer)</span>
+                                    </div>
+                                    <div className="summary-row">
+                                        <span className="summary-label">Network / Gas Fee:</span>
+                                        <span className="summary-val fee-free">
+                                            $0.00 (Zero Fee) <CheckCircle2 size={13} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
+                                        </span>
+                                    </div>
+                                    <div className="summary-row">
+                                        <span className="summary-label">Estimated Wallet Credit:</span>
+                                        <span className="summary-val credit-val">
+                                            ${Number(binanceAmountUsd || 0).toFixed(2)} USD
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Official Merchant Binance Pay ID Box */}
+                                <div className="binance-payid-box">
+                                    <div className="binance-payid-header">
+                                        <span className="payid-badge">OFFICIAL BINANCE PAY ID</span>
+                                        <span className="payid-sub">Send payment in Binance App</span>
+                                    </div>
+                                    <div className="binance-id-row">
+                                        <span className="binance-id-val">{BINANCE_PAY_ID}</span>
+                                        <button
+                                            type="button"
+                                            onClick={handleCopyBinanceId}
+                                            className="btn-copy-binance"
+                                        >
+                                            {binanceIdCopied ? (
+                                                <>
+                                                    <Check size={14} />
+                                                    <span>Copied!</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy size={14} />
+                                                    <span>Copy ID</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                    <p className="binance-notice-note">
+                                        ⚠️ <strong>Important:</strong> Please only send <strong>USDT</strong> via Binance Pay (Pay ID / Internal Transfer). Zero transaction fees will apply. After sending, paste your Binance <strong>Order ID / Transaction ID</strong> below to instantly verify and credit your wallet.
+                                    </p>
+                                </div>
+
+                                {/* Order ID Input */}
+                                <div className="field-group">
+                                    <div className="field-label-row">
+                                        <label className="field-label">Binance Order ID / Transaction ID</label>
+                                        <span className="field-hint">From Binance payment receipt</span>
+                                    </div>
+                                    <div className="input-wrap">
+                                        <input
+                                            type="text"
+                                            value={binanceOrderId}
+                                            onChange={(e) => setBinanceOrderId(e.target.value)}
+                                            placeholder="e.g. 426673175552442368"
+                                            className="text-input"
+                                            style={{ paddingLeft: '16px', paddingRight: '16px' }}
+                                        />
+                                    </div>
+                                    <span className="field-subhint">
+                                        Find this in Binance App → Pay → Payment History / Transaction Details (Order ID).
+                                    </span>
+                                </div>
+
+                                {/* Verify CTA Button */}
+                                <button
+                                    type="button"
+                                    onClick={handleVerifyBinance}
+                                    disabled={isBinanceVerifying || !binanceOrderId.trim() || Number(binanceAmountUsd || 0) < 1}
+                                    className="btn-primary custom-action-btn btn-binance-theme"
+                                >
+                                    {isBinanceVerifying ? (
+                                        <>
+                                            <RefreshCw size={16} className="spinner" />
+                                            <span>Verifying with Binance API...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle2 size={17} />
+                                            <span>Verify Binance Payment & Credit Wallet</span>
+                                            <ArrowRight size={17} />
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        ) : null}
                     </div>
                 </div>
 
@@ -1338,27 +1588,31 @@ export default function WalletPage() {
 
                 .tab-nav-row {
                     display: grid;
-                    grid-template-columns: repeat(3, 1fr);
+                    grid-template-columns: repeat(4, minmax(0, 1fr));
                     gap: 6px;
                     background: #F1F5F9;
                     padding: 5px;
                     border-radius: 14px;
                     margin-bottom: 22px;
                     border: 1px solid #E2E8F0;
+                    box-sizing: border-box;
+                    width: 100%;
                 }
 
                 .method-tab-btn {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 8px;
-                    padding: 10px 12px;
+                    gap: 6px;
+                    padding: 9px 6px;
                     border-radius: 10px;
                     border: 1.5px solid transparent;
                     background: transparent;
                     cursor: pointer;
                     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
                     text-align: center;
+                    min-width: 0;
+                    box-sizing: border-box;
                 }
 
                 .method-tab-btn:hover:not(.active) {
@@ -1384,6 +1638,11 @@ export default function WalletPage() {
                 .method-tab-btn.active.crypto-active {
                     border-color: #0086FF;
                     box-shadow: 0 2px 10px rgba(0, 134, 255, 0.16);
+                }
+
+                .method-tab-btn.active.binance-active {
+                    border-color: #F0B90B;
+                    box-shadow: 0 2px 10px rgba(240, 185, 11, 0.22);
                 }
 
                 .tab-icon-box {
@@ -1439,10 +1698,12 @@ export default function WalletPage() {
                 }
 
                 .tab-title {
-                    font-size: 13px;
+                    font-size: 12px;
                     font-weight: 700;
                     color: #0F172A;
                     white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
 
                 .tab-subtitle {
@@ -1487,6 +1748,11 @@ export default function WalletPage() {
 
                 .eps-step-num {
                     background: #F7941D !important;
+                }
+
+                .binance-step-num {
+                    background: #F0B90B !important;
+                    color: #000000 !important;
                 }
 
                 /* Supported Channels Bar */
@@ -1650,6 +1916,166 @@ export default function WalletPage() {
 
                 .preset-btn.preset-eps:hover:not(.selected) {
                     border-color: #F7941D;
+                }
+
+                .preset-btn.selected-binance {
+                    background: linear-gradient(135deg, #F0B90B 0%, #D97706 100%) !important;
+                    border-color: #F0B90B !important;
+                    box-shadow: 0 4px 14px rgba(240, 185, 11, 0.32) !important;
+                }
+
+                .preset-btn.selected-binance .preset-bdt {
+                    color: #000000 !important;
+                }
+
+                .preset-btn.selected-binance .preset-usd {
+                    color: rgba(0, 0, 0, 0.8) !important;
+                }
+
+                .preset-btn.preset-binance:hover:not(.selected) {
+                    border-color: #F0B90B;
+                }
+
+                /* Binance Pay Specific Elements */
+                .btn-binance-theme {
+                    background: linear-gradient(135deg, #F0B90B 0%, #EAB308 100%) !important;
+                    color: #000000 !important;
+                    font-weight: 700 !important;
+                    box-shadow: 0 4px 14px rgba(240, 185, 11, 0.35) !important;
+                }
+
+                .btn-binance-theme:hover:not(:disabled) {
+                    background: linear-gradient(135deg, #FBBF24 0%, #D97706 100%) !important;
+                    box-shadow: 0 6px 18px rgba(240, 185, 11, 0.45) !important;
+                }
+
+                .btn-binance-theme:disabled {
+                    opacity: 0.55 !important;
+                    cursor: not-allowed !important;
+                }
+
+                .binance-payid-box {
+                    background: #FFFDF0;
+                    border: 1.5px dashed #FCD34D;
+                    border-radius: 12px;
+                    padding: 16px 18px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                }
+
+                .binance-payid-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                    gap: 6px;
+                }
+
+                .payid-badge {
+                    font-size: 10px;
+                    font-weight: 800;
+                    letter-spacing: 0.5px;
+                    background: #FEF3C7;
+                    color: #92400E;
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                }
+
+                .payid-sub {
+                    font-size: 11px;
+                    color: #78350F;
+                    font-weight: 500;
+                }
+
+                .binance-id-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    background: #FFFFFF;
+                    border: 1px solid #FDE68A;
+                    border-radius: 8px;
+                    padding: 8px 14px;
+                    gap: 12px;
+                }
+
+                .binance-id-val {
+                    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+                    font-size: 20px;
+                    font-weight: 800;
+                    color: #B45309;
+                    letter-spacing: 1px;
+                }
+
+                .btn-copy-binance {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 7px 14px;
+                    background: #F0B90B;
+                    color: #000000;
+                    font-size: 12px;
+                    font-weight: 700;
+                    border-radius: 6px;
+                    border: none;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .btn-copy-binance:hover {
+                    background: #F59E0B;
+                    transform: translateY(-1px);
+                }
+
+                .binance-notice-note {
+                    font-size: 12px;
+                    color: #92400E;
+                    line-height: 1.5;
+                    margin: 0;
+                }
+
+                .payment-summary-card {
+                    background: #F8FAFC;
+                    border: 1px solid #E2E8F0;
+                    border-radius: 12px;
+                    padding: 14px 18px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                .summary-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 13px;
+                }
+
+                .summary-label {
+                    color: #64748B;
+                    font-weight: 500;
+                }
+
+                .summary-val {
+                    color: #0F172A;
+                    font-weight: 600;
+                }
+
+                .summary-val.fee-free {
+                    color: #059669;
+                    font-weight: 700;
+                }
+
+                .summary-val.credit-val {
+                    color: #0086FF;
+                    font-weight: 700;
+                    font-size: 14px;
+                }
+
+                .field-subhint {
+                    font-size: 11px;
+                    color: #64748B;
+                    margin-top: -4px;
                 }
 
                 .preset-bdt {
@@ -2233,6 +2659,15 @@ export default function WalletPage() {
                     }
                 }
 
+                @media (max-width: 960px) {
+                    .tab-nav-row {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 8px;
+                        padding: 6px;
+                        margin-bottom: 18px;
+                    }
+                }
+
                 @media (max-width: 768px) {
                     .main-responsive-container {
                         padding: 0 0 20px 0;
@@ -2283,9 +2718,9 @@ export default function WalletPage() {
                         gap: 14px;
                     }
                     .tab-nav-row {
-                        grid-template-columns: repeat(3, 1fr);
-                        gap: 4px;
-                        padding: 4px;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 6px;
+                        padding: 6px;
                         margin-bottom: 16px;
                     }
                     .method-tab-btn {
@@ -2512,6 +2947,70 @@ export default function WalletPage() {
                     background: linear-gradient(180deg, rgba(0, 134, 255, 0.2) 0%, rgba(0, 134, 255, 0.04) 100%), #111A2E !important;
                     border-color: #0086FF !important;
                     box-shadow: 0 4px 18px rgba(0, 134, 255, 0.25), inset 0 1px 0 rgba(0, 134, 255, 0.2) !important;
+                }
+
+                :global(body.dark-mode) .method-tab-btn.active.binance-active {
+                    background: linear-gradient(180deg, rgba(240, 185, 11, 0.18) 0%, rgba(240, 185, 11, 0.04) 100%), #111A2E !important;
+                    border-color: #F0B90B !important;
+                    box-shadow: 0 4px 18px rgba(240, 185, 11, 0.25), inset 0 1px 0 rgba(240, 185, 11, 0.2) !important;
+                }
+
+                :global(body.dark-mode) .binance-payid-box {
+                    background: rgba(240, 185, 11, 0.06) !important;
+                    border-color: rgba(240, 185, 11, 0.3) !important;
+                }
+
+                :global(body.dark-mode) .payid-badge {
+                    background: rgba(240, 185, 11, 0.2) !important;
+                    color: #FCD34D !important;
+                }
+
+                :global(body.dark-mode) .payid-sub {
+                    color: #FDE68A !important;
+                }
+
+                :global(body.dark-mode) .binance-id-row {
+                    background: #080D1A !important;
+                    border-color: rgba(240, 185, 11, 0.3) !important;
+                }
+
+                :global(body.dark-mode) .binance-id-val {
+                    color: #FBBF24 !important;
+                }
+
+                :global(body.dark-mode) .binance-notice-note {
+                    color: #FDE68A !important;
+                }
+
+                :global(body.dark-mode) .payment-summary-card {
+                    background: #080D1A !important;
+                    border-color: rgba(255, 255, 255, 0.07) !important;
+                }
+
+                :global(body.dark-mode) .summary-label {
+                    color: #94A3B8 !important;
+                }
+
+                :global(body.dark-mode) .summary-val {
+                    color: #F8FAFC !important;
+                }
+
+                :global(body.dark-mode) .summary-val.credit-val {
+                    color: #38BDF8 !important;
+                }
+
+                :global(body.dark-mode) .preset-btn.selected-binance {
+                    background: linear-gradient(135deg, #F0B90B 0%, #D97706 100%) !important;
+                    border-color: #F0B90B !important;
+                    color: #000000 !important;
+                }
+
+                :global(body.dark-mode) .preset-btn.selected-binance .preset-bdt {
+                    color: #000000 !important;
+                }
+
+                :global(body.dark-mode) .preset-btn.selected-binance .preset-usd {
+                    color: rgba(0, 0, 0, 0.8) !important;
                 }
 
                 :global(body.dark-mode) .tab-title {
