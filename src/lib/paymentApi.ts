@@ -64,8 +64,20 @@ export function getUserFromToken(): { userId: number; email: string } | null {
         .join('')
     );
     const payload = JSON.parse(jsonPayload);
-    const userId = Number(payload.nameid || payload.sub || payload.userId || 1);
-    const email = payload.email || localStorage.getItem('user_email') || '';
+    const userId = Number(
+      payload.nameid ||
+      payload.sub ||
+      payload.userId ||
+      payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ||
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('user_id') : null) ||
+      0
+    );
+    const email =
+      payload.email ||
+      payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ||
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('user_email') : '') ||
+      '';
+    if (!userId) return null;
     return { userId, email };
   } catch (err) {
     console.error('Failed to parse JWT token:', err);
