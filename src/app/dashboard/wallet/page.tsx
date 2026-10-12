@@ -497,21 +497,12 @@ export default function WalletPage() {
     };
 
     const handleVerifyBinance = async () => {
-        const amount = Number(binanceAmountUsd);
         if (!binanceOrderId.trim()) {
-            toast.error("Please enter your Binance Order ID / Transaction ID.");
+            toast.error("Please enter your Binance Order ID or Pay ID.");
             return;
         }
-        if (binanceOrderId.trim().length < 6) {
-            toast.error("Invalid Order ID format. Please check and try again.");
-            return;
-        }
-        if (isNaN(amount) || amount < 1) {
-            toast.error("Minimum deposit is $1.00 USD.");
-            return;
-        }
-        if (amount > 500) {
-            toast.error("Maximum deposit is $500.00 USD.");
+        if (binanceOrderId.trim().length < 5) {
+            toast.error("Invalid ID format. Please check and try again.");
             return;
         }
 
@@ -526,14 +517,13 @@ export default function WalletPage() {
         try {
             const token = localStorage.getItem('auth_token');
             const res = await axios.post(`${API_URL}/api/Wallet/binance/verify`, {
-                orderId: binanceOrderId.trim(),
-                expectedAmount: amount
+                orderId: binanceOrderId.trim()
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
             if (res.data && res.data.success) {
-                const credited = res.data.creditedAmount ?? amount;
+                const credited = res.data.creditedAmount;
                 const newBal = res.data.newWalletBalance;
                 toast.success(res.data.message || `Payment Verified! $${credited.toFixed(2)} USD added to your wallet.`);
                 setBinanceOrderId('');
@@ -553,7 +543,7 @@ export default function WalletPage() {
                 toast.error(res.data?.message || "Verification failed.");
             }
         } catch (err: any) {
-            const msg = err?.response?.data?.message || "Failed to verify transaction. Please check your Order ID and try again.";
+            const msg = err?.response?.data?.message || "Failed to verify transaction. Please check your Order ID or Pay ID.";
             toast.error(msg);
         } finally {
             setIsBinanceVerifying(false);
@@ -1080,67 +1070,16 @@ export default function WalletPage() {
                             </div>
                         ) : activeTab === 'binance' ? (
                             <div className="method-content">
-                                {/* 3-Step Guide Strip */}
+                                {/* 2-Step Guide Strip */}
                                 <div className="step-guide-strip">
                                     <div className="guide-step">
                                         <span className="step-num binance-step-num">1</span>
-                                        <span>Select USD Amount</span>
+                                        <span>Send Any USDT Amount</span>
                                     </div>
                                     <span className="guide-arrow">→</span>
                                     <div className="guide-step">
                                         <span className="step-num binance-step-num">2</span>
-                                        <span>Send USDT to Binance ID</span>
-                                    </div>
-                                    <span className="guide-arrow">→</span>
-                                    <div className="guide-step">
-                                        <span className="step-num binance-step-num">3</span>
-                                        <span>Verify Order ID</span>
-                                    </div>
-                                </div>
-
-                                {/* Quick Select Presets (USD) */}
-                                <div className="field-group">
-                                    <div className="field-label-row">
-                                        <label className="field-label">Quick Select (USD)</label>
-                                        <span className="field-hint">Minimum Deposit: $1.00 USD</span>
-                                    </div>
-                                    <div className="presets-row">
-                                        {['5', '10', '20', '50', '100'].map((amt) => {
-                                            const isSelected = binanceAmountUsd === amt;
-                                            return (
-                                                <button
-                                                    key={amt}
-                                                    type="button"
-                                                    onClick={() => setBinanceAmountUsd(amt)}
-                                                    className={`preset-btn preset-binance ${isSelected ? 'selected selected-binance' : ''}`}
-                                                >
-                                                    <span className="preset-bdt">${amt}</span>
-                                                    <span className="preset-usd">≈ ৳{(Number(amt) * rate).toFixed(0)}</span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Custom USD Amount */}
-                                <div className="field-group">
-                                    <div className="field-label-row">
-                                        <label className="field-label">Custom Amount in USD</label>
-                                        <span className="field-hint">Min: $1.00 | Max: $500.00 USD</span>
-                                    </div>
-                                    <div className="input-wrap">
-                                        <span className="currency-prefix">$</span>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max="500"
-                                            step="any"
-                                            value={binanceAmountUsd}
-                                            onChange={(e) => setBinanceAmountUsd(e.target.value)}
-                                            placeholder="Enter USD amount (e.g. 2.00)"
-                                            className="text-input"
-                                        />
-                                        <span className="currency-suffix">USD</span>
+                                        <span>Enter Order ID or Pay ID</span>
                                     </div>
                                 </div>
 
@@ -1148,7 +1087,7 @@ export default function WalletPage() {
                                 <div className="binance-payid-box">
                                     <div className="binance-payid-header">
                                         <span className="payid-badge">OFFICIAL BINANCE PAY ID</span>
-                                        <span className="payid-sub">Send payment in Binance App</span>
+                                        <span className="payid-sub">Zero Gas Fees • Any Amount Accepted</span>
                                     </div>
                                     <div className="binance-id-row">
                                         <span className="binance-id-val">{BINANCE_PAY_ID}</span>
@@ -1171,28 +1110,28 @@ export default function WalletPage() {
                                         </button>
                                     </div>
                                     <p className="binance-notice-note">
-                                        ⚠️ <strong>Important:</strong> Please only send <strong>USDT</strong> via Binance Pay (Pay ID / Internal Transfer). Zero transaction fees will apply. After sending, paste your Binance <strong>Order ID / Transaction ID</strong> below to instantly verify and credit your wallet.
+                                        ✨ <strong>No Amount Limits:</strong> Pay any amount of <strong>USDT</strong> via Binance Pay (Pay ID / Internal Transfer). After sending, paste your Binance <strong>Order ID</strong> or <strong>Pay ID</strong> below. The system will auto-detect the paid amount and credit your wallet instantly!
                                     </p>
                                 </div>
 
-                                {/* Order ID Input */}
+                                {/* Order ID / Pay ID Input */}
                                 <div className="field-group">
                                     <div className="field-label-row">
-                                        <label className="field-label">Binance Order ID / Transaction ID</label>
-                                        <span className="field-hint">From Binance payment receipt</span>
+                                        <label className="field-label">Binance Order ID / Pay ID</label>
+                                        <span className="field-hint">Auto Amount Detection ⚡</span>
                                     </div>
                                     <div className="input-wrap">
                                         <input
                                             type="text"
                                             value={binanceOrderId}
                                             onChange={(e) => setBinanceOrderId(e.target.value)}
-                                            placeholder="e.g. 426673175552442368"
+                                            placeholder="e.g. 426673175552442368 or Pay ID"
                                             className="text-input"
                                             style={{ paddingLeft: '16px', paddingRight: '16px' }}
                                         />
                                     </div>
                                     <span className="field-subhint">
-                                        Find this in Binance App → Pay → Payment History / Transaction Details (Order ID).
+                                        Found in Binance App → Pay → Payment History / Receipt (Order ID or Transaction ID).
                                     </span>
                                 </div>
 
@@ -1200,18 +1139,18 @@ export default function WalletPage() {
                                 <button
                                     type="button"
                                     onClick={handleVerifyBinance}
-                                    disabled={isBinanceVerifying || !binanceOrderId.trim() || Number(binanceAmountUsd || 0) < 1}
+                                    disabled={isBinanceVerifying || !binanceOrderId.trim()}
                                     className="btn-primary custom-action-btn btn-binance-theme"
                                 >
                                     {isBinanceVerifying ? (
                                         <>
                                             <RefreshCw size={16} className="spinner" />
-                                            <span>Verifying with Binance API...</span>
+                                            <span>Auto-Detecting & Verifying Payment...</span>
                                         </>
                                     ) : (
                                         <>
                                             <CheckCircle2 size={17} />
-                                            <span>Verify Binance Payment & Credit Wallet</span>
+                                            <span>Verify & Auto-Credit Wallet</span>
                                             <ArrowRight size={17} />
                                         </>
                                     )}
