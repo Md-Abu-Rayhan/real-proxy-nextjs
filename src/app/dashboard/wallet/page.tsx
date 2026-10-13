@@ -95,6 +95,23 @@ export default function WalletPage() {
     const [profileModalName, setProfileModalName] = useState<string>('');
     const [profileModalPhone, setProfileModalPhone] = useState<string>('');
     const [isSavingProfile, setIsSavingProfile] = useState<boolean>(false);
+    const [pendingPaymentAction, setPendingPaymentAction] = useState<'bkash' | 'eps' | null>(null);
+
+    const isValidBdPhone = useCallback((phone?: string | null): boolean => {
+        if (!phone) return false;
+        const cleaned = phone.replace(/[\s\-\(\)\+]/g, '');
+        const standard = cleaned.startsWith('880') ? cleaned.slice(2) : cleaned;
+        if (standard.length !== 11) return false;
+        if (!standard.startsWith('01')) return false;
+        if (standard === '01700000000' || standard === '01000000000' || standard === '01111111111') return false;
+        return true;
+    }, []);
+
+    const isProfileCompleted = Boolean(
+        profileModalName && 
+        profileModalName.trim().length >= 2 && 
+        isValidBdPhone(profileModalPhone)
+    );
 
     // Binance Pay State
     const BINANCE_PAY_ID = '37492687';
@@ -183,11 +200,11 @@ export default function WalletPage() {
                 if (phone) localStorage.setItem('user_phone', phone);
                 if (res.data.id) localStorage.setItem('user_id', String(res.data.id));
 
-                setProfileModalName(name || (res.data.email ? res.data.email.split('@')[0] : ''));
+                setProfileModalName(name);
                 setProfileModalPhone(phone);
 
-                // Auto-show popup if phone or name is missing or placeholder
-                if (!phone || phone === '01700000000' || !name) {
+                // Auto-show popup if phone or name is missing or invalid
+                if (!name || name.trim().length < 2 || !isValidBdPhone(phone)) {
                     setShowProfileModal(true);
                 }
             }
@@ -195,15 +212,15 @@ export default function WalletPage() {
             const storedPhone = localStorage.getItem('user_phone') || '';
             const storedName = localStorage.getItem('user_name') || '';
             const userInfo = getUserFromToken();
-            const effName = storedName || userInfo?.fullName || (userInfo?.email ? userInfo.email.split('@')[0] : '');
+            const effName = storedName || userInfo?.fullName || '';
             const effPhone = storedPhone || userInfo?.phoneNumber || '';
             setProfileModalName(effName);
             setProfileModalPhone(effPhone);
-            if (!effPhone || effPhone === '01700000000' || !effName) {
+            if (!effName || effName.trim().length < 2 || !isValidBdPhone(effPhone)) {
                 setShowProfileModal(true);
             }
         });
-    }, []);
+    }, [isValidBdPhone]);
 
     // Check return callback from PayStation
     useEffect(() => {
@@ -466,18 +483,20 @@ export default function WalletPage() {
             return;
         }
 
-        const storedPhone = localStorage.getItem('user_phone') || userInfo.phoneNumber || '';
-        const storedName = localStorage.getItem('user_name') || userInfo.fullName || '';
+        const storedPhone = profileModalPhone || localStorage.getItem('user_phone') || userInfo.phoneNumber || '';
+        const storedName = profileModalName || localStorage.getItem('user_name') || userInfo.fullName || '';
 
-        // If phone or name is missing or placeholder, prompt user first
-        if (!storedPhone || storedPhone === '01700000000' || !storedName) {
-            setProfileModalName(storedName || (userInfo.email ? userInfo.email.split('@')[0] : ''));
-            setProfileModalPhone(storedPhone && storedPhone !== '01700000000' ? storedPhone : '');
+        // HARD LOCK: Nobody can pay without complete customer details
+        if (!storedName || storedName.trim().length < 2 || !isValidBdPhone(storedPhone)) {
+            setProfileModalName(storedName && storedName.trim().length >= 2 ? storedName : '');
+            setProfileModalPhone(isValidBdPhone(storedPhone) ? storedPhone : '');
+            setPendingPaymentAction('bkash');
             setShowProfileModal(true);
+            toast.error("🔒 Payment Locked: Please enter your Full Name & Mobile Number first.");
             return;
         }
 
-        await executePayStationSession(amount, userInfo.userId, userInfo.email, storedName, storedPhone);
+        await executePayStationSession(amount, userInfo.userId, userInfo.email, storedName.trim(), storedPhone.trim());
     };
 
     const executePayStationSession = async (
@@ -517,70 +536,7 @@ export default function WalletPage() {
         }
     };
 
-    const handleSaveProfileAndPay = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!profileModalName.trim()) {
-            toast.error("Please enter your name.");
-            return;
-        }
-        if (!profileModalPhone.trim() || profileModalPhone.trim().length < 10) {
-            toast.error("Please enter a valid phone number.");
-            return;
-        }
-
-        setIsSavingProfile(true);
-        const token = localStorage.getItem('auth_token');
-        const userInfo = getUserFromToken();
-        const amount = Number(customBdt);
-
-        try {
-            if (token) {
-                await axios.post(`${API_URL}/api/Auth/profile`, {
-                    fullName: profileModalName.trim(),
-                    phoneNumber: profileModalPhone.trim()
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-            }
-            localStorage.setItem('user_name', profileModalName.trim());
-            localStorage.setItem('user_phone', profileModalPhone.trim());
-            setShowProfileModal(false);
-
-            if (userInfo && userInfo.userId && amount) {
-                await executePayStationSession(
-                    amount,
-                    userInfo.userId,
-                    userInfo.email,
-                    profileModalName.trim(),
-                    profileModalPhone.trim()
-                );
-            }
-        } catch (err: any) {
-            console.error("Failed to save profile:", err);
-            localStorage.setItem('user_name', profileModalName.trim());
-            localStorage.setItem('user_phone', profileModalPhone.trim());
-            setShowProfileModal(false);
-            if (userInfo && userInfo.userId && amount) {
-                await executePayStationSession(
-                    amount,
-                    userInfo.userId,
-                    userInfo.email,
-                    profileModalName.trim(),
-                    profileModalPhone.trim()
-                );
-            }
-        } finally {
-            setIsSavingProfile(false);
-        }
-    };
-
-    const handleEpsTopUp = async () => {
-        const amount = Number(customBdt);
-        if (!amount || amount < 125) {
-            toast.error("Minimum deposit amount for Nagad / Cards is ৳125 BDT ($1.00 USD).");
-            return;
-        }
-
+    const executeEpsSession = async (amount: number) => {
         setIsEpsLoading(true);
         try {
             const token = localStorage.getItem('auth_token');
@@ -605,8 +561,101 @@ export default function WalletPage() {
             }
         } catch (error: any) {
             console.error("EPS top-up error:", error);
-            toast.error(error.response?.data?.message || "Failed to start EPS top-up.");
+            const errMsg = error.response?.data?.message || "Failed to start EPS top-up.";
+            toast.error(errMsg);
             setIsEpsLoading(false);
+            if (errMsg.toLowerCase().includes("customer details") || errMsg.toLowerCase().includes("payment locked")) {
+                setShowProfileModal(true);
+            }
+        }
+    };
+
+    const handleEpsTopUp = async () => {
+        const amount = Number(customBdt);
+        if (!amount || amount < 125) {
+            toast.error("Minimum deposit amount for Nagad / Cards is ৳125 BDT ($1.00 USD).");
+            return;
+        }
+
+        const userInfo = getUserFromToken();
+        if (!userInfo || !userInfo.userId) {
+            toast.error("Please login to proceed with top-up.");
+            router.push('/login');
+            return;
+        }
+
+        const storedPhone = profileModalPhone || localStorage.getItem('user_phone') || userInfo.phoneNumber || '';
+        const storedName = profileModalName || localStorage.getItem('user_name') || userInfo.fullName || '';
+
+        // HARD LOCK: Nobody can pay without complete customer details
+        if (!storedName || storedName.trim().length < 2 || !isValidBdPhone(storedPhone)) {
+            setProfileModalName(storedName && storedName.trim().length >= 2 ? storedName : '');
+            setProfileModalPhone(isValidBdPhone(storedPhone) ? storedPhone : '');
+            setPendingPaymentAction('eps');
+            setShowProfileModal(true);
+            toast.error("🔒 Payment Locked: Please enter your Full Name & Mobile Number first.");
+            return;
+        }
+
+        await executeEpsSession(amount);
+    };
+
+    const handleSaveProfileAndPay = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const cleanName = profileModalName.trim();
+        const cleanPhone = profileModalPhone.trim();
+
+        if (!cleanName || cleanName.length < 2) {
+            toast.error("Please enter your real Full Name (at least 2 characters).");
+            return;
+        }
+        if (!isValidBdPhone(cleanPhone)) {
+            toast.error("Please enter a valid 11-digit Bangladeshi mobile number (e.g. 017XXXXXXXX).");
+            return;
+        }
+
+        setIsSavingProfile(true);
+        const token = localStorage.getItem('auth_token');
+        const userInfo = getUserFromToken();
+        const amount = Number(customBdt);
+        const actionToRun = pendingPaymentAction;
+
+        try {
+            if (token) {
+                await axios.post(`${API_URL}/api/Auth/profile`, {
+                    fullName: cleanName,
+                    phoneNumber: cleanPhone
+                }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            }
+            localStorage.setItem('user_name', cleanName);
+            localStorage.setItem('user_phone', cleanPhone);
+            setShowProfileModal(false);
+            setPendingPaymentAction(null);
+            toast.success("Customer details verified successfully!");
+
+            // Automatically continue payment if triggered by payment action
+            if (actionToRun === 'bkash') {
+                if (userInfo && userInfo.userId && amount >= 500) {
+                    await executePayStationSession(
+                        amount,
+                        userInfo.userId,
+                        userInfo.email,
+                        cleanName,
+                        cleanPhone
+                    );
+                }
+            } else if (actionToRun === 'eps') {
+                if (amount >= 125) {
+                    await executeEpsSession(amount);
+                }
+            }
+        } catch (err: any) {
+            console.error("Failed to save profile:", err);
+            toast.error(err.response?.data?.message || "Failed to update profile.");
+        } finally {
+            setIsSavingProfile(false);
         }
     };
 
@@ -618,6 +667,13 @@ export default function WalletPage() {
     };
 
     const handleVerifyBinance = async () => {
+        if (!isProfileCompleted) {
+            setPendingPaymentAction(null);
+            setShowProfileModal(true);
+            toast.error("🔒 Payment Locked: Please complete your Customer Details first.");
+            return;
+        }
+
         if (!binanceOrderId.trim()) {
             toast.error("Please enter your Binance Order ID or Pay ID.");
             return;
@@ -706,7 +762,7 @@ export default function WalletPage() {
     return (
         <div className="main-responsive-container">
             {/* Profile Completion Alert Banner if phone or name is missing */}
-            {(!profileModalPhone || profileModalPhone === '01700000000' || !profileModalName) && (
+            {!isProfileCompleted && (
                 <div style={{
                     backgroundColor: '#FEF3C7',
                     border: '1px solid #FDE68A',
@@ -716,13 +772,14 @@ export default function WalletPage() {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: '16px',
-                    flexWrap: 'wrap'
+                    flexWrap: 'wrap',
+                    marginBottom: '20px'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{
-                            width: '38px',
-                            height: '38px',
-                            borderRadius: '10px',
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '12px',
                             backgroundColor: '#F59E0B',
                             color: 'white',
                             display: 'flex',
@@ -730,20 +787,23 @@ export default function WalletPage() {
                             justifyContent: 'center',
                             flexShrink: 0
                         }}>
-                            <Smartphone size={20} />
+                            <Shield size={22} />
                         </div>
                         <div>
                             <div style={{ fontWeight: '700', fontSize: '15px', color: '#92400E' }}>
-                                Customer Profile Incomplete
+                                🔒 Payment Locked: Customer Details Required
                             </div>
                             <div style={{ fontSize: '13px', color: '#B45309' }}>
-                                Please add your Full Name and Mobile Phone Number for instant bKash deposit verification and invoice receipts.
+                                Nobody can make a payment without completing Full Name & Mobile Number. Complete your profile to unlock deposit gateways.
                             </div>
                         </div>
                     </div>
                     <button
                         type="button"
-                        onClick={() => setShowProfileModal(true)}
+                        onClick={() => {
+                            setPendingPaymentAction(null);
+                            setShowProfileModal(true);
+                        }}
                         style={{
                             backgroundColor: '#D97706',
                             color: 'white',
@@ -758,7 +818,7 @@ export default function WalletPage() {
                             gap: '6px'
                         }}
                     >
-                        <span>Complete Profile Now</span>
+                        <span>Complete Profile to Unlock Payments</span>
                         <ArrowRight size={14} />
                     </button>
                 </div>
@@ -1022,6 +1082,12 @@ export default function WalletPage() {
                                             <RefreshCw size={16} className="spinner" />
                                             <span>Connecting to bKash Gateway (PayStation)...</span>
                                         </>
+                                    ) : !isProfileCompleted ? (
+                                        <>
+                                            <img src="/bKash-Logo.png" alt="bKash" className="btn-mfs-logo" />
+                                            <span>🔒 Complete Profile to Pay ৳{Number(customBdt || 0).toLocaleString()} BDT with bKash</span>
+                                            <ArrowRight size={17} />
+                                        </>
                                     ) : (
                                         <>
                                             <img src="/bKash-Logo.png" alt="bKash" className="btn-mfs-logo" />
@@ -1139,6 +1205,12 @@ export default function WalletPage() {
                                         <>
                                             <RefreshCw size={16} className="spinner" />
                                             <span>Connecting to EPS Payment Gateway...</span>
+                                        </>
+                                    ) : !isProfileCompleted ? (
+                                        <>
+                                            <img src="/Nagad-Logo.png" alt="Nagad" className="btn-mfs-logo" style={{ height: '18px', width: 'auto', objectFit: 'contain' }} />
+                                            <span>🔒 Complete Profile to Pay ৳{Number(customBdt || 0).toLocaleString()} BDT with Nagad / Cards</span>
+                                            <ArrowRight size={17} />
                                         </>
                                     ) : (
                                         <>
@@ -3593,7 +3665,10 @@ export default function WalletPage() {
                     }}>
                         <button
                             type="button"
-                            onClick={() => setShowProfileModal(false)}
+                            onClick={() => {
+                                setPendingPaymentAction(null);
+                                setShowProfileModal(false);
+                            }}
                             style={{
                                 position: 'absolute',
                                 right: '20px',
@@ -3618,14 +3693,14 @@ export default function WalletPage() {
                             marginBottom: '16px',
                             color: '#0086FF'
                         }}>
-                            <Smartphone size={24} />
+                            <Shield size={24} />
                         </div>
 
                         <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#0F172A', marginBottom: '8px' }}>
-                            Customer Details Required
+                            🔒 Customer Details Required
                         </h3>
                         <p style={{ fontSize: '14px', color: '#64748B', lineHeight: '1.5', marginBottom: '24px' }}>
-                            Please provide your Name and Mobile Phone Number to proceed with bKash deposit verification.
+                            Please provide your real Full Name and 11-digit Mobile Phone Number. Payments are strictly locked until verified.
                         </p>
 
                         <form onSubmit={handleSaveProfileAndPay}>
@@ -3638,7 +3713,7 @@ export default function WalletPage() {
                                     required
                                     value={profileModalName}
                                     onChange={(e) => setProfileModalName(e.target.value)}
-                                    placeholder="e.g. John Doe"
+                                    placeholder="e.g. Rayhan Ahmed"
                                     style={{
                                         width: '100%',
                                         padding: '12px 14px',
@@ -3654,7 +3729,7 @@ export default function WalletPage() {
 
                             <div style={{ marginBottom: '24px' }}>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
-                                    bKash / Mobile Phone Number
+                                    Mobile Phone Number (11 digits)
                                 </label>
                                 <input
                                     type="tel"
@@ -3673,12 +3748,18 @@ export default function WalletPage() {
                                         backgroundColor: '#F8FAFC'
                                     }}
                                 />
+                                <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>
+                                    Used for bKash / Nagad verification and invoice receipts.
+                                </div>
                             </div>
 
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <button
                                     type="button"
-                                    onClick={() => setShowProfileModal(false)}
+                                    onClick={() => {
+                                        setPendingPaymentAction(null);
+                                        setShowProfileModal(false);
+                                    }}
                                     style={{
                                         flex: 1,
                                         padding: '12px',
