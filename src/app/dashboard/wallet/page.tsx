@@ -168,20 +168,41 @@ export default function WalletPage() {
         fetchTransactions(txPage, txFilter);
     }, [txPage, txFilter, fetchTransactions]);
 
-    // Sync profile details if phone or name is missing from localStorage
+    // Sync profile details and auto-prompt if phone or name is missing
     useEffect(() => {
         const token = localStorage.getItem('auth_token');
-        if (token && (!localStorage.getItem('user_phone') || !localStorage.getItem('user_name'))) {
-            axios.get(`${API_URL}/api/Auth/profile`, {
-                headers: { Authorization: `Bearer ${token}` }
-            }).then(res => {
-                if (res.data) {
-                    if (res.data.fullName) localStorage.setItem('user_name', res.data.fullName);
-                    if (res.data.phoneNumber) localStorage.setItem('user_phone', res.data.phoneNumber);
-                    if (res.data.id) localStorage.setItem('user_id', String(res.data.id));
+        if (!token) return;
+
+        axios.get(`${API_URL}/api/Auth/profile`, {
+            headers: { Authorization: `Bearer ${token}` }
+        }).then(res => {
+            if (res.data) {
+                const name = res.data.fullName || '';
+                const phone = res.data.phoneNumber || '';
+                if (name) localStorage.setItem('user_name', name);
+                if (phone) localStorage.setItem('user_phone', phone);
+                if (res.data.id) localStorage.setItem('user_id', String(res.data.id));
+
+                setProfileModalName(name || (res.data.email ? res.data.email.split('@')[0] : ''));
+                setProfileModalPhone(phone);
+
+                // Auto-show popup if phone or name is missing or placeholder
+                if (!phone || phone === '01700000000' || !name) {
+                    setShowProfileModal(true);
                 }
-            }).catch(() => {});
-        }
+            }
+        }).catch(() => {
+            const storedPhone = localStorage.getItem('user_phone') || '';
+            const storedName = localStorage.getItem('user_name') || '';
+            const userInfo = getUserFromToken();
+            const effName = storedName || userInfo?.fullName || (userInfo?.email ? userInfo.email.split('@')[0] : '');
+            const effPhone = storedPhone || userInfo?.phoneNumber || '';
+            setProfileModalName(effName);
+            setProfileModalPhone(effPhone);
+            if (!effPhone || effPhone === '01700000000' || !effName) {
+                setShowProfileModal(true);
+            }
+        });
     }, []);
 
     // Check return callback from PayStation
@@ -684,6 +705,65 @@ export default function WalletPage() {
 
     return (
         <div className="main-responsive-container">
+            {/* Profile Completion Alert Banner if phone or name is missing */}
+            {(!profileModalPhone || profileModalPhone === '01700000000' || !profileModalName) && (
+                <div style={{
+                    backgroundColor: '#FEF3C7',
+                    border: '1px solid #FDE68A',
+                    borderRadius: '16px',
+                    padding: '16px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '16px',
+                    flexWrap: 'wrap'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                            width: '38px',
+                            height: '38px',
+                            borderRadius: '10px',
+                            backgroundColor: '#F59E0B',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                        }}>
+                            <Smartphone size={20} />
+                        </div>
+                        <div>
+                            <div style={{ fontWeight: '700', fontSize: '15px', color: '#92400E' }}>
+                                Customer Profile Incomplete
+                            </div>
+                            <div style={{ fontSize: '13px', color: '#B45309' }}>
+                                Please add your Full Name and Mobile Phone Number for instant bKash deposit verification and invoice receipts.
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setShowProfileModal(true)}
+                        style={{
+                            backgroundColor: '#D97706',
+                            color: 'white',
+                            fontWeight: '600',
+                            fontSize: '13px',
+                            padding: '10px 18px',
+                            borderRadius: '10px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}
+                    >
+                        <span>Complete Profile Now</span>
+                        <ArrowRight size={14} />
+                    </button>
+                </div>
+            )}
+
             {/* Stats Grid */}
             <div className="stats-grid">
                 {/* Available Balance */}
