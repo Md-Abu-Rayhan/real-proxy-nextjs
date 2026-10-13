@@ -22,7 +22,10 @@ import {
     Search,
     ChevronLeft,
     ChevronRight,
-    CheckCircle2
+    CheckCircle2,
+    User,
+    X,
+    Loader2
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
@@ -86,6 +89,12 @@ export default function WalletPage() {
     const [isPayStationLoading, setIsPayStationLoading] = useState<boolean>(false);
     const [isEpsLoading, setIsEpsLoading] = useState<boolean>(false);
     const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+    // Profile Prompt State for Payments
+    const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+    const [profileModalName, setProfileModalName] = useState<string>('');
+    const [profileModalPhone, setProfileModalPhone] = useState<string>('');
+    const [isSavingProfile, setIsSavingProfile] = useState<boolean>(false);
 
     // Binance Pay State
     const BINANCE_PAY_ID = '37492687';
@@ -158,6 +167,22 @@ export default function WalletPage() {
     useEffect(() => {
         fetchTransactions(txPage, txFilter);
     }, [txPage, txFilter, fetchTransactions]);
+
+    // Sync profile details if phone or name is missing from localStorage
+    useEffect(() => {
+        const token = localStorage.getItem('auth_token');
+        if (token && (!localStorage.getItem('user_phone') || !localStorage.getItem('user_name'))) {
+            axios.get(`${API_URL}/api/Auth/profile`, {
+                headers: { Authorization: `Bearer ${token}` }
+            }).then(res => {
+                if (res.data) {
+                    if (res.data.fullName) localStorage.setItem('user_name', res.data.fullName);
+                    if (res.data.phoneNumber) localStorage.setItem('user_phone', res.data.phoneNumber);
+                    if (res.data.id) localStorage.setItem('user_id', String(res.data.id));
+                }
+            }).catch(() => {});
+        }
+    }, []);
 
     // Check return callback from PayStation
     useEffect(() => {
@@ -420,23 +445,41 @@ export default function WalletPage() {
             return;
         }
 
+        const storedPhone = localStorage.getItem('user_phone') || userInfo.phoneNumber || '';
+        const storedName = localStorage.getItem('user_name') || userInfo.fullName || '';
+
+        // If phone or name is missing or placeholder, prompt user first
+        if (!storedPhone || storedPhone === '01700000000' || !storedName) {
+            setProfileModalName(storedName || (userInfo.email ? userInfo.email.split('@')[0] : ''));
+            setProfileModalPhone(storedPhone && storedPhone !== '01700000000' ? storedPhone : '');
+            setShowProfileModal(true);
+            return;
+        }
+
+        await executePayStationSession(amount, userInfo.userId, userInfo.email, storedName, storedPhone);
+    };
+
+    const executePayStationSession = async (
+        amount: number,
+        userId: number,
+        email: string,
+        name: string,
+        phone: string
+    ) => {
         setIsPayStationLoading(true);
         try {
-            const userPhone = localStorage.getItem('user_phone') || "01700000000";
-            const userName = localStorage.getItem('user_name') || userInfo.email.split('@')[0];
-
             const session = await createPaymentSession({
                 sourceApp: "REALPROXY",
-                userId: userInfo.userId,
+                userId: userId,
                 amount: amount,
                 currency: "BDT",
                 gatewayProvider: "PayStation",
-                customerEmail: userInfo.email,
-                customerPhone: userPhone,
-                customerName: userName,
+                customerEmail: email,
+                customerPhone: phone || "01700000000",
+                customerName: name || "RealProxy Valued Customer",
                 callbackUrl: `${window.location.origin}/dashboard/wallet`,
                 itemCategory: "WalletTopup",
-                externalReference: `WLT-${userInfo.userId}-${amount}BDT`
+                externalReference: `WLT-${userId}-${amount}BDT`
             });
 
             if (session.success && (session.hostedInvoiceUrl || session.paymentUrl)) {
@@ -450,6 +493,63 @@ export default function WalletPage() {
             console.error("PayStation top-up error:", error);
             toast.error("Payment initialization failed. Please try again.");
             setIsPayStationLoading(false);
+        }
+    };
+
+    const handleSaveProfileAndPay = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!profileModalName.trim()) {
+            toast.error("Please enter your name.");
+            return;
+        }
+        if (!profileModalPhone.trim() || profileModalPhone.trim().length < 10) {
+            toast.error("Please enter a valid phone number.");
+            return;
+        }
+
+        setIsSavingProfile(true);
+        const token = localStorage.getItem('auth_token');
+        const userInfo = getUserFromToken();
+        const amount = Number(customBdt);
+
+        try {
+            if (token) {
+                await axios.post(`${API_URL}/api/Auth/profile`, {
+                    fullName: profileModalName.trim(),
+                    phoneNumber: profileModalPhone.trim()
+                }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            }
+            localStorage.setItem('user_name', profileModalName.trim());
+            localStorage.setItem('user_phone', profileModalPhone.trim());
+            setShowProfileModal(false);
+
+            if (userInfo && userInfo.userId && amount) {
+                await executePayStationSession(
+                    amount,
+                    userInfo.userId,
+                    userInfo.email,
+                    profileModalName.trim(),
+                    profileModalPhone.trim()
+                );
+            }
+        } catch (err: any) {
+            console.error("Failed to save profile:", err);
+            localStorage.setItem('user_name', profileModalName.trim());
+            localStorage.setItem('user_phone', profileModalPhone.trim());
+            setShowProfileModal(false);
+            if (userInfo && userInfo.userId && amount) {
+                await executePayStationSession(
+                    amount,
+                    userInfo.userId,
+                    userInfo.email,
+                    profileModalName.trim(),
+                    profileModalPhone.trim()
+                );
+            }
+        } finally {
+            setIsSavingProfile(false);
         }
     };
 
@@ -3386,6 +3486,166 @@ export default function WalletPage() {
                     border: 1px solid rgba(255, 255, 255, 0.06) !important;
                 }
             `}</style>
+
+            {showProfileModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 99999,
+                    padding: '20px'
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        borderRadius: '24px',
+                        maxWidth: '440px',
+                        width: '100%',
+                        padding: '32px',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                        position: 'relative'
+                    }}>
+                        <button
+                            type="button"
+                            onClick={() => setShowProfileModal(false)}
+                            style={{
+                                position: 'absolute',
+                                right: '20px',
+                                top: '20px',
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: '#94A3B8'
+                            }}
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <div style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '14px',
+                            backgroundColor: '#EFF6FF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: '16px',
+                            color: '#0086FF'
+                        }}>
+                            <Smartphone size={24} />
+                        </div>
+
+                        <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#0F172A', marginBottom: '8px' }}>
+                            Customer Details Required
+                        </h3>
+                        <p style={{ fontSize: '14px', color: '#64748B', lineHeight: '1.5', marginBottom: '24px' }}>
+                            Please provide your Name and Mobile Phone Number to proceed with bKash deposit verification.
+                        </p>
+
+                        <form onSubmit={handleSaveProfileAndPay}>
+                            <div style={{ marginBottom: '16px' }}>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                                    Full Name
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={profileModalName}
+                                    onChange={(e) => setProfileModalName(e.target.value)}
+                                    placeholder="e.g. John Doe"
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px 14px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #E2E8F0',
+                                        fontSize: '14px',
+                                        outline: 'none',
+                                        color: '#0F172A',
+                                        backgroundColor: '#F8FAFC'
+                                    }}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '24px' }}>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                                    bKash / Mobile Phone Number
+                                </label>
+                                <input
+                                    type="tel"
+                                    required
+                                    value={profileModalPhone}
+                                    onChange={(e) => setProfileModalPhone(e.target.value)}
+                                    placeholder="01XXXXXXXXX"
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px 14px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #E2E8F0',
+                                        fontSize: '14px',
+                                        outline: 'none',
+                                        color: '#0F172A',
+                                        backgroundColor: '#F8FAFC'
+                                    }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowProfileModal(false)}
+                                    style={{
+                                        flex: 1,
+                                        padding: '12px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #E2E8F0',
+                                        backgroundColor: '#F8FAFC',
+                                        color: '#64748B',
+                                        fontWeight: '600',
+                                        fontSize: '14px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSavingProfile || isPayStationLoading}
+                                    style={{
+                                        flex: 2,
+                                        padding: '12px',
+                                        borderRadius: '12px',
+                                        border: 'none',
+                                        backgroundColor: '#0086FF',
+                                        color: 'white',
+                                        fontWeight: '600',
+                                        fontSize: '14px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px'
+                                    }}
+                                >
+                                    {isSavingProfile ? (
+                                        <>
+                                            <Loader2 size={16} className="animate-spin" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        'Save & Continue'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -48,7 +48,12 @@ export const PAYMENT_API_BASE_URL =
 /**
  * Extracts userId and email from JWT auth_token stored in localStorage
  */
-export function getUserFromToken(): { userId: number; email: string } | null {
+export function getUserFromToken(): {
+  userId: number;
+  email: string;
+  fullName?: string;
+  phoneNumber?: string;
+} | null {
   if (typeof window === 'undefined') return null;
   const token = localStorage.getItem('auth_token');
   if (!token) return null;
@@ -77,8 +82,21 @@ export function getUserFromToken(): { userId: number; email: string } | null {
       payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ||
       (typeof localStorage !== 'undefined' ? localStorage.getItem('user_email') : '') ||
       '';
+    const fullName =
+      payload.name ||
+      payload.fullName ||
+      payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] ||
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('user_name') : '') ||
+      '';
+    const phoneNumber =
+      payload.phone ||
+      payload.phoneNumber ||
+      payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone'] ||
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('user_phone') : '') ||
+      '';
+
     if (!userId) return null;
-    return { userId, email };
+    return { userId, email, fullName, phoneNumber };
   } catch (err) {
     console.error('Failed to parse JWT token:', err);
     return null;

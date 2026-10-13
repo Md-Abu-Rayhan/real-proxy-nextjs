@@ -45,9 +45,14 @@ const LoginPage = () => {
             });
 
             if (response.data && response.data.token) {
-                // Save token to localStorage
+                // Save token and profile to localStorage
                 localStorage.setItem('auth_token', response.data.token);
                 localStorage.setItem('user_email', formData.email);
+                if (response.data.user) {
+                    if (response.data.user.id) localStorage.setItem('user_id', String(response.data.user.id));
+                    if (response.data.user.fullName) localStorage.setItem('user_name', response.data.user.fullName);
+                    if (response.data.user.phoneNumber) localStorage.setItem('user_phone', response.data.user.phoneNumber);
+                }
                 toast.success("Login successful!");
 
                 // Redirect to dashboard

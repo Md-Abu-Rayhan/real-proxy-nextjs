@@ -21,6 +21,8 @@ const RegisterPageContent = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
+        fullName: '',
+        phoneNumber: '',
         email: '',
         password: '',
         confirmPassword: '',
@@ -77,6 +79,8 @@ const RegisterPageContent = () => {
             const apiUrl = API_URL;
             const response = await axios.post(`${apiUrl}/api/Auth/register`, {
                 email: formData.email,
+                fullName: formData.fullName?.trim() || null,
+                phoneNumber: formData.phoneNumber?.trim() || null,
                 password: formData.password,
                 invitationCode: formData.invitationCode
             });
@@ -193,6 +197,28 @@ const RegisterPageContent = () => {
                         </div>
 
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div className="form-group">
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#163561' }}>Full Name</label>
+                                <input
+                                    type="text"
+                                    name="fullName"
+                                    placeholder="e.g. John Doe"
+                                    style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', fontSize: '15px' }}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#163561' }}>Phone Number</label>
+                                <input
+                                    type="tel"
+                                    name="phoneNumber"
+                                    placeholder="01XXXXXXXXX"
+                                    style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', fontSize: '15px' }}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
                             <div className="form-group">
                                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#163561' }}>{t.register.email}</label>
                                 <input
