@@ -113,11 +113,11 @@ export async function createPaymentSession(
   const provider = (params.gatewayProvider || 'PayStation').toLowerCase();
 
   if (currency === 'BDT') {
-    if (provider === 'paystation' && params.amount < 500) {
+    if (provider === 'paystation' && params.amount < 300) {
       return {
         success: false,
-        message: 'Minimum deposit amount for bKash is ৳500 BDT.',
-        errorCode: 'MIN_AMOUNT_500_BDT',
+        message: 'Minimum deposit amount for bKash is ৳300 BDT.',
+        errorCode: 'MIN_AMOUNT_300_BDT',
       };
     }
     if (params.amount < 125) {

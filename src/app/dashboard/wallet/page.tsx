@@ -471,8 +471,8 @@ export default function WalletPage() {
 
     const handlePayStationTopUp = async () => {
         const amount = Number(customBdt);
-        if (!amount || amount < 500) {
-            toast.error("Minimum deposit amount for bKash is ৳500 BDT.");
+        if (!amount || amount < 300) {
+            toast.error("Minimum deposit amount for bKash is ৳300 BDT.");
             return;
         }
 
@@ -930,7 +930,7 @@ export default function WalletPage() {
                                 type="button"
                                 onClick={() => {
                                     setActiveTab('bkash');
-                                    if (!customBdt || Number(customBdt) < 500) {
+                                    if (!customBdt || Number(customBdt) < 300) {
                                         setCustomBdt('1000');
                                     }
                                 }}
@@ -1018,10 +1018,10 @@ export default function WalletPage() {
                                 <div className="field-group">
                                     <div className="field-label-row">
                                         <label className="field-label">Quick Select (BDT)</label>
-                                        <span className="field-hint">Minimum Deposit: ৳500 BDT (~${(500 / rate).toFixed(2)} USD)</span>
+                                        <span className="field-hint">Minimum Deposit: ৳300 BDT (~${(300 / rate).toFixed(2)} USD)</span>
                                     </div>
                                     <div className="presets-row">
-                                        {[500, 1000, 2500, 5000, 10000].map((amt) => {
+                                        {[300, 500, 1000, 2500, 5000].map((amt) => {
                                             const isSelected = customBdt === amt.toString();
                                             const usd = (amt / rate).toFixed(0);
                                             return (
@@ -1046,18 +1046,18 @@ export default function WalletPage() {
                                         <span className="currency-prefix">৳</span>
                                         <input
                                             type="number"
-                                            min="500"
+                                            min="300"
                                             step="1"
                                             value={customBdt}
                                             onChange={(e) => setCustomBdt(e.target.value)}
-                                            placeholder="Enter amount (min ৳500)"
+                                            placeholder="Enter amount (min ৳300)"
                                             className="text-input"
                                         />
                                         <span className="currency-suffix">BDT</span>
                                     </div>
-                                    {customBdt !== '' && Number(customBdt) < 500 && (
+                                    {customBdt !== '' && Number(customBdt) < 300 && (
                                         <div className="min-bdt-warning bkash-warning">
-                                            ⚠️ Minimum deposit amount for bKash is ৳500 BDT
+                                            ⚠️ Minimum deposit amount for bKash is ৳300 BDT
                                         </div>
                                     )}
                                 </div>
@@ -1074,7 +1074,7 @@ export default function WalletPage() {
                                 <button
                                     type="button"
                                     onClick={handlePayStationTopUp}
-                                    disabled={isPayStationLoading || !customBdt || Number(customBdt) < 500}
+                                    disabled={isPayStationLoading || !customBdt || Number(customBdt) < 300}
                                     className="btn-primary custom-action-btn btn-bkash-theme"
                                 >
                                     {isPayStationLoading ? (
