@@ -140,7 +140,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
             {/* Sidebar */}
             <aside className={`dashboard-sidebar ${isSidebarOpen ? 'show' : ''} ${isSidebarCollapsed ? 'collapsed' : ''}`}>
-                {/* Logo Area */}
                 <div className="sidebar-logo">
                     <Link href="/" style={{ textDecoration: 'none' }}>
                         <img src="/logo.png" alt="Logo" className="logo-img" />
