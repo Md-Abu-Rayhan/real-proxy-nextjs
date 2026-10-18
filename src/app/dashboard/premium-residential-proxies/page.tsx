@@ -5,6 +5,7 @@ import { API_URL } from '@/lib/config';
 import {
     Info,
     ChevronDown,
+    ChevronLeft,
     ChevronRight,
     Globe,
     Copy,
@@ -119,6 +120,8 @@ const PremiumResidentialProxiesPage = () => {
     const [statsData, setStatsData] = useState<any>(null);
     const [isStatsLoading, setIsStatsLoading] = useState(false);
     const [tableSearch, setTableSearch] = useState('');
+    const [statsPage, setStatsPage] = useState<number>(1);
+    const [statsPageSize, setStatsPageSize] = useState<number>(10);
 
     useEffect(() => {
         setIsMounted(true);
@@ -1322,7 +1325,7 @@ const PremiumResidentialProxiesPage = () => {
                             ].map(pill => (
                                 <button
                                     key={pill.id}
-                                    onClick={() => { setStatsPreset(pill.id as any); }}
+                                    onClick={() => { setStatsPreset(pill.id as any); setStatsPage(1); }}
                                     style={{
                                         padding: '8px 16px',
                                         borderRadius: '8px',
@@ -1449,7 +1452,10 @@ const PremiumResidentialProxiesPage = () => {
                                     type="text"
                                     placeholder="Search host or email..."
                                     value={tableSearch}
-                                    onChange={(e) => setTableSearch(e.target.value)}
+                                    onChange={(e) => {
+                                        setTableSearch(e.target.value);
+                                        setStatsPage(1);
+                                    }}
                                     style={{
                                         width: '100%',
                                         padding: '8px 12px 8px 36px',
@@ -1490,39 +1496,191 @@ const PremiumResidentialProxiesPage = () => {
                                 );
                             }
 
+                            const totalRows = filteredDocs.length;
+                            const totalPages = Math.max(1, Math.ceil(totalRows / statsPageSize));
+                            const safePage = Math.min(statsPage, totalPages);
+                            const startIndex = (safePage - 1) * statsPageSize;
+                            const endIndex = Math.min(startIndex + statsPageSize, totalRows);
+                            const paginatedDocs = filteredDocs.slice(startIndex, endIndex);
+
                             return (
-                                <div style={{ overflowX: 'auto' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
-                                        <thead>
-                                            <tr style={{ borderBottom: `1px solid ${theme.border}`, color: theme.textMuted, fontWeight: '600' }}>
-                                                <th style={{ padding: '12px 16px' }}>User</th>
-                                                <th style={{ padding: '12px 16px' }}>Country</th>
-                                                <th style={{ padding: '12px 16px' }}>Host</th>
-                                                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Total</th>
-                                                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Success Rate</th>
-                                                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Bandwidth</th>
-                                                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Avg Latency</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredDocs.map((row: any, idx: number) => (
-                                                <tr key={idx} style={{ borderBottom: `1px solid ${theme.border}`, transition: 'background 0.15s' }}>
-                                                    <td style={{ padding: '14px 16px', color: theme.text, fontWeight: '500' }}>{row.email || row.subUserId || '—'}</td>
-                                                    <td style={{ padding: '14px 16px', color: theme.text }}>
-                                                        <span style={{ marginRight: '6px' }}>{getCountryFlag(row.country)}</span>
-                                                        {row.country ? row.country.toUpperCase() : 'Global'}
-                                                    </td>
-                                                    <td style={{ padding: '14px 16px', color: theme.text, fontFamily: 'monospace', fontSize: '12px' }}>{row.host || '—'}</td>
-                                                    <td style={{ padding: '14px 16px', textAlign: 'right', color: theme.text, fontWeight: '600' }}>{(row.totalRequests || 0).toLocaleString()}</td>
-                                                    <td style={{ padding: '14px 16px', textAlign: 'right', color: row.successRate >= 90 ? '#10B981' : (row.successRate >= 75 ? '#F59E0B' : '#EF4444'), fontWeight: '600' }}>
-                                                        {row.successRate !== undefined ? `${row.successRate}%` : '—'}
-                                                    </td>
-                                                    <td style={{ padding: '14px 16px', textAlign: 'right', color: theme.text }}>{formatBytes(row.bandwidthBytes || 0)}</td>
-                                                    <td style={{ padding: '14px 16px', textAlign: 'right', color: theme.textMuted }}>{row.avgLatency ? `${(row.avgLatency / 1000).toFixed(2)} s` : '—'}</td>
+                                <div>
+                                    <div style={{ overflowX: 'auto' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                                            <thead>
+                                                <tr style={{ borderBottom: `1px solid ${theme.border}`, color: theme.textMuted, fontWeight: '600' }}>
+                                                    <th style={{ padding: '12px 16px' }}>User</th>
+                                                    <th style={{ padding: '12px 16px' }}>Country</th>
+                                                    <th style={{ padding: '12px 16px' }}>Host</th>
+                                                    <th style={{ padding: '12px 16px', textAlign: 'right' }}>Total</th>
+                                                    <th style={{ padding: '12px 16px', textAlign: 'right' }}>Success Rate</th>
+                                                    <th style={{ padding: '12px 16px', textAlign: 'right' }}>Bandwidth</th>
+                                                    <th style={{ padding: '12px 16px', textAlign: 'right' }}>Avg Latency</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                {paginatedDocs.map((row: any, idx: number) => (
+                                                    <tr key={idx} style={{ borderBottom: `1px solid ${theme.border}`, transition: 'background 0.15s' }}>
+                                                        <td style={{ padding: '14px 16px', color: theme.text, fontWeight: '500' }}>{row.email || row.subUserId || '—'}</td>
+                                                        <td style={{ padding: '14px 16px', color: theme.text }}>
+                                                            <span style={{ marginRight: '6px' }}>{getCountryFlag(row.country)}</span>
+                                                            {row.country ? row.country.toUpperCase() : 'Global'}
+                                                        </td>
+                                                        <td style={{ padding: '14px 16px', color: theme.text, fontFamily: 'monospace', fontSize: '12px' }}>{row.host || '—'}</td>
+                                                        <td style={{ padding: '14px 16px', textAlign: 'right', color: theme.text, fontWeight: '600' }}>{(row.totalRequests || 0).toLocaleString()}</td>
+                                                        <td style={{ padding: '14px 16px', textAlign: 'right', color: row.successRate >= 90 ? '#10B981' : (row.successRate >= 75 ? '#F59E0B' : '#EF4444'), fontWeight: '600' }}>
+                                                            {row.successRate !== undefined ? `${row.successRate}%` : '—'}
+                                                        </td>
+                                                        <td style={{ padding: '14px 16px', textAlign: 'right', color: theme.text }}>{formatBytes(row.bandwidthBytes || 0)}</td>
+                                                        <td style={{ padding: '14px 16px', textAlign: 'right', color: theme.textMuted }}>{row.avgLatency ? `${(row.avgLatency / 1000).toFixed(2)} s` : '—'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {/* Pagination Controls */}
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        flexWrap: 'wrap',
+                                        gap: '12px',
+                                        paddingTop: '16px',
+                                        borderTop: `1px solid ${theme.border}`,
+                                        marginTop: '12px'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                                            <span style={{ fontSize: '13px', color: theme.textMuted }}>
+                                                Showing <strong>{totalRows === 0 ? 0 : startIndex + 1}</strong> to <strong>{endIndex}</strong> of <strong>{totalRows}</strong> entries
+                                            </span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span style={{ fontSize: '12px', color: theme.textMuted }}>Rows per page:</span>
+                                                <select
+                                                    value={statsPageSize}
+                                                    onChange={(e) => {
+                                                        setStatsPageSize(Number(e.target.value));
+                                                        setStatsPage(1);
+                                                    }}
+                                                    style={{
+                                                        padding: '4px 8px',
+                                                        borderRadius: '6px',
+                                                        border: `1px solid ${theme.border}`,
+                                                        backgroundColor: theme.input,
+                                                        color: theme.text,
+                                                        fontSize: '12px',
+                                                        cursor: 'pointer',
+                                                        outline: 'none'
+                                                    }}
+                                                >
+                                                    <option value={10}>10</option>
+                                                    <option value={25}>25</option>
+                                                    <option value={50}>50</option>
+                                                    <option value={100}>100</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        {totalPages > 1 && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setStatsPage(p => Math.max(1, p - 1))}
+                                                    disabled={safePage <= 1}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        padding: '6px 12px',
+                                                        borderRadius: '6px',
+                                                        border: `1px solid ${theme.border}`,
+                                                        backgroundColor: theme.card,
+                                                        color: safePage <= 1 ? theme.textMuted : theme.text,
+                                                        fontSize: '12.5px',
+                                                        fontWeight: '600',
+                                                        cursor: safePage <= 1 ? 'not-allowed' : 'pointer',
+                                                        opacity: safePage <= 1 ? 0.45 : 1,
+                                                        transition: 'all 0.15s'
+                                                    }}
+                                                >
+                                                    <ChevronLeft size={14} />
+                                                    <span>Prev</span>
+                                                </button>
+
+                                                {(() => {
+                                                    const pages: (number | string)[] = [];
+                                                    if (totalPages <= 5) {
+                                                        for (let i = 1; i <= totalPages; i++) pages.push(i);
+                                                    } else {
+                                                        if (safePage <= 3) {
+                                                            pages.push(1, 2, 3, 4, '...', totalPages);
+                                                        } else if (safePage >= totalPages - 2) {
+                                                            pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                                                        } else {
+                                                            pages.push(1, '...', safePage - 1, safePage, safePage + 1, '...', totalPages);
+                                                        }
+                                                    }
+
+                                                    return pages.map((p, pIdx) => {
+                                                        if (typeof p === 'string') {
+                                                            return (
+                                                                <span key={`dots-${pIdx}`} style={{ padding: '0 4px', color: theme.textMuted, fontSize: '12px' }}>
+                                                                    ...
+                                                                </span>
+                                                            );
+                                                        }
+                                                        const isCurrent = p === safePage;
+                                                        return (
+                                                            <button
+                                                                key={p}
+                                                                type="button"
+                                                                onClick={() => setStatsPage(p)}
+                                                                style={{
+                                                                    minWidth: '32px',
+                                                                    height: '32px',
+                                                                    padding: '0 6px',
+                                                                    borderRadius: '6px',
+                                                                    border: isCurrent ? '1px solid #FFA800' : `1px solid ${theme.border}`,
+                                                                    backgroundColor: isCurrent ? (isDarkMode ? '#3A2703' : '#FFF9E6') : theme.card,
+                                                                    color: isCurrent ? '#D97706' : theme.text,
+                                                                    fontSize: '12.5px',
+                                                                    fontWeight: isCurrent ? '700' : '500',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.15s'
+                                                                }}
+                                                            >
+                                                                {p}
+                                                            </button>
+                                                        );
+                                                    });
+                                                })()}
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setStatsPage(p => Math.min(totalPages, p + 1))}
+                                                    disabled={safePage >= totalPages}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        padding: '6px 12px',
+                                                        borderRadius: '6px',
+                                                        border: `1px solid ${theme.border}`,
+                                                        backgroundColor: theme.card,
+                                                        color: safePage >= totalPages ? theme.textMuted : theme.text,
+                                                        fontSize: '12.5px',
+                                                        fontWeight: '600',
+                                                        cursor: safePage >= totalPages ? 'not-allowed' : 'pointer',
+                                                        opacity: safePage >= totalPages ? 0.45 : 1,
+                                                        transition: 'all 0.15s'
+                                                    }}
+                                                >
+                                                    <span>Next</span>
+                                                    <ChevronRight size={14} />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             );
                         })()}
