@@ -27,6 +27,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import LoadingDashboard from "@/components/common/LoadingDashboard";
 import { motion, AnimatePresence } from "framer-motion";
+import { triggerPickBandwidthModal } from '@/components/ui/PickBandwidthModal';
 
 interface ProxyInfo {
     proxyAccount: string;
@@ -528,6 +529,17 @@ const ResidentialProxiesPage = () => {
         }
     }, [proxyInfo?.proxyAccount]);
 
+    // Auto-refresh balance when bandwidth is purchased
+    useEffect(() => {
+        const handlePurchased = () => {
+            if (proxyInfo?.proxyAccount) {
+                refreshBalance(proxyInfo.proxyAccount);
+            }
+        };
+        window.addEventListener('bandwidth-purchased', handlePurchased);
+        return () => window.removeEventListener('bandwidth-purchased', handlePurchased);
+    }, [proxyInfo?.proxyAccount]);
+
     // Fetch cities when country changes
     useEffect(() => {
         const fetchCities = async () => {
@@ -834,9 +846,7 @@ const ResidentialProxiesPage = () => {
                 </div>
 
                 <button
-                    onClick={() =>
-                        router.push('/residential-proxies?recharge=true#bandwidth-section')
-                    }
+                    onClick={() => triggerPickBandwidthModal('Residential')}
                     className="header-refill-btn"
                 >
                     Refill Balance

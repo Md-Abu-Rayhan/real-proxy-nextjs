@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { triggerContactModal } from '@/components/ui/ContactModal';
+import { PickBandwidthModal } from '@/components/ui/PickBandwidthModal';
 import { WalletProvider, useWallet } from '@/context/WalletContext';
 
 const HeaderWalletBadge = () => {
@@ -308,6 +309,9 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
                 <main className="dashboard-main custom-scrollbar">
                     {children}
                 </main>
+
+                {/* Global Pick Bandwidth Interactive Purchase Modal */}
+                <PickBandwidthModal />
             </div>
 
             <style jsx global>{`

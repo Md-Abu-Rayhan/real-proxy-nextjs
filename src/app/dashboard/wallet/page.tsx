@@ -114,7 +114,7 @@ export default function WalletPage() {
     );
 
     // Binance Pay State
-    const BINANCE_PAY_ID = '37492687';
+    const BINANCE_PAY_ID = '835211363';
     const [binanceAmountUsd, setBinanceAmountUsd] = useState<string>('5');
     const [binanceOrderId, setBinanceOrderId] = useState<string>('');
     const [isBinanceVerifying, setIsBinanceVerifying] = useState<boolean>(false);

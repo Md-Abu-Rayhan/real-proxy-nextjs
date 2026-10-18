@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -13,29 +13,17 @@ import {
     ArrowRight,
     Plus,
     Minus,
-    Check,
     Tag,
     Zap,
-    Copy,
     ShoppingCart,
-    ExternalLink,
-    ShieldCheck,
     X,
-    Server,
-    Activity,
     Users,
-    Code,
-    Terminal,
-    Clock,
     TrendingUp,
-    FileText,
-    AlertCircle,
-    ChevronRight,
-    Layers,
-    BarChart3
+    FileText
 } from 'lucide-react';
 import { API_URL } from '@/lib/config';
 import { useWallet } from '@/context/WalletContext';
+import { triggerPickBandwidthModal } from '@/components/ui/PickBandwidthModal';
 
 interface TransactionItem {
     id: number;
@@ -65,7 +53,6 @@ export default function DashboardOverviewPage() {
     const [userEmail, setUserEmail] = useState<string>('');
     const [userName, setUserName] = useState<string>('');
     const [proxyCredentials, setProxyCredentials] = useState<{ account?: string; password?: string } | null>(null);
-    const [copiedCredential, setCopiedCredential] = useState<string | null>(null);
     const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
     // Residential Proxies Bandwidth
@@ -82,101 +69,8 @@ export default function DashboardOverviewPage() {
     const [transactions, setTransactions] = useState<TransactionItem[]>([]);
     const [isTxLoading, setIsTxLoading] = useState<boolean>(true);
 
-    // Code Snippet Tab
-    const [activeSnippetTab, setActiveSnippetTab] = useState<'curl' | 'python' | 'node'>('curl');
-
-    // Interactive Telemetry & Traffic Chart State
-    const [telemetryTimeframe, setTelemetryTimeframe] = useState<'24H' | '7D' | '30D'>('24H');
-    const [telemetryMetric, setTelemetryMetric] = useState<'bandwidth' | 'requests'>('bandwidth');
-    const [hoveredPointIndex, setHoveredPointIndex] = useState<number | null>(null);
-
-    const telemetryDatasets = useMemo(() => ({
-        '24H': [
-            { label: '00:00', gb: 1.2, reqs: 11.2, latency: 36 },
-            { label: '04:00', gb: 0.6, reqs: 6.4, latency: 34 },
-            { label: '08:00', gb: 3.8, reqs: 34.8, latency: 42 },
-            { label: '12:00', gb: 7.2, reqs: 62.4, latency: 45 },
-            { label: '16:00', gb: 8.6, reqs: 74.1, latency: 44 },
-            { label: '20:00', gb: 4.8, reqs: 41.6, latency: 40 },
-            { label: 'Now', gb: 6.9, reqs: 59.2, latency: 41 },
-        ],
-        '7D': [
-            { label: 'Mon', gb: 18.2, reqs: 160, latency: 39 },
-            { label: 'Tue', gb: 38.6, reqs: 340, latency: 43 },
-            { label: 'Wed', gb: 24.1, reqs: 210, latency: 41 },
-            { label: 'Thu', gb: 52.9, reqs: 465, latency: 46 },
-            { label: 'Fri', gb: 64.4, reqs: 565, latency: 44 },
-            { label: 'Sat', gb: 31.7, reqs: 275, latency: 38 },
-            { label: 'Sun', gb: 46.1, reqs: 405, latency: 40 },
-        ],
-        '30D': [
-            { label: 'Week 1', gb: 120, reqs: 1120, latency: 41 },
-            { label: 'Week 2', gb: 265, reqs: 2350, latency: 44 },
-            { label: 'Week 3', gb: 195, reqs: 1720, latency: 42 },
-            { label: 'Week 4', gb: 360, reqs: 3150, latency: 46 },
-            { label: 'Week 5', gb: 410, reqs: 3580, latency: 43 },
-        ],
-    }), []);
-
-    const currentChartData = telemetryDatasets[telemetryTimeframe];
-    const chartW = 600;
-    const chartH = 210;
-    const chartPadX = 30;
-    const chartPadTop = 22;
-    const chartPadBottom = 30;
-    const graphPlotH = chartH - chartPadTop - chartPadBottom;
-    const chartValues = currentChartData.map(d => telemetryMetric === 'bandwidth' ? d.gb : d.reqs);
-    const minVal = Math.min(...chartValues);
-    const maxVal = Math.max(...chartValues);
-    const valRange = (maxVal - minVal) || 1;
-    const plotMin = Math.max(0, minVal - valRange * 0.22);
-    const plotMax = maxVal + valRange * 0.18;
-    const plotRange = (plotMax - plotMin) || 1;
-
-    const chartPoints = currentChartData.map((d, i) => {
-        const x = chartPadX + (i / (currentChartData.length - 1)) * (chartW - chartPadX * 2);
-        const normalized = (chartValues[i] - plotMin) / plotRange;
-        const y = chartPadTop + graphPlotH - (normalized * graphPlotH);
-        return { x, y, data: d, value: chartValues[i] };
-    });
-
-    let chartLineD = '';
-    let chartAreaD = '';
-    if (chartPoints.length > 0) {
-        chartLineD = `M ${chartPoints[0].x},${chartPoints[0].y}`;
-        for (let i = 0; i < chartPoints.length - 1; i++) {
-            const curr = chartPoints[i];
-            const next = chartPoints[i + 1];
-            const cpX1 = curr.x + (next.x - curr.x) / 2;
-            const cpY1 = curr.y;
-            const cpX2 = curr.x + (next.x - curr.x) / 2;
-            const cpY2 = next.y;
-            chartLineD += ` C ${cpX1},${cpY1} ${cpX2},${cpY2} ${next.x},${next.y}`;
-        }
-        const last = chartPoints[chartPoints.length - 1];
-        const baseY = chartPadTop + graphPlotH;
-        chartAreaD = `${chartLineD} L ${last.x},${baseY} L ${chartPoints[0].x},${baseY} Z`;
-    }
-    const activeHoverPoint = hoveredPointIndex !== null && chartPoints[hoveredPointIndex] ? chartPoints[hoveredPointIndex] : null;
-
-    const [isBuyModalOpen, setIsBuyModalOpen] = useState<boolean>(false);
-    const [modalProxyType, setModalProxyType] = useState<'Residential' | 'Premium Residential'>('Residential');
-    const [selectedBandwidth, setSelectedBandwidth] = useState<number>(5);
-    const [promoCode, setPromoCode] = useState<string>('');
-    const [appliedDiscount, setAppliedDiscount] = useState<number | null>(null);
-    const [isValidatingPromo, setIsValidatingPromo] = useState<boolean>(false);
-    const [isPurchasing, setIsPurchasing] = useState<boolean>(false);
-
-    // Calculations & Bandwidth Unit Normalization
+    // Currency rate calculation
     const rate = exchangeRateBdt > 0 ? exchangeRateBdt : 125;
-    const pricePerGb = modalProxyType === 'Premium Residential' ? 1.50 : 1.00;
-    const baseTotalUsd = selectedBandwidth * pricePerGb;
-    const discountAmountUsd = appliedDiscount ? (baseTotalUsd * appliedDiscount) / 100 : 0;
-    const finalTotalUsd = Math.max(0.01, baseTotalUsd - discountAmountUsd);
-    const finalTotalBdt = Math.round(finalTotalUsd * rate);
-
-    const hasSufficientBalance = !isWalletLoading && balanceUsd >= finalTotalUsd;
-    const balanceShortage = Math.max(0, finalTotalUsd - balanceUsd);
 
     // Evomi residential proxy balance is returned in MB - normalize to GB (1000 MB = 1 GB)
     const residentialRemainingGb = residentialBalance !== null ? residentialBalance / 1000 : null;
@@ -295,106 +189,24 @@ export default function DashboardOverviewPage() {
 
     // Open Modal
     const handleOpenModal = (type: 'Residential' | 'Premium Residential') => {
-        setModalProxyType(type);
-        setSelectedBandwidth(5);
-        setPromoCode('');
-        setAppliedDiscount(null);
-        setIsBuyModalOpen(true);
+        triggerPickBandwidthModal(type);
     };
 
-    // Promo Validation
-    const handleValidatePromo = async () => {
-        if (!promoCode || promoCode.trim().length < 3) return;
-        setIsValidatingPromo(true);
-        try {
-            const token = localStorage.getItem('auth_token');
-            const pkgId = modalProxyType === 'Premium Residential'
-                ? (selectedBandwidth === 10 ? "static_10gb" : (selectedBandwidth === 50 ? "static_50gb" : (selectedBandwidth === 100 ? "static_100gb" : "static_custom")))
-                : (selectedBandwidth === 10 ? "res_10gb" : (selectedBandwidth === 50 ? "res_50gb" : (selectedBandwidth === 100 ? "res_100gb" : "custom")));
-
-            const res = await axios.get(`${API_URL}/api/Payment/validate-promo`, {
-                params: {
-                    code: promoCode.trim().toUpperCase(),
-                    packageId: pkgId,
-                    amount: finalTotalBdt
-                },
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            if (res.data?.discountPercentage) {
-                setAppliedDiscount(res.data.discountPercentage);
-                toast.success(`Promo applied: ${res.data.discountPercentage}% OFF`);
-            } else {
-                setAppliedDiscount(null);
-                toast.error("Invalid or expired promo code");
-            }
-        } catch {
-            setAppliedDiscount(null);
-            toast.error("Promo code not found");
-        } finally {
-            setIsValidatingPromo(false);
-        }
-    };
-
-    // Confirm Wallet Purchase
-    const handleConfirmPurchase = async () => {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-            router.push('/login');
-            return;
-        }
-
-        if (balanceUsd < finalTotalUsd) {
-            toast.error(`Insufficient balance. Please add $${balanceShortage.toFixed(2)} USD.`);
-            return;
-        }
-
-        setIsPurchasing(true);
-        try {
-            const res = await axios.post(`${API_URL}/api/Wallet/buy-proxy`, {
-                proxyType: modalProxyType,
-                bandwidthGb: selectedBandwidth,
-                promoCode: appliedDiscount && promoCode ? promoCode.trim() : null
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (res.data?.success) {
-                toast.success(`🎉 ${selectedBandwidth} GB ${modalProxyType} activated!`);
-                setIsBuyModalOpen(false);
-                refreshWallet(true);
+    // Auto-refresh data when bandwidth is purchased
+    useEffect(() => {
+        const handlePurchased = () => {
+            const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+            if (token) {
                 fetchResidentialData(token);
                 if (userEmail) fetchPremiumData(userEmail);
                 fetchRecentTransactions(token);
-            } else {
-                toast.error(res.data?.message || "Purchase failed.");
             }
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || "Failed to complete purchase.");
-        } finally {
-            setIsPurchasing(false);
-        }
-    };
+        };
+        window.addEventListener('bandwidth-purchased', handlePurchased);
+        return () => window.removeEventListener('bandwidth-purchased', handlePurchased);
+    }, [userEmail, fetchResidentialData, fetchPremiumData, fetchRecentTransactions]);
 
-    // Copy Helper
-    const handleCopy = (text: string, id: string) => {
-        navigator.clipboard.writeText(text);
-        setCopiedCredential(id);
-        toast.success("Copied to clipboard!");
-        setTimeout(() => setCopiedCredential(null), 1800);
-    };
 
-    // Dynamic Code Snippets
-    const userAcc = proxyCredentials?.account || "username";
-    const userPass = proxyCredentials?.password || "password";
-    const codeSnippets = {
-        curl: `curl -x rp.realproxy.net:1000 -U "${userAcc}:${userPass}" https://ipinfo.io/ip`,
-        python: `import requests\n\nproxies = {\n    "http": "http://${userAcc}:${userPass}@rp.realproxy.net:1000",\n    "https": "http://${userAcc}:${userPass}@rp.realproxy.net:1000"\n}\nresponse = requests.get("https://ipinfo.io/ip", proxies=proxies)\nprint("My Proxy IP:", response.text.strip())`,
-        node: `const axios = require('axios');\n\naxios.get('https://ipinfo.io/ip', {\n    proxy: {\n        host: 'rp.realproxy.net',\n        port: 1000,\n        auth: { username: '${userAcc}', password: '${userPass}' }\n    }\n}).then(res => console.log('IP:', res.data));`
-    };
 
     return (
         <div className="dash-root-container">
@@ -615,377 +427,6 @@ export default function DashboardOverviewPage() {
                 </div>
             </section>
 
-            {/* TWO-COLUMN INFORMATIVE MIDDLE GRID: Network Analytics + Code Integration */}
-            <section className="middle-dashboard-grid">
-                {/* Left: Interactive Proxy Network & Traffic Telemetry Panel */}
-                <div className="info-panel telemetry-interactive-panel">
-                    <div className="panel-header">
-                        <div className="panel-title-group">
-                            <div className="panel-icon-wrap icon-blue-wrap">
-                                <Activity size={18} />
-                            </div>
-                            <div>
-                                <h3 className="panel-title">Network Telemetry & Traffic Graph</h3>
-                                <p className="panel-desc">Interactive edge throughput, carrier peering latency, and traffic velocity.</p>
-                            </div>
-                        </div>
-                        <div className="telemetry-controls-group">
-                            <div className="metric-toggle-capsule">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setTelemetryMetric('bandwidth');
-                                        setHoveredPointIndex(null);
-                                    }}
-                                    className={`metric-toggle-btn ${telemetryMetric === 'bandwidth' ? 'active' : ''}`}
-                                >
-                                    Bandwidth
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setTelemetryMetric('requests');
-                                        setHoveredPointIndex(null);
-                                    }}
-                                    className={`metric-toggle-btn ${telemetryMetric === 'requests' ? 'active' : ''}`}
-                                >
-                                    Requests
-                                </button>
-                            </div>
-                            <div className="timeframe-pills-group">
-                                {(['24H', '7D', '30D'] as const).map(tf => (
-                                    <button
-                                        key={tf}
-                                        type="button"
-                                        onClick={() => {
-                                            setTelemetryTimeframe(tf);
-                                            setHoveredPointIndex(null);
-                                        }}
-                                        className={`timeframe-pill-btn ${telemetryTimeframe === tf ? 'active' : ''}`}
-                                    >
-                                        {tf}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Micro Live Stats Strip */}
-                    <div className="telemetry-live-strip">
-                        <div className="live-stat-item">
-                            <span className="ls-label">Peak Velocity</span>
-                            <span className="ls-val">
-                                {telemetryMetric === 'bandwidth' ? '6.8 GB/h' : '58.4K reqs'}
-                            </span>
-                            <span className="ls-trend green-text">+12.4%</span>
-                        </div>
-                        <div className="live-stat-item">
-                            <span className="ls-label">Avg Carrier Latency</span>
-                            <span className="ls-val green-text">42 ms</span>
-                            <span className="ls-sub">Direct Tier-1</span>
-                        </div>
-                        <div className="live-stat-item">
-                            <span className="ls-label">Success Rate</span>
-                            <span className="ls-val">99.8%</span>
-                            <span className="ls-sub">0% Captcha</span>
-                        </div>
-                        <div className="live-stat-item">
-                            <span className="ls-label">Active Edge Nodes</span>
-                            <span className="ls-val">195+ Countries</span>
-                            <span className="ls-sub">Global Mesh</span>
-                        </div>
-                    </div>
-
-                    {/* Interactive SVG Curve Graph with Hover Tooltip */}
-                    <div
-                        className="interactive-chart-wrap"
-                        onMouseLeave={() => setHoveredPointIndex(null)}
-                    >
-                        <svg
-                            viewBox={`0 0 ${chartW} ${chartH}`}
-                            className="telemetry-svg-chart"
-                            preserveAspectRatio="none"
-                            onMouseMove={(e) => {
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                const mouseX = e.clientX - rect.left;
-                                const svgX = (mouseX / rect.width) * chartW;
-                                let closestIndex = 0;
-                                let minDist = Infinity;
-                                chartPoints.forEach((pt, idx) => {
-                                    const dist = Math.abs(pt.x - svgX);
-                                    if (dist < minDist) {
-                                        minDist = dist;
-                                        closestIndex = idx;
-                                    }
-                                });
-                                setHoveredPointIndex(closestIndex);
-                            }}
-                        >
-                            <defs>
-                                <linearGradient id="telemetryGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#0086FF" stopOpacity="0.25" />
-                                    <stop offset="70%" stopColor="#0086FF" stopOpacity="0.05" />
-                                    <stop offset="100%" stopColor="#0086FF" stopOpacity="0.0" />
-                                </linearGradient>
-                            </defs>
-
-                            {/* Background Horizontal Grid Lines */}
-                            <line x1={chartPadX} y1={chartPadTop} x2={chartW - chartPadX} y2={chartPadTop} stroke="#E2E8F0" strokeDasharray="3 3" opacity="0.6" />
-                            <line x1={chartPadX} y1={chartPadTop + graphPlotH / 2} x2={chartW - chartPadX} y2={chartPadTop + graphPlotH / 2} stroke="#E2E8F0" strokeDasharray="3 3" opacity="0.6" />
-                            <line x1={chartPadX} y1={chartPadTop + graphPlotH} x2={chartW - chartPadX} y2={chartPadTop + graphPlotH} stroke="#E2E8F0" opacity="0.8" />
-
-                            {/* Area Gradient Fill */}
-                            {chartAreaD && <path d={chartAreaD} fill="url(#telemetryGrad)" />}
-
-                            {/* Smooth Stroke Curve */}
-                            {chartLineD && (
-                                <path
-                                    d={chartLineD}
-                                    fill="none"
-                                    stroke="#0086FF"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                />
-                            )}
-
-                            {/* Subtle Data Points */}
-                            {chartPoints.map((pt, idx) => (
-                                <circle
-                                    key={idx}
-                                    cx={pt.x}
-                                    cy={pt.y}
-                                    r={hoveredPointIndex === idx ? "5" : "3"}
-                                    fill={hoveredPointIndex === idx ? "#0086FF" : "#FFFFFF"}
-                                    stroke="#0086FF"
-                                    strokeWidth={hoveredPointIndex === idx ? "2.5" : "1.5"}
-                                    className="chart-dot"
-                                />
-                            ))}
-
-                            {/* Hover Active Crosshair & Halo */}
-                            {activeHoverPoint && (
-                                <>
-                                    <line
-                                        x1={activeHoverPoint.x}
-                                        y1={chartPadTop}
-                                        x2={activeHoverPoint.x}
-                                        y2={chartPadTop + graphPlotH}
-                                        stroke="#0086FF"
-                                        strokeWidth="1.5"
-                                        strokeDasharray="3 3"
-                                        opacity="0.8"
-                                    />
-                                    <circle
-                                        cx={activeHoverPoint.x}
-                                        cy={activeHoverPoint.y}
-                                        r="9"
-                                        fill="rgba(0, 134, 255, 0.2)"
-                                    />
-                                </>
-                            )}
-
-                            {/* X-Axis Labels */}
-                            {chartPoints.map((pt, idx) => (
-                                <text
-                                    key={idx}
-                                    x={pt.x}
-                                    y={chartH - 8}
-                                    textAnchor="middle"
-                                    fontSize="10"
-                                    fontWeight="500"
-                                    fill={hoveredPointIndex === idx ? "#0086FF" : "#94A3B8"}
-                                >
-                                    {pt.data.label}
-                                </text>
-                            ))}
-                        </svg>
-
-                        {/* Interactive Tooltip Card Floating over Active Point */}
-                        {activeHoverPoint && (
-                            <div
-                                className="chart-hover-card"
-                                style={{
-                                    left: `${Math.min(84, Math.max(16, (activeHoverPoint.x / chartW) * 100))}%`,
-                                    top: `${Math.max(10, (activeHoverPoint.y / chartH) * 100 - 45)}%`
-                                }}
-                            >
-                                <div className="ch-time">{activeHoverPoint.data.label} Snapshot</div>
-                                <div className="ch-val">
-                                    {telemetryMetric === 'bandwidth'
-                                        ? `${activeHoverPoint.data.gb.toFixed(1)} GB Transferred`
-                                        : `${activeHoverPoint.data.reqs.toLocaleString()}K Requests`
-                                    }
-                                </div>
-                                <div className="ch-meta">
-                                    <span>Latency: <strong>{activeHoverPoint.data.latency}ms</strong></span>
-                                    <span>•</span>
-                                    <span>P99 Peering: <strong>99.9%</strong></span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Bandwidth Distribution Visual Bar */}
-                    <div className="bandwidth-breakdown-card">
-                        <div className="bb-header">
-                            <span className="bb-title">Active Bandwidth Allocation</span>
-                            <span className="bb-total">
-                                Total Active: <strong>{totalActiveGb.toFixed(2)} GB</strong>
-                            </span>
-                        </div>
-                        <div className="bb-bar-track">
-                            <div
-                                className="bb-bar-seg res-seg"
-                                style={{
-                                    width: totalActiveGb > 0
-                                        ? `${Math.max(5, Math.min(95, ((residentialRemainingGb || 0) / totalActiveGb) * 100))}%`
-                                        : '50%'
-                                }}
-                                title={`Standard Residential: ${(residentialRemainingGb || 0).toFixed(2)} GB`}
-                            ></div>
-                            <div
-                                className="bb-bar-seg prem-seg"
-                                style={{
-                                    width: totalActiveGb > 0
-                                        ? `${Math.max(5, Math.min(95, ((premiumRemainingGb || 0) / totalActiveGb) * 100))}%`
-                                        : '50%'
-                                }}
-                                title={`Premium Residential: ${(premiumRemainingGb || 0).toFixed(2)} GB`}
-                            ></div>
-                        </div>
-                        <div className="bb-legend">
-                            <div className="legend-item">
-                                <span className="legend-color res-col"></span>
-                                <span>Standard Residential: <strong>{residentialRemainingGb !== null ? residentialRemainingGb.toFixed(2) : '0.00'} GB</strong></span>
-                            </div>
-                            <div className="legend-item">
-                                <span className="legend-color prem-col"></span>
-                                <span>Premium Residential: <strong>{premiumRemainingGb !== null ? premiumRemainingGb.toFixed(2) : '0.00'} GB</strong></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right: Quick Proxy Connection & Code Integration */}
-                <div className="info-panel">
-                    <div className="panel-header">
-                        <div className="panel-title-group">
-                            <div className="panel-icon-wrap icon-purple-wrap">
-                                <Terminal size={18} />
-                            </div>
-                            <div>
-                                <h3 className="panel-title">Quick Connect & Code Generator</h3>
-                                <p className="panel-desc">Test your proxy endpoint instantly with your credentials.</p>
-                            </div>
-                        </div>
-                        <div className="snippet-tabs">
-                            <button
-                                type="button"
-                                onClick={() => setActiveSnippetTab('curl')}
-                                className={`snippet-tab ${activeSnippetTab === 'curl' ? 'active' : ''}`}
-                            >
-                                cURL
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setActiveSnippetTab('python')}
-                                className={`snippet-tab ${activeSnippetTab === 'python' ? 'active' : ''}`}
-                            >
-                                Python
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setActiveSnippetTab('node')}
-                                className={`snippet-tab ${activeSnippetTab === 'node' ? 'active' : ''}`}
-                            >
-                                Node.js
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Endpoint Details Row */}
-                    <div className="endpoint-details-strip">
-                        <div className="endp-col">
-                            <span className="endp-lbl">Hostname & Port</span>
-                            <div className="endp-val-row">
-                                <span className="endp-val font-mono">rp.realproxy.net:1000</span>
-                                <button
-                                    type="button"
-                                    onClick={() => handleCopy('rp.realproxy.net:1000', 'host')}
-                                    className="btn-endp-copy"
-                                    title="Copy Host:Port"
-                                >
-                                    {copiedCredential === 'host' ? <Check size={13} color="#10B981" /> : <Copy size={13} />}
-                                </button>
-                            </div>
-                        </div>
-                        <div className="endp-col">
-                            <span className="endp-lbl">Username</span>
-                            <div className="endp-val-row">
-                                <span className="endp-val font-mono">{proxyCredentials?.account || "Loading..."}</span>
-                                {proxyCredentials?.account && (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleCopy(proxyCredentials.account!, 'user')}
-                                        className="btn-endp-copy"
-                                        title="Copy Username"
-                                    >
-                                        {copiedCredential === 'user' ? <Check size={13} color="#10B981" /> : <Copy size={13} />}
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                        <div className="endp-col">
-                            <span className="endp-lbl">Password</span>
-                            <div className="endp-val-row">
-                                <span className="endp-val font-mono">
-                                    {proxyCredentials?.password ? `${proxyCredentials.password.substring(0, 6)}••••••` : "Loading..."}
-                                </span>
-                                {proxyCredentials?.password && (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleCopy(proxyCredentials.password!, 'pass')}
-                                        className="btn-endp-copy"
-                                        title="Copy Password"
-                                    >
-                                        {copiedCredential === 'pass' ? <Check size={13} color="#10B981" /> : <Copy size={13} />}
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Code Snippet Box */}
-                    <div className="code-snippet-card">
-                        <div className="code-head">
-                            <span className="code-lang-label">
-                                {activeSnippetTab === 'curl' ? 'BASH / TERMINAL' : (activeSnippetTab === 'python' ? 'PYTHON (REQUESTS)' : 'NODE.JS (AXIOS)')}
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => handleCopy(codeSnippets[activeSnippetTab], 'code')}
-                                className="btn-copy-code"
-                            >
-                                {copiedCredential === 'code' ? (
-                                    <>
-                                        <Check size={13} color="#10B981" />
-                                        <span>Copied!</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Copy size={13} />
-                                        <span>Copy Code</span>
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                        <pre className="code-pre custom-scrollbar">
-                            <code>{codeSnippets[activeSnippetTab]}</code>
-                        </pre>
-                    </div>
-                </div>
-            </section>
-
             {/* RECENT TRANSACTIONS & ACTIVITY LEDGER */}
             <section className="transactions-section">
                 <div className="tx-header-row">
@@ -1006,59 +447,64 @@ export default function DashboardOverviewPage() {
                             <span>Loading recent activity...</span>
                         </div>
                     ) : transactions.length > 0 ? (
-                        <div className="table-responsive">
-                            <table className="tx-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date & Time</th>
-                                        <th>Activity Type</th>
-                                        <th>Payment Gateway</th>
-                                        <th>Amount (USD)</th>
-                                        <th>Amount (BDT)</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {transactions.map((tx) => {
-                                        const isCredit = tx.transactionType?.toLowerCase().includes('topup') ||
-                                            tx.transactionType?.toLowerCase().includes('deposit') ||
-                                            tx.transactionType?.toLowerCase().includes('affiliate');
-                                        return (
-                                            <tr key={tx.id}>
-                                                <td className="tx-date">
-                                                    {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString(undefined, {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    }) : 'Recent'}
-                                                </td>
-                                                <td>
-                                                    <span className={`tx-type-pill ${isCredit ? 'pill-credit' : 'pill-debit'}`}>
-                                                        {tx.transactionType || tx.description || 'Transaction'}
-                                                    </span>
-                                                </td>
-                                                <td className="tx-method">
-                                                    {tx.paymentMethod || 'Wallet'}
-                                                </td>
-                                                <td className={`tx-amt ${isCredit ? 'tx-plus' : 'tx-minus'}`}>
-                                                    {isCredit ? '+' : '-'}${Number(tx.amountUsd || 0).toFixed(2)}
-                                                </td>
-                                                <td className="tx-bdt">
-                                                    ৳{Number(tx.amountBdt || 0).toLocaleString()}
-                                                </td>
-                                                <td>
-                                                    <span className="tx-status-badge">
-                                                        <span className="status-dot-green"></span>
-                                                        {tx.status || 'Completed'}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                        <>
+                            <div className="mobile-scroll-indicator">
+                                <span>← Swipe table horizontally for details →</span>
+                            </div>
+                            <div className="table-responsive">
+                                <table className="tx-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date & Time</th>
+                                            <th>Activity Type</th>
+                                            <th>Payment Gateway</th>
+                                            <th>Amount (USD)</th>
+                                            <th>Amount (BDT)</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {transactions.map((tx) => {
+                                            const isCredit = tx.transactionType?.toLowerCase().includes('topup') ||
+                                                tx.transactionType?.toLowerCase().includes('deposit') ||
+                                                tx.transactionType?.toLowerCase().includes('affiliate');
+                                            return (
+                                                <tr key={tx.id}>
+                                                    <td className="tx-date">
+                                                        {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString(undefined, {
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        }) : 'Recent'}
+                                                    </td>
+                                                    <td>
+                                                        <span className={`tx-type-pill ${isCredit ? 'pill-credit' : 'pill-debit'}`}>
+                                                            {tx.transactionType || tx.description || 'Transaction'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="tx-method">
+                                                        {tx.paymentMethod || 'Wallet'}
+                                                    </td>
+                                                    <td className={`tx-amt ${isCredit ? 'tx-plus' : 'tx-minus'}`}>
+                                                        {isCredit ? '+' : '-'}${Number(tx.amountUsd || 0).toFixed(2)}
+                                                    </td>
+                                                    <td className="tx-bdt">
+                                                        ৳{Number(tx.amountBdt || 0).toLocaleString()}
+                                                    </td>
+                                                    <td>
+                                                        <span className="tx-status-badge">
+                                                            <span className="status-dot-green"></span>
+                                                            {tx.status || 'Completed'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
                     ) : (
                         <div className="tx-empty-state">
                             <FileText size={32} color="#94A3B8" />
@@ -1072,216 +518,7 @@ export default function DashboardOverviewPage() {
                 </div>
             </section>
 
-            {/* ============================================================
-                "PICK YOUR BANDWIDTH" INTERACTIVE PURCHASE MODAL
-            ============================================================ */}
-            {isBuyModalOpen && (
-                <div className="modal-backdrop" onClick={() => setIsBuyModalOpen(false)}>
-                    <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-                        {/* Header */}
-                        <div className="modal-head">
-                            <div className="modal-title-box">
-                                <div className="modal-icon">
-                                    <ShoppingCart size={19} />
-                                </div>
-                                <div>
-                                    <h3 className="modal-heading">Pick Your Bandwidth</h3>
-                                    <p className="modal-desc">Select bandwidth volume. Paid instantly with your wallet balance.</p>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setIsBuyModalOpen(false)}
-                                className="modal-close"
-                            >
-                                <X size={18} />
-                            </button>
-                        </div>
 
-                        {/* Plan Switcher */}
-                        <div className="plan-switch">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setModalProxyType('Residential');
-                                    setAppliedDiscount(null);
-                                }}
-                                className={`switch-tab ${modalProxyType === 'Residential' ? 'switch-active res' : ''}`}
-                            >
-                                <Globe size={15} />
-                                <span>Residential ($1.00/GB)</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setModalProxyType('Premium Residential');
-                                    setAppliedDiscount(null);
-                                }}
-                                className={`switch-tab ${modalProxyType === 'Premium Residential' ? 'switch-active prem' : ''}`}
-                            >
-                                <Crown size={15} />
-                                <span>Premium ($1.50/GB)</span>
-                            </button>
-                        </div>
-
-                        {/* Volume Presets */}
-                        <div className="section-block">
-                            <div className="block-label-row">
-                                <span className="block-label">Select Bandwidth Volume</span>
-                                <span className="savings-badge">Market Discount Applied</span>
-                            </div>
-                            <div className="presets-grid">
-                                {[1, 5, 10, 25, 50, 100].map((gb) => {
-                                    const isSelected = selectedBandwidth === gb;
-                                    const cost = (gb * pricePerGb).toFixed(2);
-                                    return (
-                                        <button
-                                            key={gb}
-                                            type="button"
-                                            onClick={() => setSelectedBandwidth(gb)}
-                                            className={`preset-box ${isSelected ? (modalProxyType === 'Premium Residential' ? 'preset-gold' : 'preset-blue') : ''}`}
-                                        >
-                                            <span className="gb-number">{gb} GB</span>
-                                            <span className="gb-price">${cost}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Custom Slider / Stepper */}
-                        <div className="slider-box">
-                            <div className="slider-header">
-                                <span className="slider-current-lbl">Custom Volume:</span>
-                                <div className="stepper-controls">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedBandwidth(prev => Math.max(1, prev - 1))}
-                                        className="btn-step"
-                                        disabled={selectedBandwidth <= 1}
-                                    >
-                                        <Minus size={13} />
-                                    </button>
-                                    <span className="slider-current-val">{selectedBandwidth} GB</span>
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedBandwidth(prev => Math.min(100, prev + 1))}
-                                        className="btn-step"
-                                        disabled={selectedBandwidth >= 100}
-                                    >
-                                        <Plus size={13} />
-                                    </button>
-                                </div>
-                            </div>
-                            <input
-                                type="range"
-                                min="1"
-                                max="100"
-                                step="1"
-                                value={selectedBandwidth}
-                                onChange={(e) => setSelectedBandwidth(Number(e.target.value))}
-                                className="clean-slider"
-                                style={{
-                                    background: `linear-gradient(to right, #0086FF 0%, #0086FF ${(selectedBandwidth / 100) * 100}%, #E2E8F0 ${(selectedBandwidth / 100) * 100}%, #E2E8F0 100%)`
-                                }}
-                            />
-                        </div>
-
-                        {/* Cost Summary Box */}
-                        <div className="cost-summary">
-                            <div className="cost-row">
-                                <span className="cost-lbl">Price Per GB:</span>
-                                <span className="cost-val">${pricePerGb.toFixed(2)} USD</span>
-                            </div>
-                            <div className="cost-row">
-                                <span className="cost-lbl">Total in BDT:</span>
-                                <span className="cost-val">৳{finalTotalBdt.toLocaleString()} BDT</span>
-                            </div>
-                            <div className="cost-row total-highlight">
-                                <span className="cost-lbl">Total to Pay:</span>
-                                <span className="cost-total-amount">
-                                    ${finalTotalUsd.toFixed(2)} <span className="usd-text">USD</span>
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Promo Code Input */}
-                        <div className="promo-row">
-                            <div className="promo-input-box">
-                                <Tag size={15} className="promo-tag-icon" />
-                                <input
-                                    type="text"
-                                    placeholder="PROMO CODE"
-                                    value={promoCode}
-                                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                                    className="promo-field"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleValidatePromo}
-                                    disabled={isValidatingPromo || !promoCode}
-                                    className="btn-promo-apply"
-                                >
-                                    {isValidatingPromo ? "..." : appliedDiscount ? "Applied ✓" : "Apply"}
-                                </button>
-                            </div>
-                            {appliedDiscount && (
-                                <span className="discount-note">
-                                    ✓ {appliedDiscount}% discount activated
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Wallet Status Banner */}
-                        <div className={`wallet-status-bar ${hasSufficientBalance ? 'status-ok' : 'status-low'}`}>
-                            <div className="wallet-status-left">
-                                <Wallet size={18} />
-                                <div>
-                                    <span className="status-label">Your Wallet Balance</span>
-                                    <span className="status-val">${balanceUsd.toFixed(2)} USD (৳{balanceBdt.toLocaleString()} BDT)</span>
-                                </div>
-                            </div>
-                            <div className="wallet-status-right">
-                                {hasSufficientBalance ? (
-                                    <span className="pill-ok">✓ Sufficient</span>
-                                ) : (
-                                    <span className="pill-short">Need +${balanceShortage.toFixed(2)}</span>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Purchase Button */}
-                        <div className="modal-cta-row">
-                            {hasSufficientBalance ? (
-                                <button
-                                    type="button"
-                                    onClick={handleConfirmPurchase}
-                                    disabled={isPurchasing}
-                                    className={`btn-confirm-pay ${modalProxyType === 'Premium Residential' ? 'pay-gold' : 'pay-blue'}`}
-                                >
-                                    {isPurchasing ? (
-                                        <>
-                                            <RefreshCw size={16} className="spin-icon" />
-                                            <span>Activating...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Zap size={16} />
-                                            <span>Pay ${finalTotalUsd.toFixed(2)} from Wallet</span>
-                                        </>
-                                    )}
-                                </button>
-                            ) : (
-                                <Link href="/dashboard/wallet" className="btn-topup-wallet-link">
-                                    <Wallet size={16} />
-                                    <span>Top Up Wallet Now (+ Add ${balanceShortage.toFixed(2)})</span>
-                                    <ArrowRight size={16} />
-                                </Link>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Scoped CSS Styles */}
             <style jsx>{`
@@ -2282,7 +1519,9 @@ export default function DashboardOverviewPage() {
                 .tx-header-row {
                     display: flex;
                     justify-content: space-between;
-                    align-items: flex-end;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 12px;
                 }
 
                 .tx-section-title {
@@ -2302,7 +1541,7 @@ export default function DashboardOverviewPage() {
                     display: inline-flex;
                     align-items: center;
                     gap: 6px;
-                    padding: 6px 13px;
+                    padding: 7px 14px;
                     border-radius: 8px;
                     font-size: 12px;
                     font-weight: 700;
@@ -2310,6 +1549,8 @@ export default function DashboardOverviewPage() {
                     background: rgba(0, 134, 255, 0.06);
                     border: 1px solid rgba(0, 134, 255, 0.18);
                     text-decoration: none;
+                    white-space: nowrap;
+                    flex-shrink: 0;
                     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
                 }
                 .tx-view-all-link:hover {
@@ -2330,12 +1571,42 @@ export default function DashboardOverviewPage() {
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.015);
                 }
 
+                .mobile-scroll-indicator {
+                    display: none;
+                    padding: 8px 16px;
+                    background: linear-gradient(90deg, #F8FAFC 0%, #EFF6FF 100%);
+                    border-bottom: 1px solid #E2E8F0;
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #0086FF;
+                    text-align: right;
+                }
+
                 .table-responsive {
+                    width: 100%;
                     overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: thin;
+                    scrollbar-color: #CBD5E1 #F8FAFC;
+                }
+
+                .table-responsive::-webkit-scrollbar {
+                    height: 6px;
+                }
+                .table-responsive::-webkit-scrollbar-track {
+                    background: #F8FAFC;
+                }
+                .table-responsive::-webkit-scrollbar-thumb {
+                    background: #CBD5E1;
+                    border-radius: 4px;
+                }
+                .table-responsive::-webkit-scrollbar-thumb:hover {
+                    background: #94A3B8;
                 }
 
                 .tx-table {
                     width: 100%;
+                    min-width: 650px;
                     border-collapse: collapse;
                     text-align: left;
                     font-size: 13px;
@@ -2343,22 +1614,29 @@ export default function DashboardOverviewPage() {
 
                 .tx-table th {
                     background: #F8FAFC;
-                    padding: 12px 16px;
+                    padding: 13px 16px;
                     font-size: 11px;
                     font-weight: 700;
                     color: #64748B;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
                     border-bottom: 1px solid #E2E8F0;
+                    white-space: nowrap;
                 }
 
                 .tx-table td {
                     padding: 13px 16px;
                     border-bottom: 1px solid #F1F5F9;
                     color: #334155;
+                    white-space: nowrap;
                 }
 
-                .tx-date { font-size: 12px; color: #64748B; }
+                .tx-date {
+                    font-size: 12px;
+                    color: #64748B;
+                    white-space: nowrap;
+                    font-variant-numeric: tabular-nums;
+                }
 
                 .tx-type-pill {
                     display: inline-block;
@@ -2366,18 +1644,31 @@ export default function DashboardOverviewPage() {
                     border-radius: 6px;
                     font-size: 11px;
                     font-weight: 700;
+                    white-space: nowrap;
                 }
 
                 .pill-credit { background: rgba(16, 185, 129, 0.1); color: #059669; }
                 .pill-debit { background: rgba(99, 102, 241, 0.1); color: #4F46E5; }
 
-                .tx-method { font-weight: 600; color: #475569; }
+                .tx-method {
+                    font-weight: 600;
+                    color: #475569;
+                    white-space: nowrap;
+                }
 
-                .tx-amt { font-weight: 800; }
+                .tx-amt {
+                    font-weight: 800;
+                    white-space: nowrap;
+                }
                 .tx-plus { color: #10B981; }
                 .tx-minus { color: #EF4444; }
 
-                .tx-bdt { font-size: 12px; color: #64748B; font-weight: 600; }
+                .tx-bdt {
+                    font-size: 12px;
+                    color: #64748B;
+                    font-weight: 600;
+                    white-space: nowrap;
+                }
 
                 .tx-status-badge {
                     display: inline-flex;
@@ -2389,6 +1680,7 @@ export default function DashboardOverviewPage() {
                     border-radius: 12px;
                     font-size: 11px;
                     font-weight: 700;
+                    white-space: nowrap;
                 }
 
                 .status-dot-green {
@@ -2396,6 +1688,7 @@ export default function DashboardOverviewPage() {
                     height: 6px;
                     border-radius: 50%;
                     background: #10B981;
+                    flex-shrink: 0;
                 }
 
                 .tx-loading-box, .tx-empty-state {
@@ -2440,12 +1733,12 @@ export default function DashboardOverviewPage() {
                     left: 0;
                     right: 0;
                     bottom: 0;
-                    background: rgba(15, 23, 42, 0.65);
-                    backdrop-filter: blur(5px);
+                    background: rgba(15, 23, 42, 0.75);
+                    backdrop-filter: blur(6px);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    z-index: 9999;
+                    z-index: 100000;
                     padding: 16px;
                 }
 
@@ -2453,14 +1746,16 @@ export default function DashboardOverviewPage() {
                     background: #FFFFFF;
                     border-radius: 20px;
                     width: 100%;
-                    max-width: 580px;
-                    padding: 24px;
+                    max-width: 540px;
+                    max-height: calc(100dvh - 32px);
                     display: flex;
                     flex-direction: column;
-                    gap: 18px;
-                    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22), 0 0 1px rgba(0, 0, 0, 0.1);
+                    padding: 0;
+                    gap: 0;
+                    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28), 0 0 1px rgba(0, 0, 0, 0.15);
                     border: 1px solid #E2E8F0;
                     animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+                    overflow: hidden;
                 }
 
                 @keyframes modalPop {
@@ -2471,7 +1766,35 @@ export default function DashboardOverviewPage() {
                 .modal-head {
                     display: flex;
                     justify-content: space-between;
-                    align-items: flex-start;
+                    align-items: center;
+                    padding: 16px 22px;
+                    border-bottom: 1px solid #F1F5F9;
+                    background: #FFFFFF;
+                    flex-shrink: 0;
+                }
+
+                .modal-scroll-body {
+                    padding: 18px 22px 22px 22px;
+                    overflow-y: auto;
+                    -webkit-overflow-scrolling: touch;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                    scrollbar-width: thin;
+                    scrollbar-color: #CBD5E1 #F8FAFC;
+                }
+                .modal-scroll-body::-webkit-scrollbar {
+                    width: 5px;
+                }
+                .modal-scroll-body::-webkit-scrollbar-track {
+                    background: #F8FAFC;
+                }
+                .modal-scroll-body::-webkit-scrollbar-thumb {
+                    background: #CBD5E1;
+                    border-radius: 4px;
+                }
+                .modal-scroll-body::-webkit-scrollbar-thumb:hover {
+                    background: #94A3B8;
                 }
 
                 .modal-title-box {
@@ -2732,30 +2055,42 @@ export default function DashboardOverviewPage() {
                     border-radius: 12px;
                     padding: 12px 16px;
                     display: flex;
-                    justify-content: space-between;
-                    align-items: center;
+                    flex-direction: column;
+                    gap: 8px;
                 }
 
                 .cost-row {
                     display: flex;
-                    flex-direction: column;
-                    gap: 2px;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: 100%;
                 }
 
-                .cost-lbl { font-size: 11px; color: #64748B; font-weight: 600; }
+                .cost-lbl { font-size: 12px; color: #64748B; font-weight: 600; }
                 .cost-val { font-size: 13px; font-weight: 700; color: #1E293B; }
 
-                .total-highlight {
-                    align-items: flex-end;
+                .cost-divider {
+                    height: 1px;
+                    background: #E2E8F0;
+                    margin: 2px 0;
+                }
+
+                .total-highlight .cost-lbl {
+                    font-size: 13px;
+                    font-weight: 700;
+                    color: #0F172A;
                 }
 
                 .cost-total-amount {
-                    font-size: 20px;
+                    font-size: 18px;
                     font-weight: 800;
                     color: #0086FF;
+                    display: flex;
+                    align-items: baseline;
+                    gap: 3px;
                 }
 
-                .usd-text { font-size: 12px; font-weight: 700; color: #64748B; }
+                .usd-text { font-size: 11.5px; font-weight: 700; color: #64748B; }
 
                 .promo-row {
                     display: flex;
@@ -3169,18 +2504,6 @@ export default function DashboardOverviewPage() {
                     .kpi-grid {
                         grid-template-columns: repeat(2, 1fr);
                     }
-                    .middle-dashboard-grid {
-                        grid-template-columns: 1fr;
-                    }
-                }
-
-                @media (max-width: 900px) {
-                    .telemetry-live-strip {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-                    .endpoint-details-strip {
-                        grid-template-columns: 1fr;
-                    }
                 }
 
                 @media (max-width: 768px) {
@@ -3205,42 +2528,81 @@ export default function DashboardOverviewPage() {
                     .kpi-card {
                         padding: 18px;
                     }
-                    .info-panel {
-                        padding: 16px;
-                    }
                     .presets-grid {
                         grid-template-columns: repeat(3, 1fr);
-                    }
-                    .cost-summary {
-                        flex-direction: column;
-                        align-items: flex-start;
-                        gap: 8px;
-                    }
-                    .total-highlight {
-                        align-items: flex-start;
                     }
                     .wallet-status-bar {
                         flex-direction: column;
                         align-items: flex-start;
                         gap: 8px;
                     }
-                    .bb-header {
-                        flex-direction: column;
-                        align-items: flex-start;
+                    .mobile-scroll-indicator {
+                        display: flex;
+                        justify-content: flex-end;
+                        align-items: center;
+                        gap: 4px;
+                    }
+                }
+
+                @media (max-width: 640px) {
+                    .modal-backdrop {
+                        padding: 8px;
+                    }
+                    .modal-container {
+                        max-height: calc(100dvh - 16px);
+                        border-radius: 16px;
+                    }
+                    .modal-head {
+                        padding: 12px 16px;
+                    }
+                    .modal-heading {
+                        font-size: 16px;
+                    }
+                    .modal-desc {
+                        font-size: 11px;
+                    }
+                    .modal-scroll-body {
+                        padding: 14px 16px 18px 16px;
+                        gap: 13px;
+                    }
+                    .presets-grid {
+                        grid-template-columns: repeat(3, 1fr);
                         gap: 6px;
                     }
-                    .bb-legend {
+                    .cost-summary {
+                        padding: 10px 14px;
+                        gap: 6px;
+                    }
+                    .cost-total-amount {
+                        font-size: 18px;
+                    }
+                    .btn-confirm-pay {
+                        height: 44px;
+                        font-size: 13px;
+                    }
+                    .tx-header-row {
                         flex-direction: column;
                         align-items: flex-start;
-                        gap: 8px;
+                        gap: 10px;
+                    }
+                    .tx-view-all-link {
+                        align-self: flex-start;
+                    }
+                    .tx-table {
+                        min-width: 630px;
+                    }
+                    .tx-table th {
+                        padding: 10px 12px;
+                        font-size: 10.5px;
+                    }
+                    .tx-table td {
+                        padding: 11px 12px;
+                        font-size: 12px;
                     }
                 }
 
                 @media (max-width: 480px) {
                     .card-actions-dual {
-                        grid-template-columns: 1fr;
-                    }
-                    .telemetry-live-strip {
                         grid-template-columns: 1fr;
                     }
                     .hero-right {
