@@ -159,7 +159,6 @@ export default function DashboardOverviewPage() {
     }
     const activeHoverPoint = hoveredPointIndex !== null && chartPoints[hoveredPointIndex] ? chartPoints[hoveredPointIndex] : null;
 
-    // "Pick Your Bandwidth" Purchase Modal State
     const [isBuyModalOpen, setIsBuyModalOpen] = useState<boolean>(false);
     const [modalProxyType, setModalProxyType] = useState<'Residential' | 'Premium Residential'>('Residential');
     const [selectedBandwidth, setSelectedBandwidth] = useState<number>(5);
