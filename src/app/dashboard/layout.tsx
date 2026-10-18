@@ -156,6 +156,7 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
         { name: 'Tutorial', icon: <Video size={18} />, path: '/dashboard/tutorials' },
     ];
 
+
     return (
         <div className="dashboard-wrapper">
             {/* Sidebar Backdrop for Mobile */}
