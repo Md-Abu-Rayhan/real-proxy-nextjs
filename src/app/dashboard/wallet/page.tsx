@@ -769,66 +769,44 @@ export default function WalletPage() {
     return (
         <div className="main-responsive-container">
             {/* Profile Completion Alert Banner if phone or name is missing */}
-            {!isProfileCompleted && (
-                <div style={{
-                    backgroundColor: '#FEF3C7',
-                    border: '1px solid #FDE68A',
-                    borderRadius: '16px',
-                    padding: '16px 20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '16px',
-                    flexWrap: 'wrap',
-                    marginBottom: '20px'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '12px',
-                            backgroundColor: '#F59E0B',
-                            color: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0
-                        }}>
-                            <Shield size={22} />
-                        </div>
-                        <div>
-                            <div style={{ fontWeight: '700', fontSize: '15px', color: '#92400E' }}>
-                                🔒 Payment Locked: Customer Details Required
-                            </div>
-                            <div style={{ fontSize: '13px', color: '#B45309' }}>
-                                Nobody can make a payment without completing Full Name & Mobile Number. Complete your profile to unlock deposit gateways.
-                            </div>
-                        </div>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setPendingPaymentAction(null);
-                            setShowProfileModal(true);
-                        }}
-                        style={{
-                            backgroundColor: '#D97706',
-                            color: 'white',
-                            fontWeight: '600',
-                            fontSize: '13px',
-                            padding: '10px 18px',
-                            borderRadius: '10px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px'
-                        }}
-                    >
-                        <span>Complete Profile to Unlock Payments</span>
-                        <ArrowRight size={14} />
-                    </button>
-                </div>
+            {!isProfileCompleted && (
+                <div style={{
+                    backgroundColor: '#F8FAFC',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '12px',
+                    padding: '12px 18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    flexWrap: 'wrap',
+                    marginBottom: '16px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0086FF' }} />
+                        <span style={{ fontSize: '13px', color: '#475569' }}>
+                            Please provide your name and mobile number to complete bKash and card top-ups.
+                        </span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setPendingPaymentAction(null);
+                            setShowProfileModal(true);
+                        }}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#0086FF',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            padding: 0
+                        }}
+                    >
+                        Add Details &rarr;
+                    </button>
+                </div>
             )}
 
             {/* Stats Grid */}
@@ -1092,7 +1070,7 @@ export default function WalletPage() {
                                     ) : !isProfileCompleted ? (
                                         <>
                                             <img src="/bKash-Logo.png" alt="bKash" className="btn-mfs-logo" />
-                                            <span>🔒 Complete Profile to Pay ৳{Number(customBdt || 0).toLocaleString()} BDT with bKash</span>
+                                            <span>Pay ৳{Number(customBdt || 0).toLocaleString()} BDT with bKash</span>
                                             <ArrowRight size={17} />
                                         </>
                                     ) : (
@@ -1216,7 +1194,7 @@ export default function WalletPage() {
                                     ) : !isProfileCompleted ? (
                                         <>
                                             <img src="/Nagad-Logo.png" alt="Nagad" className="btn-mfs-logo" style={{ height: '18px', width: 'auto', objectFit: 'contain' }} />
-                                            <span>🔒 Complete Profile to Pay ৳{Number(customBdt || 0).toLocaleString()} BDT with Nagad / Cards</span>
+                                            <span>Pay ৳{Number(customBdt || 0).toLocaleString()} BDT with Nagad / Cards</span>
                                             <ArrowRight size={17} />
                                         </>
                                     ) : (
@@ -3646,173 +3624,160 @@ export default function WalletPage() {
                 }
             `}</style>
 
-            {showProfileModal && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(15, 23, 42, 0.65)',
-                    backdropFilter: 'blur(4px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 99999,
-                    padding: '20px'
-                }}>
-                    <div style={{
-                        backgroundColor: 'white',
-                        borderRadius: '24px',
-                        maxWidth: '440px',
-                        width: '100%',
-                        padding: '32px',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                        position: 'relative'
-                    }}>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setPendingPaymentAction(null);
-                                setShowProfileModal(false);
-                            }}
-                            style={{
-                                position: 'absolute',
-                                right: '20px',
-                                top: '20px',
-                                background: 'transparent',
-                                border: 'none',
-                                cursor: 'pointer',
-                                color: '#94A3B8'
-                            }}
-                        >
-                            <X size={20} />
-                        </button>
-
-                        <div style={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '14px',
-                            backgroundColor: '#EFF6FF',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginBottom: '16px',
-                            color: '#0086FF'
-                        }}>
-                            <Shield size={24} />
-                        </div>
-
-                        <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#0F172A', marginBottom: '8px' }}>
-                            🔒 Customer Details Required
-                        </h3>
-                        <p style={{ fontSize: '14px', color: '#64748B', lineHeight: '1.5', marginBottom: '24px' }}>
-                            Please provide your real Full Name and 11-digit Mobile Phone Number. Payments are strictly locked until verified.
-                        </p>
-
-                        <form onSubmit={handleSaveProfileAndPay}>
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
-                                    Full Name
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={profileModalName}
-                                    onChange={(e) => setProfileModalName(e.target.value)}
-                                    placeholder="e.g. Rayhan Ahmed"
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px 14px',
-                                        borderRadius: '12px',
-                                        border: '1px solid #E2E8F0',
-                                        fontSize: '14px',
-                                        outline: 'none',
-                                        color: '#0F172A',
-                                        backgroundColor: '#F8FAFC'
-                                    }}
-                                />
-                            </div>
-
-                            <div style={{ marginBottom: '24px' }}>
-                                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
-                                    Mobile Phone Number (11 digits)
-                                </label>
-                                <input
-                                    type="tel"
-                                    required
-                                    value={profileModalPhone}
-                                    onChange={(e) => setProfileModalPhone(e.target.value)}
-                                    placeholder="01XXXXXXXXX"
-                                    style={{
-                                        width: '100%',
-                                        padding: '12px 14px',
-                                        borderRadius: '12px',
-                                        border: '1px solid #E2E8F0',
-                                        fontSize: '14px',
-                                        outline: 'none',
-                                        color: '#0F172A',
-                                        backgroundColor: '#F8FAFC'
-                                    }}
-                                />
-                                <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>
-                                    Used for bKash / Nagad verification and invoice receipts.
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setPendingPaymentAction(null);
-                                        setShowProfileModal(false);
-                                    }}
-                                    style={{
-                                        flex: 1,
-                                        padding: '12px',
-                                        borderRadius: '12px',
-                                        border: '1px solid #E2E8F0',
-                                        backgroundColor: '#F8FAFC',
-                                        color: '#64748B',
-                                        fontWeight: '600',
-                                        fontSize: '14px',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSavingProfile || isPayStationLoading}
-                                    style={{
-                                        flex: 2,
-                                        padding: '12px',
-                                        borderRadius: '12px',
-                                        border: 'none',
-                                        backgroundColor: '#0086FF',
-                                        color: 'white',
-                                        fontWeight: '600',
-                                        fontSize: '14px',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '8px'
-                                    }}
-                                >
-                                    {isSavingProfile ? (
-                                        <>
-                                            <Loader2 size={16} className="animate-spin" />
-                                            Saving...
-                                        </>
-                                    ) : (
-                                        'Save & Continue'
-                                    )}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+            {showProfileModal && (
+                <div style={{
+                    position: 'fixed',
+                    inset: 0,
+                    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 99999,
+                    padding: '20px'
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        borderRadius: '16px',
+                        maxWidth: '420px',
+                        width: '100%',
+                        padding: '28px',
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        position: 'relative'
+                    }}>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setPendingPaymentAction(null);
+                                setShowProfileModal(false);
+                            }}
+                            style={{
+                                position: 'absolute',
+                                right: '18px',
+                                top: '18px',
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: '#94A3B8'
+                            }}
+                        >
+                            <X size={18} />
+                        </button>
+
+                        <div style={{ marginBottom: '20px' }}>
+                            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#0F172A', margin: '0 0 6px 0' }}>
+                                Customer Details
+                            </h3>
+                            <p style={{ fontSize: '13.5px', color: '#64748B', lineHeight: '1.45', margin: 0 }}>
+                                Please provide your name and mobile number to proceed with payment.
+                            </p>
+                        </div>
+
+                        <form onSubmit={handleSaveProfileAndPay}>
+                            <div style={{ marginBottom: '14px' }}>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                                    Full Name
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={profileModalName}
+                                    onChange={(e) => setProfileModalName(e.target.value)}
+                                    placeholder="Your full name"
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px',
+                                        borderRadius: '8px',
+                                        border: '1px solid #CBD5E1',
+                                        fontSize: '14px',
+                                        outline: 'none',
+                                        color: '#0F172A',
+                                        backgroundColor: '#FFFFFF',
+                                        boxSizing: 'border-box'
+                                    }}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                                    Mobile Phone Number
+                                </label>
+                                <input
+                                    type="tel"
+                                    required
+                                    value={profileModalPhone}
+                                    onChange={(e) => setProfileModalPhone(e.target.value)}
+                                    placeholder="01XXXXXXXXX"
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 12px',
+                                        borderRadius: '8px',
+                                        border: '1px solid #CBD5E1',
+                                        fontSize: '14px',
+                                        outline: 'none',
+                                        color: '#0F172A',
+                                        backgroundColor: '#FFFFFF',
+                                        boxSizing: 'border-box'
+                                    }}
+                                />
+                                <div style={{ fontSize: '11.5px', color: '#94A3B8', marginTop: '4px' }}>
+                                    Used for bKash verification and payment receipt.
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setPendingPaymentAction(null);
+                                        setShowProfileModal(false);
+                                    }}
+                                    style={{
+                                        flex: 1,
+                                        padding: '10px 16px',
+                                        borderRadius: '8px',
+                                        border: '1px solid #CBD5E1',
+                                        backgroundColor: '#F8FAFC',
+                                        color: '#475569',
+                                        fontWeight: '600',
+                                        fontSize: '13.5px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSavingProfile || isPayStationLoading}
+                                    style={{
+                                        flex: 1.5,
+                                        padding: '10px 16px',
+                                        borderRadius: '8px',
+                                        border: 'none',
+                                        backgroundColor: '#0086FF',
+                                        color: 'white',
+                                        fontWeight: '600',
+                                        fontSize: '13.5px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '6px'
+                                    }}
+                                >
+                                    {isSavingProfile ? (
+                                        <>
+                                            <Loader2 size={15} className="animate-spin" />
+                                            <span>Saving...</span>
+                                        </>
+                                    ) : (
+                                        'Save & Continue'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )}
         </div>
     );

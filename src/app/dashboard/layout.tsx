@@ -60,7 +60,7 @@ const HeaderWalletBadge = () => {
 };
 
 const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => {
-    const [expandedGroups, setExpandedGroups] = useState<string[]>(['SOCKSS PROXIES', 'TRAFFIC PLANS', 'FINANCE & BILLING', 'REFERRAL', 'TOOL', 'Promotion Plan']);
+    const [expandedGroups, setExpandedGroups] = useState<string[]>(['SOCKSS PROXIES', 'TRAFFIC PLANS', 'FINANCE & BILLING', 'ACCOUNT & SETTINGS', 'REFERRAL', 'TOOL', 'Promotion Plan']);
     const router = useRouter();
     const pathname = usePathname();
     const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -152,6 +152,12 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
             items: [
                 { name: 'My Wallet', icon: <Wallet size={18} style={{ color: '#0086ff' }} />, path: '/dashboard/wallet' },
                 { name: 'Affiliate Program', icon: <Users size={18} />, path: '/dashboard/affiliate' }
+            ]
+        },
+        {
+            group: 'ACCOUNT & SETTINGS',
+            items: [
+                { name: 'My Profile', icon: <User size={18} style={{ color: '#0086ff' }} />, path: '/dashboard/profile' }
             ]
         },
         { name: 'Tutorial', icon: <Video size={18} />, path: '/dashboard/tutorials' },
@@ -289,11 +295,13 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
                         </button>
 
                         <div className="user-profile">
-                            <div className="user-info">
-                                <CircleUser size={28} color="#0086ff" strokeWidth={1.5} />
-                                <span className="user-name">{userEmail || 'User'}</span>
-                                <ChevronDown size={14} color="#86909C" />
-                            </div>
+                            <Link href="/dashboard/profile" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                                <div className="user-info" style={{ cursor: 'pointer' }} title="View Profile">
+                                    <CircleUser size={28} color="#0086ff" strokeWidth={1.5} />
+                                    <span className="user-name">{userEmail || 'User'}</span>
+                                    <ChevronDown size={14} color="#86909C" />
+                                </div>
+                            </Link>
                             <button
                                 onClick={handleLogout}
                                 className="logout-btn"
