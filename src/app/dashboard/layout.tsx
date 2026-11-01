@@ -28,7 +28,8 @@ import {
     Sun,
     Moon,
     Video,
-    Wallet
+    Wallet,
+    Handshake
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { triggerContactModal } from '@/components/ui/ContactModal';
@@ -151,7 +152,8 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
             group: 'FINANCE & BILLING',
             items: [
                 { name: 'My Wallet', icon: <Wallet size={18} style={{ color: '#0086ff' }} />, path: '/dashboard/wallet' },
-                { name: 'Affiliate Program', icon: <Users size={18} />, path: '/dashboard/affiliate' }
+                { name: 'Affiliate Program', icon: <Users size={18} />, path: '/dashboard/affiliate' },
+                { name: 'Reseller Program', icon: <Handshake size={18} style={{ color: '#0086ff' }} />, path: '/dashboard/reseller' }
             ]
         },
         {

@@ -72,11 +72,11 @@ export default function DashboardOverviewPage() {
     // Currency rate calculation
     const rate = exchangeRateBdt > 0 ? exchangeRateBdt : 125;
 
-    // Evomi residential proxy balance is returned in MB - normalize to GB (1000 MB = 1 GB)
+    // Proxy balances are stored/returned in MB - normalize to GB (1000 MB = 1 GB)
     const residentialRemainingGb = residentialBalance !== null ? residentialBalance / 1000 : null;
-    const premiumRemainingGb = premiumRemainingMb !== null ? premiumRemainingMb / 1024 : null;
-    const premiumLimitGb = premiumLimitMb !== null ? premiumLimitMb / 1024 : null;
-    const premiumUsedGb = premiumUsedMb !== null ? premiumUsedMb / 1024 : null;
+    const premiumRemainingGb = premiumRemainingMb !== null ? premiumRemainingMb / 1000 : null;
+    const premiumLimitGb = premiumLimitMb !== null ? premiumLimitMb / 1000 : null;
+    const premiumUsedGb = premiumUsedMb !== null ? premiumUsedMb / 1000 : null;
     const totalActiveGb = (residentialRemainingGb || 0) + (premiumRemainingGb || 0);
 
     // Fetch Residential Data
@@ -465,32 +465,83 @@ export default function DashboardOverviewPage() {
                                     </thead>
                                     <tbody>
                                         {transactions.map((tx) => {
-                                            const isCredit = tx.transactionType?.toLowerCase().includes('topup') ||
-                                                tx.transactionType?.toLowerCase().includes('deposit') ||
-                                                tx.transactionType?.toLowerCase().includes('affiliate');
+                                            const isCreditDesc = tx.description ? (tx.description.includes('(CREDIT)') || tx.description.includes('(ADD)')) : false;
+                                            const isDebitDesc = tx.description ? (tx.description.includes('(DEBIT)') || tx.description.includes('(DEDUCT)')) : false;
+                                            const isResellerReceive = tx.transactionType === 'RESELLER_RECEIVE';
+                                            const isResellerTransfer = tx.transactionType === 'RESELLER_TRANSFER';
+
+                                            const isCredit = isResellerReceive
+                                                ? true
+                                                : isResellerTransfer
+                                                ? false
+                                                : (tx.transactionType === 'ADMIN_ADJUST' && isCreditDesc)
+                                                ? true
+                                                : (tx.transactionType === 'ADMIN_ADJUST' && isDebitDesc)
+                                                ? false
+                                                : tx.transactionType?.toLowerCase().includes('topup') ||
+                                                  tx.transactionType?.toLowerCase().includes('deposit') ||
+                                                  tx.transactionType?.toLowerCase().includes('affiliate') ||
+                                                  tx.transactionType?.toLowerCase().includes('refund');
+
+                                            let typeLabel = tx.transactionType || 'Transaction';
+                                            let pillClass = isCredit ? 'pill-credit' : 'pill-debit';
+
+                                            if (tx.transactionType === 'TOPUP') {
+                                                typeLabel = 'Top-Up';
+                                            } else if (tx.transactionType === 'PURCHASE') {
+                                                typeLabel = 'Bandwidth Purchase';
+                                            } else if (tx.transactionType === 'RESELLER_RECEIVE') {
+                                                typeLabel = 'Reseller Credit';
+                                                pillClass = 'pill-credit';
+                                            } else if (tx.transactionType === 'RESELLER_TRANSFER') {
+                                                typeLabel = 'Reseller Dispatch';
+                                                pillClass = 'pill-reseller';
+                                            } else if (tx.transactionType === 'ADMIN_ADJUST') {
+                                                typeLabel = isCredit ? 'Admin Credit' : 'Admin Debit';
+                                            } else if (tx.transactionType === 'AFFILIATE_TRANSFER') {
+                                                typeLabel = 'Affiliate Transfer';
+                                            } else if (tx.transactionType === 'REFUND') {
+                                                typeLabel = 'Refund';
+                                            }
+
+                                            const gatewayDisplay = tx.paymentMethod === 'RESELLER'
+                                                ? 'Reseller'
+                                                : tx.paymentMethod === 'WALLET_BALANCE'
+                                                ? 'Wallet'
+                                                : tx.paymentMethod === 'ADMIN'
+                                                ? 'Admin'
+                                                : (tx.paymentMethod || 'Wallet');
+
                                             return (
                                                 <tr key={tx.id}>
                                                     <td className="tx-date">
                                                         {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString(undefined, {
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
+                                                             month: 'short',
+                                                             day: 'numeric',
+                                                             hour: '2-digit',
+                                                             minute: '2-digit'
                                                         }) : 'Recent'}
                                                     </td>
                                                     <td>
-                                                        <span className={`tx-type-pill ${isCredit ? 'pill-credit' : 'pill-debit'}`}>
-                                                            {tx.transactionType || tx.description || 'Transaction'}
-                                                        </span>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                            <span className={`tx-type-pill ${pillClass}`}>
+                                                                {typeLabel}
+                                                            </span>
+                                                            {tx.description && (
+                                                                <span style={{ fontSize: '11px', color: '#64748B', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={tx.description}>
+                                                                    {tx.description}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                     <td className="tx-method">
-                                                        {tx.paymentMethod || 'Wallet'}
+                                                        {gatewayDisplay}
                                                     </td>
                                                     <td className={`tx-amt ${isCredit ? 'tx-plus' : 'tx-minus'}`}>
-                                                        {isCredit ? '+' : '-'}${Number(tx.amountUsd || 0).toFixed(2)}
+                                                        {isResellerReceive ? '+$0.00' : `${isCredit ? '+' : '-'}$${Number(tx.amountUsd || 0).toFixed(2)}`}
                                                     </td>
                                                     <td className="tx-bdt">
-                                                        ৳{Number(tx.amountBdt || 0).toLocaleString()}
+                                                        {isResellerReceive ? '৳0' : `৳${Number(tx.amountBdt || 0).toLocaleString()}`}
                                                     </td>
                                                     <td>
                                                         <span className="tx-status-badge">
@@ -1649,6 +1700,7 @@ export default function DashboardOverviewPage() {
 
                 .pill-credit { background: rgba(16, 185, 129, 0.1); color: #059669; }
                 .pill-debit { background: rgba(99, 102, 241, 0.1); color: #4F46E5; }
+                .pill-reseller { background: rgba(139, 92, 246, 0.12); color: #7C3AED; }
 
                 .tx-method {
                     font-weight: 600;
