@@ -701,9 +701,6 @@ Please share your custom wholesale pricing and API access details.`;
                                         <div style={{ fontSize: '18px', fontWeight: '800', color: theme.text, marginTop: '6px' }}>
                                             ${(resellerStatus.residentialRateUsd || 0.70).toFixed(2)} <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: '500' }}>/ GB</span>
                                         </div>
-                                        <div style={{ fontSize: '11px', color: '#10B981', fontWeight: '600', marginTop: '4px' }}>
-                                            Evomi Residential Pool
-                                        </div>
                                     </div>
 
                                     {/* Option 2: Premium Residential Proxies */}
@@ -726,9 +723,6 @@ Please share your custom wholesale pricing and API access details.`;
                                         </div>
                                         <div style={{ fontSize: '18px', fontWeight: '800', color: theme.text, marginTop: '6px' }}>
                                             ${(resellerStatus.premiumResidentialRateUsd || 0.90).toFixed(2)} <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: '500' }}>/ GB</span>
-                                        </div>
-                                        <div style={{ fontSize: '11px', color: '#8B5CF6', fontWeight: '600', marginTop: '4px' }}>
-                                            Geonode Premium Pool
                                         </div>
                                     </div>
                                 </div>
