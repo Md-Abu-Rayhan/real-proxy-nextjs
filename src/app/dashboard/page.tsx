@@ -402,14 +402,14 @@ export default function DashboardOverviewPage() {
                             <span className="kpi-cur">USD</span>
                         </div>
                         <div className="kpi-sub-label">
-                            Available referral commissions • 10% Recurring
+                            Available referral commissions • 5% Recurring
                         </div>
                     </div>
 
                     <div className="kpi-micro-stats">
                         <div className="micro-stat-row">
                             <span className="micro-stat-label">Commission Rate</span>
-                            <span className="micro-stat-val text-green font-semibold">10% Lifetime</span>
+                            <span className="micro-stat-val text-green font-semibold">5% Lifetime</span>
                         </div>
                         <div className="micro-stat-row">
                             <span className="micro-stat-label">Min Payout</span>
@@ -473,15 +473,15 @@ export default function DashboardOverviewPage() {
                                             const isCredit = isResellerReceive
                                                 ? true
                                                 : isResellerTransfer
-                                                ? false
-                                                : (tx.transactionType === 'ADMIN_ADJUST' && isCreditDesc)
-                                                ? true
-                                                : (tx.transactionType === 'ADMIN_ADJUST' && isDebitDesc)
-                                                ? false
-                                                : tx.transactionType?.toLowerCase().includes('topup') ||
-                                                  tx.transactionType?.toLowerCase().includes('deposit') ||
-                                                  tx.transactionType?.toLowerCase().includes('affiliate') ||
-                                                  tx.transactionType?.toLowerCase().includes('refund');
+                                                    ? false
+                                                    : (tx.transactionType === 'ADMIN_ADJUST' && isCreditDesc)
+                                                        ? true
+                                                        : (tx.transactionType === 'ADMIN_ADJUST' && isDebitDesc)
+                                                            ? false
+                                                            : tx.transactionType?.toLowerCase().includes('topup') ||
+                                                            tx.transactionType?.toLowerCase().includes('deposit') ||
+                                                            tx.transactionType?.toLowerCase().includes('affiliate') ||
+                                                            tx.transactionType?.toLowerCase().includes('refund');
 
                                             let typeLabel = tx.transactionType || 'Transaction';
                                             let pillClass = isCredit ? 'pill-credit' : 'pill-debit';
@@ -507,19 +507,19 @@ export default function DashboardOverviewPage() {
                                             const gatewayDisplay = tx.paymentMethod === 'RESELLER'
                                                 ? 'Reseller'
                                                 : tx.paymentMethod === 'WALLET_BALANCE'
-                                                ? 'Wallet'
-                                                : tx.paymentMethod === 'ADMIN'
-                                                ? 'Admin'
-                                                : (tx.paymentMethod || 'Wallet');
+                                                    ? 'Wallet'
+                                                    : tx.paymentMethod === 'ADMIN'
+                                                        ? 'Admin'
+                                                        : (tx.paymentMethod || 'Wallet');
 
                                             return (
                                                 <tr key={tx.id}>
                                                     <td className="tx-date">
                                                         {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString(undefined, {
-                                                             month: 'short',
-                                                             day: 'numeric',
-                                                             hour: '2-digit',
-                                                             minute: '2-digit'
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
                                                         }) : 'Recent'}
                                                     </td>
                                                     <td>

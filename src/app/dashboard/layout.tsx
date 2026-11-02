@@ -139,7 +139,7 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
     type SidebarItem = ({ group: string; items: SidebarLink[] } & { name?: undefined }) | (SidebarLink & { group?: undefined });
 
     const sidebarItems: SidebarItem[] = [
-        { name: 'Dashboard Overview', icon: <LayoutDashboard size={18} />, path: '/dashboard' },
+        { name: 'Dashboard', icon: <LayoutDashboard size={18} />, path: '/dashboard' },
         { name: 'Products & Pricing', icon: <Globe size={18} />, path: '/residential-proxies' },
         {
             group: 'TRAFFIC PLANS',

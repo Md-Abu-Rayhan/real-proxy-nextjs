@@ -422,20 +422,20 @@ Please share your custom wholesale pricing and API access details.`;
                     backgroundColor: theme.card,
                     border: `1px solid ${theme.cardBorder}`,
                     borderRadius: '20px',
-                    padding: '30px 28px',
+                    padding: '24px 28px',
                     marginBottom: '24px',
                     boxShadow: isDarkMode ? '0 8px 30px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.04)',
                     position: 'relative',
                     overflow: 'hidden'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
                         <div>
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10B981', padding: '6px 14px', borderRadius: '24px', fontSize: '12px', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '14px' }}>
-                                <Sparkles size={15} />
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10B981', padding: '5px 12px', borderRadius: '24px', fontSize: '12px', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '10px' }}>
+                                <Sparkles size={14} />
                                 <span>Authorized Wholesale Reseller</span>
                             </div>
 
-                            <h1 style={{ fontSize: '28px', fontWeight: '800', color: theme.text, margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>
+                            <h1 style={{ fontSize: '26px', fontWeight: '800', color: theme.text, margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>
                                 Reseller Command Center
                             </h1>
                             <p style={{ fontSize: '14px', color: theme.textMuted, margin: 0, maxWidth: '640px', lineHeight: '1.6' }}>
@@ -443,52 +443,33 @@ Please share your custom wholesale pricing and API access details.`;
                             </p>
                         </div>
 
-                        {/* Wholesale Tier Rates Card */}
-                        <div style={{
-                            backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : '#F8FAFC',
-                            border: `1px solid ${theme.cardBorder}`,
-                            borderRadius: '16px',
-                            padding: '16px 20px',
-                            display: 'flex',
-                            gap: '24px',
-                            alignItems: 'center'
-                        }}>
-                            <div>
-                                <div style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: '700', color: theme.textMuted, letterSpacing: '0.5px' }}>
-                                    Residential Proxies
-                                </div>
-                                <div style={{ fontSize: '20px', fontWeight: '800', color: '#10B981', marginTop: '2px' }}>
-                                    ${(resellerStatus.residentialRateUsd || 0.70).toFixed(2)} <span style={{ fontSize: '12px', color: theme.textMuted, fontWeight: '500' }}>/ GB</span>
-                                </div>
-                                <div style={{ fontSize: '11px', color: '#10B981', fontWeight: '600', marginTop: '2px' }}>
-                                    Save 30% vs Retail
-                                </div>
-                            </div>
-
-                            <div style={{ width: '1px', height: '42px', backgroundColor: theme.cardBorder }} />
-
-                            <div>
-                                <div style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: '700', color: theme.textMuted, letterSpacing: '0.5px' }}>
-                                    Premium Residential
-                                </div>
-                                <div style={{ fontSize: '20px', fontWeight: '800', color: '#8B5CF6', marginTop: '2px' }}>
-                                    ${(resellerStatus.premiumResidentialRateUsd || 0.90).toFixed(2)} <span style={{ fontSize: '12px', color: theme.textMuted, fontWeight: '500' }}>/ GB</span>
-                                </div>
-                                <div style={{ fontSize: '11px', color: '#8B5CF6', fontWeight: '600', marginTop: '2px' }}>
-                                    Save 40% vs Retail
-                                </div>
-                            </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <Link
+                                href="/dashboard/wallet"
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    backgroundColor: '#0086FF',
+                                    color: '#ffffff',
+                                    padding: '10px 18px',
+                                    borderRadius: '12px',
+                                    fontSize: '13px',
+                                    fontWeight: '700',
+                                    textDecoration: 'none',
+                                    boxShadow: '0 2px 10px rgba(0,134,255,0.25)',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                <Wallet size={16} />
+                                <span>Top Up Wallet</span>
+                            </Link>
                         </div>
                     </div>
                 </div>
 
                 {/* 2. Reseller Performance Stats */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                    gap: '16px',
-                    marginBottom: '28px'
-                }}>
+                <div className="reseller-stats-grid">
                     {/* Wallet Balance Card */}
                     <div style={{
                         backgroundColor: theme.card,
@@ -634,7 +615,7 @@ Please share your custom wholesale pricing and API access details.`;
                                         type="email"
                                         value={targetEmail}
                                         onChange={(e) => setTargetEmail(e.target.value)}
-                                        placeholder="e.g. te.st.a.bidrayhan@gmail.com"
+                                        placeholder="e.g. example@gmail.com"
                                         style={{
                                             width: '100%',
                                             padding: '12px 14px 12px 40px',
@@ -686,20 +667,37 @@ Please share your custom wholesale pricing and API access details.`;
                                         style={{
                                             border: `2px solid ${selectedProxyType === 'Residential' ? '#10B981' : theme.cardBorder}`,
                                             backgroundColor: selectedProxyType === 'Residential' ? (isDarkMode ? 'rgba(16, 185, 129, 0.08)' : '#ECFDF5') : theme.inputBg,
-                                            borderRadius: '12px',
-                                            padding: '14px',
+                                            borderRadius: '14px',
+                                            padding: '16px',
                                             cursor: 'pointer',
-                                            transition: 'all 0.2s ease'
+                                            transition: 'all 0.2s ease',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'space-between'
                                         }}
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <span style={{ fontSize: '14px', fontWeight: '800', color: selectedProxyType === 'Residential' ? '#10B981' : theme.text }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                            <span style={{ fontSize: '15px', fontWeight: '800', color: selectedProxyType === 'Residential' ? '#10B981' : theme.text }}>
                                                 Residential
                                             </span>
-                                            {selectedProxyType === 'Residential' && <Check size={16} color="#10B981" />}
+                                            {selectedProxyType === 'Residential' ? (
+                                                <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <Check size={13} color="#ffffff" strokeWidth={3} />
+                                                </div>
+                                            ) : (
+                                                <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: `2px solid ${theme.cardBorder}` }} />
+                                            )}
                                         </div>
-                                        <div style={{ fontSize: '18px', fontWeight: '800', color: theme.text, marginTop: '6px' }}>
-                                            ${(resellerStatus.residentialRateUsd || 0.70).toFixed(2)} <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: '500' }}>/ GB</span>
+                                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                                            <div>
+                                                <span style={{ fontSize: '20px', fontWeight: '800', color: theme.text }}>
+                                                    ${(resellerStatus.residentialRateUsd || 0.70).toFixed(2)}
+                                                </span>
+                                                <span style={{ fontSize: '12px', color: theme.textMuted, fontWeight: '500' }}> / GB</span>
+                                            </div>
+                                            <span style={{ fontSize: '11px', fontWeight: '700', color: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.12)', padding: '2px 8px', borderRadius: '6px' }}>
+                                                30% OFF
+                                            </span>
                                         </div>
                                     </div>
 
@@ -709,20 +707,37 @@ Please share your custom wholesale pricing and API access details.`;
                                         style={{
                                             border: `2px solid ${selectedProxyType === 'Premium Residential' ? '#8B5CF6' : theme.cardBorder}`,
                                             backgroundColor: selectedProxyType === 'Premium Residential' ? (isDarkMode ? 'rgba(139, 92, 246, 0.08)' : '#F5F3FF') : theme.inputBg,
-                                            borderRadius: '12px',
-                                            padding: '14px',
+                                            borderRadius: '14px',
+                                            padding: '16px',
                                             cursor: 'pointer',
-                                            transition: 'all 0.2s ease'
+                                            transition: 'all 0.2s ease',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'space-between'
                                         }}
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <span style={{ fontSize: '14px', fontWeight: '800', color: selectedProxyType === 'Premium Residential' ? '#8B5CF6' : theme.text }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                            <span style={{ fontSize: '15px', fontWeight: '800', color: selectedProxyType === 'Premium Residential' ? '#8B5CF6' : theme.text }}>
                                                 Premium
                                             </span>
-                                            {selectedProxyType === 'Premium Residential' && <Check size={16} color="#8B5CF6" />}
+                                            {selectedProxyType === 'Premium Residential' ? (
+                                                <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <Check size={13} color="#ffffff" strokeWidth={3} />
+                                                </div>
+                                            ) : (
+                                                <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: `2px solid ${theme.cardBorder}` }} />
+                                            )}
                                         </div>
-                                        <div style={{ fontSize: '18px', fontWeight: '800', color: theme.text, marginTop: '6px' }}>
-                                            ${(resellerStatus.premiumResidentialRateUsd || 0.90).toFixed(2)} <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: '500' }}>/ GB</span>
+                                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                                            <div>
+                                                <span style={{ fontSize: '20px', fontWeight: '800', color: theme.text }}>
+                                                    ${(resellerStatus.premiumResidentialRateUsd || 0.90).toFixed(2)}
+                                                </span>
+                                                <span style={{ fontSize: '12px', color: theme.textMuted, fontWeight: '500' }}> / GB</span>
+                                            </div>
+                                            <span style={{ fontSize: '11px', fontWeight: '700', color: '#8B5CF6', backgroundColor: 'rgba(139, 92, 246, 0.12)', padding: '2px 8px', borderRadius: '6px' }}>
+                                                40% OFF
+                                            </span>
                                         </div>
                                     </div>
                                 </div>

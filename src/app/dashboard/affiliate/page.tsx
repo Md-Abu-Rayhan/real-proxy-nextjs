@@ -144,20 +144,20 @@ export default function AffiliateDashboard() {
         <div className="actions-column">
           <div className="action-card">
             <div className="action-header">
-              <h2 className="action-title">Convert to Wallet</h2>
+              <h2 className="action-title">Transfer to Main Wallet</h2>
               <div className="available-badge">Available Balance</div>
             </div>
             <div className="balance-display">
               <span className="currency">$</span>
               {loading ? <span className="skeleton skeleton-balance" /> : affiliateBalance.toFixed(4)}
             </div>
-            <p className="action-desc">Convert your approved affiliate balance directly to your main wallet to purchase bandwidth instantly.</p>
+            <p className="action-desc">Transfer your approved affiliate balance directly to your main wallet to purchase bandwidth instantly.</p>
             <button
               className="btn-primary custom-action-btn"
               disabled={loading || affiliateBalance <= 0 || convertLoading}
               onClick={handleConvertToWallet}
             >
-              {convertLoading ? "Redirecting..." : "Convert Balance"} <ArrowRight size={16} />
+              {convertLoading ? "Redirecting..." : "Transfer to Wallet"} <ArrowRight size={16} />
             </button>
           </div>
         </div>
