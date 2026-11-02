@@ -19,9 +19,6 @@ import {
     ChevronDown,
     Sparkles,
     PhoneCall,
-    Building2,
-    Layers,
-    Headphones,
     Wallet,
     RefreshCw,
     AlertCircle,
@@ -1323,64 +1320,6 @@ Please share your custom wholesale pricing and API access details.`;
                         </a>
                     </div>
                 </div>
-            </div>
-
-            {/* Program Benefits Grid */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                gap: '16px',
-                marginBottom: '24px'
-            }}>
-                {[
-                    {
-                        icon: <Zap size={20} color="#0086FF" />,
-                        title: 'Tiered Wholesale Pricing',
-                        desc: 'Unlock deeply discounted rates as low as $0.70/GB for Residential Proxies and $0.90/GB for Premium Residential Proxies.'
-                    },
-                    {
-                        icon: <Building2 size={20} color="#10B981" />,
-                        title: 'Sub-User Provisioning',
-                        desc: 'Create, isolate, and distribute individual proxy credentials with custom bandwidth quotas directly to your own end-users.'
-                    },
-                    {
-                        icon: <Layers size={20} color="#8B5CF6" />,
-                        title: 'REST API & Automation',
-                        desc: 'Automate balance top-ups, sub-user generation, and live usage monitoring directly via our developer API.'
-                    },
-                    {
-                        icon: <Headphones size={20} color="#F59E0B" />,
-                        title: 'Dedicated Account Manager',
-                        desc: 'Direct WhatsApp and Telegram access to our senior engineering team for rapid resolution and custom subnet routings.'
-                    }
-                ].map((perk, i) => (
-                    <div key={i} style={{
-                        backgroundColor: theme.card,
-                        border: `1px solid ${theme.cardBorder}`,
-                        borderRadius: '12px',
-                        padding: '20px',
-                        boxShadow: isDarkMode ? '0 2px 8px rgba(0,0,0,0.2)' : '0 1px 4px rgba(0,0,0,0.02)'
-                    }}>
-                        <div style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '10px',
-                            backgroundColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#F1F5F9',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginBottom: '14px'
-                        }}>
-                            {perk.icon}
-                        </div>
-                        <h3 style={{ fontSize: '16px', fontWeight: '700', color: theme.text, margin: '0 0 6px 0' }}>
-                            {perk.title}
-                        </h3>
-                        <p style={{ fontSize: '13px', color: theme.textMuted, margin: 0, lineHeight: '1.5' }}>
-                            {perk.desc}
-                        </p>
-                    </div>
-                ))}
             </div>
 
             {/* Interactive Application Form */}
