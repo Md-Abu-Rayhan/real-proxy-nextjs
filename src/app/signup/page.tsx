@@ -34,7 +34,7 @@ const RegisterPageContent = () => {
     useEffect(() => {
         const token = localStorage.getItem('auth_token');
         if (token) {
-            router.push('/dashboard/residential-proxies');
+            router.push('/dashboard');
             return;
         }
 

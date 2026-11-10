@@ -148,12 +148,63 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     // Deposit completed! Stop active polling session immediately
                     stopDepositListening();
 
+                    // Check latest transaction to identify the exact method (Admin Adjustment, bKash, EPS, Binance, Cryptomus, etc.)
+                    let detectedMethod = 'Deposit Confirmed';
+                    let detectedNetwork = '';
+                    let txAmount = diff;
+
+                    try {
+                        const txRes = await axios.get(`${API_URL}/api/Wallet/transactions?page=1&pageSize=1`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        const latestTx = txRes.data?.items?.[0];
+
+                        if (latestTx) {
+                            const pMethod = (latestTx.paymentMethod || '').toUpperCase();
+                            const txType = (latestTx.transactionType || '').toUpperCase();
+
+                            if (pMethod === 'ADMIN' || txType === 'ADMIN_ADJUST') {
+                                detectedMethod = 'Admin Adjustment';
+                                detectedNetwork = '';
+                            } else if (pMethod === 'BKASH') {
+                                detectedMethod = 'bKash';
+                                detectedNetwork = 'MFS';
+                            } else if (pMethod === 'NAGAD') {
+                                detectedMethod = 'Nagad';
+                                detectedNetwork = 'MFS';
+                            } else if (pMethod === 'ROCKET') {
+                                detectedMethod = 'Rocket';
+                                detectedNetwork = 'MFS';
+                            } else if (pMethod === 'EPS') {
+                                detectedMethod = 'EPS';
+                                detectedNetwork = 'Online Banking / Card';
+                            } else if (pMethod === 'BINANCE') {
+                                detectedMethod = 'Binance Pay';
+                                detectedNetwork = 'USDT';
+                            } else if (pMethod === 'CRYPTOMUS' || pMethod === 'CRYPTO') {
+                                detectedMethod = 'Cryptomus';
+                                detectedNetwork = latestTx.description?.replace(/Crypto Deposit\s*/i, '').replace(/[()]/g, '').trim() || 'Crypto / Blockchain';
+                            } else if (txType === 'AFFILIATE_TRANSFER') {
+                                detectedMethod = 'Affiliate Transfer';
+                                detectedNetwork = '';
+                            } else if (latestTx.paymentMethod) {
+                                detectedMethod = latestTx.paymentMethod;
+                            }
+
+                            if (latestTx.amountUsd && Number(latestTx.amountUsd) > 0) {
+                                txAmount = Number(latestTx.amountUsd);
+                            }
+                        }
+                    } catch (txErr) {
+                        console.warn('Could not fetch latest transaction details for deposit modal:', txErr);
+                    }
+
                     showDepositSuccess({
-                        amountUsd: diff,
+                        amountUsd: txAmount,
                         newBalanceUsd: newBal,
                         currency: 'USD',
-                        network: 'Crypto / Blockchain',
-                        method: 'Deposit Confirmed'
+                        network: detectedNetwork,
+                        method: detectedMethod
                     });
                 }
 

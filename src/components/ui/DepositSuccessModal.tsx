@@ -42,8 +42,11 @@ export const DepositSuccessModal: React.FC<DepositSuccessModalProps> = ({
 
     const formattedAmount = Number(data.amountUsd || 0).toFixed(2);
     const formattedNewBalance = Number(data.newBalanceUsd || 0).toFixed(2);
-    const displayMethod = data.method || 'Cryptomus';
-    const displayNetwork = data.network || data.currency || 'Crypto';
+    const isAdmin = data.method?.toLowerCase().includes('admin');
+    const modalTitle = isAdmin ? 'Balance Credited' : 'Deposit Confirmed';
+    const modalSubtitle = isAdmin ? 'Funds have been added by Administrator' : 'Funds have been credited to your wallet';
+    const displayMethod = data.method || 'Deposit';
+    const displayNetwork = data.network || '';
 
     return (
         <div className="deposit-modal-backdrop" onClick={onClose}>
@@ -55,8 +58,8 @@ export const DepositSuccessModal: React.FC<DepositSuccessModalProps> = ({
                             <Check size={18} strokeWidth={2.5} />
                         </div>
                         <div>
-                            <h3 className="modal-title">Deposit Confirmed</h3>
-                            <p className="modal-subtitle">Funds have been credited to your wallet</p>
+                            <h3 className="modal-title">{modalTitle}</h3>
+                            <p className="modal-subtitle">{modalSubtitle}</p>
                         </div>
                     </div>
                     <button
@@ -83,7 +86,9 @@ export const DepositSuccessModal: React.FC<DepositSuccessModalProps> = ({
                 <div className="ledger-card">
                     <div className="ledger-row">
                         <span className="ledger-label">Payment Method</span>
-                        <span className="ledger-value">{displayMethod} ({displayNetwork})</span>
+                        <span className="ledger-value">
+                            {displayMethod}{displayNetwork ? ` (${displayNetwork})` : ''}
+                        </span>
                     </div>
 
                     <div className="ledger-row">

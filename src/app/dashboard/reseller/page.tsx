@@ -1270,7 +1270,7 @@ Please share your custom wholesale pricing and API access details.`;
                             maxWidth: '720px'
                         }}>
                             Scale your proxy operations or business with enterprise-tier volume discounts.
-                            Get custom per-GB rates ($0.70/GB Standard Residential, $0.90/GB Premium Residential), API provisioning keys, dedicated sub-user accounts, and priority 24/7 technical assistance.
+                            Get custom per-GB rates ($0.70/GB Standard Residential, $0.90/GB Premium Residential), priority 24/7 technical assistance.
                         </p>
                     </div>
 
