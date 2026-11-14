@@ -48,12 +48,12 @@ export const OneClickBuyModal: React.FC<OneClickBuyModalProps> = ({
     }, [isOpen, initialProxyType, initialBandwidthGb]);
 
     const pricePerGb = proxyType === 'Premium Residential' ? 1.50 : 1.00;
-    const baseTotalUsd = bandwidth * pricePerGb;
-    const discountAmountUsd = appliedDiscountPercent ? (baseTotalUsd * appliedDiscountPercent) / 100 : 0;
-    const finalTotalUsd = Math.max(0.01, baseTotalUsd - discountAmountUsd);
-    const finalTotalBdt = finalTotalUsd * (exchangeRateBdt || 125);
-    const hasSufficientBalance = balanceUsd >= finalTotalUsd;
-    const balanceAfterUsd = balanceUsd - finalTotalUsd;
+    const baseTotalUsd = Number((bandwidth * pricePerGb).toFixed(2));
+    const discountAmountUsd = appliedDiscountPercent ? Number(((baseTotalUsd * appliedDiscountPercent) / 100).toFixed(2)) : 0;
+    const finalTotalUsd = Math.max(0.01, Number((baseTotalUsd - discountAmountUsd).toFixed(2)));
+    const finalTotalBdt = Math.round(finalTotalUsd * (exchangeRateBdt || 125));
+    const hasSufficientBalance = Number(balanceUsd.toFixed(2)) >= finalTotalUsd;
+    const balanceAfterUsd = Math.max(0, Number((balanceUsd - finalTotalUsd).toFixed(2)));
 
     const handleApplyPromo = async () => {
         if (!promoCode.trim()) return;

@@ -20,7 +20,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body suppressHydrationWarning>
-        <Toaster position="top-right" />
+        <Toaster
+          position="top-right"
+          containerStyle={{
+            zIndex: 9999999,
+          }}
+          toastOptions={{
+            style: {
+              zIndex: 9999999,
+            },
+          }}
+        />
         <StyledJsxRegistry>
           <LanguageProvider>
             {children}

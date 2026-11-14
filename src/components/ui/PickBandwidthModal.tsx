@@ -62,13 +62,13 @@ export const PickBandwidthModal: React.FC = () => {
     // Price Calculations
     const rate = exchangeRateBdt > 0 ? exchangeRateBdt : 125;
     const pricePerGb = modalProxyType === 'Premium Residential' ? 1.50 : 1.00;
-    const baseTotalUsd = selectedBandwidth * pricePerGb;
-    const discountAmountUsd = appliedDiscount ? (baseTotalUsd * appliedDiscount) / 100 : 0;
-    const finalTotalUsd = Math.max(0.01, baseTotalUsd - discountAmountUsd);
+    const baseTotalUsd = Number((selectedBandwidth * pricePerGb).toFixed(2));
+    const discountAmountUsd = appliedDiscount ? Number(((baseTotalUsd * appliedDiscount) / 100).toFixed(2)) : 0;
+    const finalTotalUsd = Math.max(0.01, Number((baseTotalUsd - discountAmountUsd).toFixed(2)));
     const finalTotalBdt = Math.round(finalTotalUsd * rate);
 
-    const hasSufficientBalance = !isWalletLoading && balanceUsd >= finalTotalUsd;
-    const balanceShortage = Math.max(0, finalTotalUsd - balanceUsd);
+    const hasSufficientBalance = !isWalletLoading && (Number(balanceUsd.toFixed(2)) >= finalTotalUsd);
+    const balanceShortage = Math.max(0, Number((finalTotalUsd - balanceUsd).toFixed(2)));
 
     // Promo Validation
     const handleValidatePromo = async () => {
@@ -112,7 +112,7 @@ export const PickBandwidthModal: React.FC = () => {
             return;
         }
 
-        if (balanceUsd < finalTotalUsd) {
+        if (Number(balanceUsd.toFixed(2)) < finalTotalUsd) {
             toast.error(`Insufficient balance. Please add $${balanceShortage.toFixed(2)} USD.`);
             return;
         }
@@ -356,11 +356,18 @@ export const PickBandwidthModal: React.FC = () => {
                                 )}
                             </button>
                         ) : (
-                            <Link href="/dashboard/wallet" className="btn-topup-wallet-link">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsOpen(false);
+                                    router.push('/dashboard/wallet');
+                                }}
+                                className="btn-topup-wallet-link"
+                            >
                                 <Wallet size={16} />
                                 <span>Top Up Wallet Now (+ Add ${balanceShortage.toFixed(2)})</span>
                                 <ArrowRight size={16} />
-                            </Link>
+                            </button>
                         )}
                     </div>
                 </div>
@@ -378,7 +385,7 @@ export const PickBandwidthModal: React.FC = () => {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    z-index: 100000;
+                    z-index: 9999;
                     padding: 16px;
                 }
 
@@ -889,32 +896,34 @@ export const PickBandwidthModal: React.FC = () => {
                 .btn-topup-wallet-link {
                     width: 100%;
                     box-sizing: border-box;
-                    height: 46px;
+                    height: 48px;
                     padding: 0 20px;
                     border-radius: 12px;
-                    background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
-                    border: 1.5px solid rgba(245, 158, 11, 0.5);
-                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 0 12px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-                    color: #FFFFFF;
-                    text-decoration: none;
-                    font-size: 13.5px;
-                    font-weight: 700;
+                    border: 1px solid rgba(5, 150, 105, 0.4);
+                    background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(16, 185, 129, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.38);
+                    font-size: 14px;
+                    font-weight: 800;
+                    letter-spacing: -0.2px;
+                    color: #FFFFFF !important;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     gap: 8px;
+                    cursor: pointer;
+                    text-decoration: none;
                     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
                 }
 
                 .btn-topup-wallet-link:hover {
-                    background: linear-gradient(180deg, #334155 0%, #1E293B 100%);
-                    border-color: #F59E0B;
-                    transform: translateY(-1px);
-                    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+                    background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+                    transform: translateY(-1.5px);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12), 0 12px 30px rgba(16, 185, 129, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.45);
                 }
 
                 .btn-topup-wallet-link:active {
                     transform: translateY(0.5px) scale(0.985);
+                    box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.2);
                 }
 
                 .spin-icon { animation: spin 1s linear infinite; }

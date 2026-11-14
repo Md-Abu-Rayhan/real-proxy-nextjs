@@ -36,10 +36,10 @@ const Pricing = () => {
 
     const current = getPricing(bandwidth);
     const pricePerGb = proxyType === 'Premium Residential' ? 1.50 : 1.00;
-    const baseCostUsd = bandwidth * pricePerGb;
-    const discountAmtUsd = appliedDiscount ? (baseCostUsd * appliedDiscount) / 100 : 0;
-    const finalCostUsd = Math.max(0.01, baseCostUsd - discountAmtUsd);
-    const hasSufficientBalance = !isWalletLoading && walletBalance >= finalCostUsd;
+    const baseCostUsd = Number((bandwidth * pricePerGb).toFixed(2));
+    const discountAmtUsd = appliedDiscount ? Number(((baseCostUsd * appliedDiscount) / 100).toFixed(2)) : 0;
+    const finalCostUsd = Math.max(0.01, Number((baseCostUsd - discountAmtUsd).toFixed(2)));
+    const hasSufficientBalance = !isWalletLoading && Number(walletBalance.toFixed(2)) >= finalCostUsd;
 
     React.useEffect(() => {
         const typeParam = searchParams.get('type');
@@ -167,7 +167,7 @@ const Pricing = () => {
             return;
         }
 
-        if (walletBalance < finalCostUsd) {
+        if (Number(walletBalance.toFixed(2)) < finalCostUsd) {
             toast.error(`Insufficient wallet balance. Available: $${walletBalance.toFixed(2)}, Required: $${finalCostUsd.toFixed(2)}. Please add funds to your wallet.`);
             return;
         }
