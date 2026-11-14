@@ -61,7 +61,7 @@ export const PickBandwidthModal: React.FC = () => {
 
     // Price Calculations
     const rate = exchangeRateBdt > 0 ? exchangeRateBdt : 125;
-    const pricePerGb = modalProxyType === 'Premium Residential' ? 1.50 : 1.00;
+    const pricePerGb = modalProxyType === 'Premium Residential' ? 1.20 : 1.00;
     const baseTotalUsd = Number((selectedBandwidth * pricePerGb).toFixed(2));
     const discountAmountUsd = appliedDiscount ? Number(((baseTotalUsd * appliedDiscount) / 100).toFixed(2)) : 0;
     const finalTotalUsd = Math.max(0.01, Number((baseTotalUsd - discountAmountUsd).toFixed(2)));
@@ -203,7 +203,7 @@ export const PickBandwidthModal: React.FC = () => {
                             className={`switch-tab ${modalProxyType === 'Premium Residential' ? 'switch-active prem' : ''}`}
                         >
                             <Crown size={15} />
-                            <span>Premium ($1.50/GB)</span>
+                            <span>Premium ($1.20/GB)</span>
                         </button>
                     </div>
 

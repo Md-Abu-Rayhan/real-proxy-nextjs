@@ -346,7 +346,7 @@ export default function DashboardOverviewPage() {
                             <Crown size={16} color="#FFA800" />
                             <span>Premium Residential</span>
                         </div>
-                        <span className="kpi-tag gold-tag">$1.50 / GB</span>
+                        <span className="kpi-tag gold-tag">$1.20 / GB</span>
                     </div>
 
                     <div className="kpi-amount-box">
@@ -393,7 +393,7 @@ export default function DashboardOverviewPage() {
                             <Users size={16} />
                             <span>Affiliate Rewards</span>
                         </div>
-                        <span className="kpi-tag green-tag">10% Recurring</span>
+                        <span className="kpi-tag green-tag">5% Recurring</span>
                     </div>
 
                     <div className="kpi-amount-box">
@@ -434,7 +434,7 @@ export default function DashboardOverviewPage() {
                         <h3 className="tx-section-title">Recent Wallet & Purchase Activity</h3>
                         <p className="tx-section-desc">Latest top-ups, proxy bandwidth purchases, and ledger entries.</p>
                     </div>
-                    <Link href="/dashboard/wallet" className="tx-view-all-link">
+                    <Link href="/dashboard/wallet#ledger" className="tx-view-all-link">
                         <span>View Full Ledger</span>
                         <ArrowRight size={14} />
                     </Link>
@@ -541,7 +541,9 @@ export default function DashboardOverviewPage() {
                                                         {isResellerReceive ? '+$0.00' : `${isCredit ? '+' : '-'}$${Number(tx.amountUsd || 0).toFixed(2)}`}
                                                     </td>
                                                     <td className="tx-bdt">
-                                                        {isResellerReceive ? '৳0' : `৳${Number(tx.amountBdt || 0).toLocaleString()}`}
+                                                        {isResellerReceive
+                                                            ? '৳0'
+                                                            : `৳${(Number(tx.amountBdt) > 0 ? Number(tx.amountBdt) : Math.round(Number(tx.amountUsd || 0) * (rate || 125))).toLocaleString()}`}
                                                     </td>
                                                     <td>
                                                         <span className="tx-status-badge">
@@ -1588,30 +1590,32 @@ export default function DashboardOverviewPage() {
                     margin: 2px 0 0 0;
                 }
 
-                .tx-view-all-link {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 6px;
-                    padding: 7px 14px;
-                    border-radius: 8px;
-                    font-size: 12px;
-                    font-weight: 700;
-                    color: #0086FF;
-                    background: rgba(0, 134, 255, 0.06);
-                    border: 1px solid rgba(0, 134, 255, 0.18);
-                    text-decoration: none;
-                    white-space: nowrap;
-                    flex-shrink: 0;
-                    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                :global(.tx-view-all-link) {
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    gap: 6px !important;
+                    padding: 8px 16px !important;
+                    border-radius: 9px !important;
+                    font-size: 12.5px !important;
+                    font-weight: 700 !important;
+                    color: #0086FF !important;
+                    background: rgba(0, 134, 255, 0.08) !important;
+                    border: 1px solid rgba(0, 134, 255, 0.25) !important;
+                    text-decoration: none !important;
+                    white-space: nowrap !important;
+                    flex-shrink: 0 !important;
+                    cursor: pointer !important;
+                    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
                 }
-                .tx-view-all-link:hover {
-                    background: rgba(0, 134, 255, 0.12);
-                    border-color: rgba(0, 134, 255, 0.35);
-                    transform: translateY(-1px);
-                    box-shadow: 0 2px 6px rgba(0, 134, 255, 0.15);
+                :global(.tx-view-all-link:hover) {
+                    background: #0086FF !important;
+                    color: #FFFFFF !important;
+                    border-color: #0086FF !important;
+                    transform: translateY(-1px) !important;
+                    box-shadow: 0 4px 12px rgba(0, 134, 255, 0.22) !important;
                 }
-                .tx-view-all-link:active {
-                    transform: translateY(0) scale(0.98);
+                :global(.tx-view-all-link:active) {
+                    transform: translateY(0) scale(0.98) !important;
                 }
 
                 .tx-table-card {
@@ -2548,6 +2552,17 @@ export default function DashboardOverviewPage() {
                     border-color: rgba(255, 255, 255, 0.15) !important;
                     color: #F8FAFC !important;
                 }
+                :global(body.dark-mode) :global(.tx-view-all-link) {
+                    background: rgba(56, 189, 248, 0.1) !important;
+                    border-color: rgba(56, 189, 248, 0.25) !important;
+                    color: #38BDF8 !important;
+                }
+                :global(body.dark-mode) :global(.tx-view-all-link:hover) {
+                    background: #0284C7 !important;
+                    color: #FFFFFF !important;
+                    border-color: #0284C7 !important;
+                    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35) !important;
+                }
 
                 /* ============================================================
                    RESPONSIVE BREAKPOINTS (ALL DEVICES COMPATIBLE)
@@ -2637,8 +2652,8 @@ export default function DashboardOverviewPage() {
                         align-items: flex-start;
                         gap: 10px;
                     }
-                    .tx-view-all-link {
-                        align-self: flex-start;
+                    :global(.tx-view-all-link) {
+                        align-self: flex-start !important;
                     }
                     .tx-table {
                         min-width: 630px;

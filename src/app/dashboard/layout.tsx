@@ -165,6 +165,13 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
         { name: 'Tutorial', icon: <Video size={18} />, path: '/dashboard/tutorials' },
     ];
 
+    const isPathActive = (targetPath: string) => {
+        if (!pathname) return false;
+        if (targetPath === '/dashboard') {
+            return pathname === '/dashboard' || pathname === '/dashboard/';
+        }
+        return pathname === targetPath || pathname === targetPath + '/' || pathname.startsWith(targetPath + '/');
+    };
 
     return (
         <div className="dashboard-wrapper">
@@ -206,7 +213,7 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
                                         {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                                     </div>
                                     {isExpanded && (item as any).items.map((subItem: any, sIdx: number) => {
-                                        const isActive = pathname === subItem.path || pathname?.startsWith(subItem.path + '/');
+                                        const isActive = isPathActive(subItem.path);
                                         return (
                                             <Link
                                                 key={sIdx}
@@ -227,7 +234,7 @@ const DashboardLayoutContent = ({ children }: { children: React.ReactNode }) => 
                                 </div>
                             );
                         } else {
-                            const isActive = pathname === item.path || pathname?.startsWith(item.path + '/');
+                            const isActive = isPathActive(item.path);
                             return (
                                 <Link
                                     key={idx}

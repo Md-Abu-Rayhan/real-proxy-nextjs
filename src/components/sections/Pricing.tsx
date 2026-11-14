@@ -24,7 +24,7 @@ const Pricing = () => {
     const [isWalletLoading, setIsWalletLoading] = useState<boolean>(false);
 
     const getPricing = (gb: number) => {
-        let pricePerGb = proxyType === 'Premium Residential' ? 1.50 : 1.00;
+        let pricePerGb = proxyType === 'Premium Residential' ? 1.20 : 1.00;
         const total = (gb * pricePerGb).toFixed(2);
         const originalTotal = (gb * 3.10).toFixed(2);
         const discount = Math.round(((3.10 - pricePerGb) / 3.10) * 100);
@@ -35,7 +35,7 @@ const Pricing = () => {
     };
 
     const current = getPricing(bandwidth);
-    const pricePerGb = proxyType === 'Premium Residential' ? 1.50 : 1.00;
+    const pricePerGb = proxyType === 'Premium Residential' ? 1.20 : 1.00;
     const baseCostUsd = Number((bandwidth * pricePerGb).toFixed(2));
     const discountAmtUsd = appliedDiscount ? Number(((baseCostUsd * appliedDiscount) / 100).toFixed(2)) : 0;
     const finalCostUsd = Math.max(0.01, Number((baseCostUsd - discountAmtUsd).toFixed(2)));
@@ -68,7 +68,7 @@ const Pricing = () => {
         try {
             const token = localStorage.getItem('auth_token');
             const apiUrl = API_URL;
-            const currentBDT = (bandwidth * (proxyType === 'Premium Residential' ? 1.50 : 1.00) * 125);
+            const currentBDT = (bandwidth * (proxyType === 'Premium Residential' ? 1.20 : 1.00) * 125);
 
             const response = await axios.get(`${apiUrl}/api/Payment/validate-promo`, {
                 params: {
@@ -102,7 +102,7 @@ const Pricing = () => {
             const reValidate = async () => {
                 const token = localStorage.getItem('auth_token');
                 const apiUrl = API_URL;
-                const currentBDT = (bandwidth * (proxyType === 'Premium Residential' ? 1.50 : 1.00) * 125);
+                const currentBDT = (bandwidth * (proxyType === 'Premium Residential' ? 1.20 : 1.00) * 125);
 
                 try {
                     const response = await axios.get(`${apiUrl}/api/Payment/validate-promo`, {

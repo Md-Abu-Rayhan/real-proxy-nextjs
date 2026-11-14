@@ -275,6 +275,20 @@ export default function WalletPage() {
         }
     }, [refreshWallet, fetchTransactions, txFilter]);
 
+    // Scroll to ledger if requested by hash
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (window.location.hash === '#ledger' || window.location.hash === '#transaction-history') {
+            const timer = setTimeout(() => {
+                const el = document.getElementById('ledger');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 200);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
     // Fetch Static Crypto Wallet Address
     const fetchStaticWallet = useCallback(async (currency: string, network: string) => {
         setIsCryptoLoading(true);
@@ -1398,7 +1412,7 @@ export default function WalletPage() {
                 </div>
 
                 {/* Right Column: Transaction History Ledger */}
-                <div className="history-column">
+                <div className="history-column" id="ledger">
                     <div className="history-container">
                         <div className="history-header">
                             <div className="history-title-col">
@@ -1744,6 +1758,7 @@ export default function WalletPage() {
                     min-width: 0;
                     width: 100%;
                     max-width: 100%;
+                    scroll-margin-top: 80px;
                 }
 
                 /* Action Card */

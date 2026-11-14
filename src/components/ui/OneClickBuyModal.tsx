@@ -47,7 +47,7 @@ export const OneClickBuyModal: React.FC<OneClickBuyModalProps> = ({
         }
     }, [isOpen, initialProxyType, initialBandwidthGb]);
 
-    const pricePerGb = proxyType === 'Premium Residential' ? 1.50 : 1.00;
+    const pricePerGb = proxyType === 'Premium Residential' ? 1.20 : 1.00;
     const baseTotalUsd = Number((bandwidth * pricePerGb).toFixed(2));
     const discountAmountUsd = appliedDiscountPercent ? Number(((baseTotalUsd * appliedDiscountPercent) / 100).toFixed(2)) : 0;
     const finalTotalUsd = Math.max(0.01, Number((baseTotalUsd - discountAmountUsd).toFixed(2)));
@@ -188,7 +188,7 @@ export const OneClickBuyModal: React.FC<OneClickBuyModalProps> = ({
                                     className={`proxy-type-card ${proxyType === 'Premium Residential' ? 'active-type' : ''}`}
                                 >
                                     <span className="type-title">Premium (Geonode)</span>
-                                    <span className="type-price gold-price">$1.50 / GB</span>
+                                    <span className="type-price gold-price">$1.20 / GB</span>
                                 </button>
                             </div>
                         </div>
