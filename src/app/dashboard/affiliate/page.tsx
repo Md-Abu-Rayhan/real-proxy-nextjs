@@ -1,17 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Copy, Gift, DollarSign, Users, Award, TrendingUp, AlertCircle, ArrowRight } from "lucide-react";
+import { Copy, Gift, DollarSign, Users, Award, TrendingUp, AlertCircle, ArrowRight, CheckCircle2 } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import LoadingDashboard from "@/components/common/LoadingDashboard";
 import { API_URL } from "@/lib/config";
+import { useWallet } from "@/context/WalletContext";
 
 export default function AffiliateDashboard() {
   const router = useRouter();
+  const { refreshWallet } = useWallet();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [convertLoading, setConvertLoading] = useState(false);
+  const [transferFeedback, setTransferFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<any>({
     ReferralCode: "",
@@ -46,10 +49,46 @@ export default function AffiliateDashboard() {
   const affiliateBalance = Number(data?.affiliateBalance ?? data?.AffiliateBalance ?? 0);
   const referralLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/signup?ref=${data?.referralCode || data?.ReferralCode || ""}`;
 
-  const handleConvertToWallet = () => {
-    if (affiliateBalance <= 0) return;
-    // Navigate to pricing section — Pricing.tsx will fetch balance live from API
-    router.push("/#pricing-section");
+  const handleConvertToWallet = async () => {
+    if (affiliateBalance <= 0 || convertLoading) return;
+    setConvertLoading(true);
+    setTransferFeedback(null);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await axios.post(
+        `${API_URL}/api/Wallet/convert-affiliate`,
+        { amountUsd: affiliateBalance },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data?.success) {
+        setTransferFeedback({
+          type: 'success',
+          message: res.data.message || `Successfully transferred $${affiliateBalance.toFixed(4)} USD to your Prepaid Wallet!`
+        });
+        // Refresh live affiliate dashboard data
+        const refreshRes = await axios.get(`${API_URL}/api/affiliate/dashboard`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setData(refreshRes.data);
+        // Refresh live global wallet context
+        if (refreshWallet) {
+          await refreshWallet();
+        }
+      } else {
+        setTransferFeedback({
+          type: 'error',
+          message: res.data?.message || "Transfer failed. Please try again."
+        });
+      }
+    } catch (err: any) {
+      setTransferFeedback({
+        type: 'error',
+        message: err.response?.data?.message || "Failed to transfer affiliate earnings to prepaid wallet."
+      });
+    } finally {
+      setConvertLoading(false);
+    }
   };
 
   const copyToClipboard = async () => {
@@ -152,13 +191,50 @@ export default function AffiliateDashboard() {
               {loading ? <span className="skeleton skeleton-balance" /> : affiliateBalance.toFixed(4)}
             </div>
             <p className="action-desc">Transfer your approved affiliate balance directly to your main wallet to purchase bandwidth instantly.</p>
+            {transferFeedback && (
+              <div className={`transfer-feedback-box ${transferFeedback.type}`}>
+                {transferFeedback.type === 'success' ? (
+                  <CheckCircle2 size={16} />
+                ) : (
+                  <AlertCircle size={16} />
+                )}
+                <span>{transferFeedback.message}</span>
+              </div>
+            )}
             <button
               className="btn-primary custom-action-btn"
               disabled={loading || affiliateBalance <= 0 || convertLoading}
               onClick={handleConvertToWallet}
             >
-              {convertLoading ? "Redirecting..." : "Transfer to Wallet"} <ArrowRight size={16} />
+              {convertLoading ? "Transferring..." : "Transfer to Wallet"} <ArrowRight size={16} />
             </button>
+          </div>
+
+          {/* Program Overview & Rates Card */}
+          <div className="rules-card">
+            <div className="rules-header">
+              <h3 className="rules-title">Commission Rates</h3>
+            </div>
+            <div className="rates-list">
+              <div className="rate-item">
+                <div className="rate-info">
+                  <span className="rate-network residential-text">Residential Proxies</span>
+                  <span className="rate-sub">Standard rotating bandwidth</span>
+                </div>
+                <span className="rate-badge">5% Lifetime</span>
+              </div>
+              <div className="rate-item">
+                <div className="rate-info">
+                  <span className="rate-network premium-text">Premium Residential</span>
+                  <span className="rate-sub">Static ISP & premium pool</span>
+                </div>
+                <span className="rate-badge premium-badge">5% Lifetime</span>
+              </div>
+            </div>
+            <div className="perks-footer">
+              <div className="perk-point">✓ Instant wallet credit upon approval</div>
+              <div className="perk-point">✓ Real-time multi-network audit flow</div>
+            </div>
           </div>
         </div>
 
@@ -187,28 +263,43 @@ export default function AffiliateDashboard() {
                   <thead>
                     <tr>
                       <th>Date</th>
+                      <th>Proxy Network</th>
                       <th>Order Amount</th>
                       <th>Commission Earned</th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(data?.history || data?.History).map((item: any, idx: number) => (
-                      <tr key={idx}>
-                        <td>
-                          <span className="table-date">{new Date(item.createdAt || item.CreatedAt).toLocaleDateString()}</span>
-                        </td>
-                        <td><span className="table-amount">${Number(item.purchaseAmount || item.PurchaseAmount || 0).toFixed(4)}</span></td>
-                        <td>
-                          <span className="table-commission">+${Number(item.commissionAmount || item.CommissionAmount || 0).toFixed(4)}</span>
-                        </td>
-                        <td>
-                          <span className={`status-badge ${(item.status || item.Status)?.toLowerCase()}`}>
-                            {item.status || item.Status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {(data?.history || data?.History).map((item: any, idx: number) => {
+                      const isPremium = (item.proxyType || item.ProxyType)?.toLowerCase().includes('premium');
+                      return (
+                        <tr key={idx}>
+                          <td>
+                            <span className="table-date">{new Date(item.createdAt || item.CreatedAt).toLocaleDateString()}</span>
+                          </td>
+                          <td>
+                            {isPremium ? (
+                              <span className="network-badge badge-premium">
+                                👑 Premium
+                              </span>
+                            ) : (
+                              <span className="network-badge badge-residential">
+                                Residential
+                              </span>
+                            )}
+                          </td>
+                          <td><span className="table-amount">${Number(item.purchaseAmount || item.PurchaseAmount || 0).toFixed(4)}</span></td>
+                          <td>
+                            <span className="table-commission">+${Number(item.commissionAmount || item.CommissionAmount || 0).toFixed(4)}</span>
+                          </td>
+                          <td>
+                            <span className={`status-badge ${(item.status || item.Status)?.toLowerCase()}`}>
+                              {item.status || item.Status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -458,8 +549,15 @@ export default function AffiliateDashboard() {
         /* Dashboard Main Layout Grid */
         .dashboard-main-grid {
           display: grid;
-          grid-template-columns: 450px 1fr;
+          grid-template-columns: 380px 1fr;
           gap: 24px;
+          align-items: start;
+        }
+
+        .actions-column {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
         }
 
         .action-card {
@@ -469,7 +567,7 @@ export default function AffiliateDashboard() {
           border: 1px solid #E2E8F0;
           display: flex;
           flex-direction: column;
-          height: 100%;
+          height: auto;
         }
         
         .action-header {
@@ -540,9 +638,144 @@ export default function AffiliateDashboard() {
         .action-desc {
           font-size: 14px;
           color: #64748B;
-          margin: 0 0 24px 0;
+          margin: 0 0 20px 0;
           line-height: 1.6;
-          flex: 1;
+        }
+
+        .transfer-feedback-box {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 14px;
+          border-radius: 12px;
+          font-size: 13px;
+          font-weight: 500;
+          margin-bottom: 16px;
+          line-height: 1.4;
+        }
+
+        .transfer-feedback-box.success {
+          background-color: #ECFDF5;
+          color: #065F46;
+          border: 1px solid #A7F3D0;
+        }
+
+        .transfer-feedback-box.error {
+          background-color: #FEF2F2;
+          color: #991B1B;
+          border: 1px solid #FECACA;
+        }
+
+        /* Rules & Overview Card */
+        .rules-card {
+          background-color: #FFFFFF;
+          padding: 22px 24px;
+          border-radius: 16px;
+          border: 1px solid #E2E8F0;
+        }
+
+        .rules-header {
+          margin-bottom: 14px;
+        }
+
+        .rules-title {
+          font-size: 15px;
+          font-weight: 600;
+          color: var(--navy);
+          margin: 0;
+        }
+
+        .rates-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-bottom: 16px;
+        }
+
+        .rate-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 12px;
+          background: #F8FAFC;
+          border-radius: 10px;
+          border: 1px solid #E2E8F0;
+        }
+
+        .rate-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .rate-network {
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        .residential-text {
+          color: #0284C7;
+        }
+
+        .premium-text {
+          color: #D97706;
+        }
+
+        .rate-sub {
+          font-size: 11px;
+          color: #64748B;
+        }
+
+        .rate-badge {
+          font-size: 12px;
+          font-weight: 600;
+          color: #0284C7;
+          background: #E0F2FE;
+          padding: 3px 8px;
+          border-radius: 6px;
+        }
+
+        .premium-badge {
+          color: #B45309;
+          background: #FEF3C7;
+        }
+
+        .perks-footer {
+          border-top: 1px solid #F1F5F9;
+          padding-top: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .perk-point {
+          font-size: 12px;
+          color: #475569;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .network-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 12px;
+          font-weight: 600;
+          padding: 3px 10px;
+          border-radius: 16px;
+          white-space: nowrap;
+        }
+
+        .network-badge.badge-residential {
+          background-color: #E0F2FE;
+          color: #0369A1;
+          border: 1px solid #BAE6FD;
+        }
+
+        .network-badge.badge-premium {
+          background-color: #FEF3C7;
+          color: #B45309;
+          border: 1px solid #FDE68A;
         }
 
         .custom-action-btn {
@@ -815,6 +1048,49 @@ export default function AffiliateDashboard() {
 
         :global(body.dark-mode) .table-amount {
           color: #F8FAFC;
+        }
+
+        :global(body.dark-mode) .rules-card {
+          background-color: #1E293B;
+          border-color: #334155;
+        }
+
+        :global(body.dark-mode) .rules-title {
+          color: #F8FAFC;
+        }
+
+        :global(body.dark-mode) .rate-item {
+          background-color: #0F172A;
+          border-color: #334155;
+        }
+
+        :global(body.dark-mode) .rate-sub,
+        :global(body.dark-mode) .perk-point {
+          color: #94A3B8;
+        }
+
+        :global(body.dark-mode) .network-badge.badge-residential {
+          background-color: #0c4a6e;
+          color: #38bdf8;
+          border-color: #0284c7;
+        }
+
+        :global(body.dark-mode) .network-badge.badge-premium {
+          background-color: #78350f;
+          color: #fde68a;
+          border-color: #b45309;
+        }
+
+        :global(body.dark-mode) .transfer-feedback-box.success {
+          background-color: #064E3B;
+          color: #6EE7B7;
+          border-color: #047857;
+        }
+
+        :global(body.dark-mode) .transfer-feedback-box.error {
+          background-color: #7F1D1D;
+          color: #FCA5A5;
+          border-color: #991B1B;
         }
       `}</style>
     </div>
